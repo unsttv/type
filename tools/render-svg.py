@@ -8,25 +8,23 @@ from typing import Dict, List, Tuple
 Point = Tuple[int, int]
 Poly = List[Point]
 
-
 # -----------------------------
 # Grid / metrics (deduced)
 # -----------------------------
 # Default lowercase cell width
 CELL_W = 12
 
-# Common viewBox HEIGHT for *all* letters (includes ascenders + descenders)
-# Baseline is at y=20; x-height starts at y=9; cap starts at y=0.
-# Ascender height above x-height = 9 units (0..9), so descender depth below baseline = 9 units (20..29),
-# plus the same 1-unit bar thickness => bottom reaches y=30.
+# Common viewBox HEIGHT for *all* characters (includes ascenders + descenders)
+# Baseline at y=20, x-height starts at y=9. Ascender height above x-height is 9 units (0..9),
+# so descender depth below baseline is also 9 units (20..29), plus 1 unit stroke thickness => y=30.
 CELL_H = 30
 
-# Key y lines (all horizontal strokes are 1 unit thick)
+# Horizontal strokes are 1 unit thick at these bands
 Y_CAP0,  Y_CAP1  = 0, 1
 Y_TOP0,  Y_TOP1  = 9, 10
 Y_MID0,  Y_MID1  = 14, 15
 Y_BASE0, Y_BASE1 = 19, 20
-Y_DESC0, Y_DESC1 = 29, 30  # descender “bottom line” thickness (if needed)
+Y_DESC0, Y_DESC1 = 29, 30  # bottom-most thin band for descenders
 
 
 def R(x1: int, y1: int, x2: int, y2: int) -> Poly:
@@ -45,12 +43,12 @@ def poly_points(poly: Poly) -> str:
 
 
 # -----------------------------
-# Simple transforms on polygons
+# Simple transforms
 # -----------------------------
 def rotate180_poly(poly: Poly, w: int, cy2: int) -> Poly:
     """
     180° rotation around (w/2, cy2/2).
-    For the lowercase band center: cy2 = Y_TOP0 + Y_BASE1 = 29 (since center y=14.5).
+    For lowercase band center: cy2 = Y_TOP0 + Y_BASE1 (= 29).
     """
     return [(w - x, cy2 - y) for (x, y) in poly]
 
@@ -60,197 +58,167 @@ def mirrorx_poly(poly: Poly, w: int) -> Poly:
     return [(w - x, y) for (x, y) in poly]
 
 
-# -----------------------------
-# Canonical “s” from your sample (cut loose from the ST monogram)
-# This is the exact stepped outline implied by your ST polygon’s S-part.
-# (12×20 lowercase band: y=9..20)
-# -----------------------------
-S_POLY: Poly = [
-    (0, 9),
-    (12, 9),
-    (12, 10),
-    (8, 10),
-    (8, 14),
-    (4, 14),
-    (4, 15),
-    (0, 15),
-    (0, 20),
-    (12, 20),
-    (12, 19),
-    (8, 19),
-    (8, 15),
-    (12, 15),
-    (12, 10),
-    (12, 9),
-]
+def translate_poly(poly: Poly, dx: int, dy: int = 0) -> Poly:
+    return [(x + dx, y + dy) for (x, y) in poly]
 
 
 # -----------------------------
-# Glyphs
-# Notes applied:
-# - a = e rotated 180° (in the lowercase band)
-# - descenders go as far below baseline as ascenders go above x-height (so down to y=30)
-# - s is now the exact sample S shape (standalone)
-# - z = mirrored s
-# - p/q/y/j updated for new descender depth
+# Base glyphs (letters)
 # -----------------------------
 GLYPHS: Dict[str, GlyphDef] = {}
 
-# --- base e (used to derive a) ---
+# e (used to derive a)
 E_DEF = GlyphDef(12, [
     R(0, Y_TOP0, 12, Y_TOP1),        # top bar
-    R(0, Y_TOP1, 4, Y_BASE0),        # left stem down
+    R(0, Y_TOP1, 4,  Y_BASE0),       # left stem down
     R(8, Y_TOP1, 12, Y_MID0),        # upper-right closure (loop)
     R(0, Y_MID0, 12, Y_MID1),        # mid bar
     R(0, Y_BASE0, 12, Y_BASE1),      # baseline
 ])
 
-# a = e rotated 180° around lowercase band center (x=6, y=14.5 => cy2=29)
-A_DEF = GlyphDef(12, [
-    rotate180_poly(p, 12, Y_TOP0 + Y_BASE1) for p in E_DEF.polys
-])
+# a = e rotated 180° (your latest rule)
+A_DEF = GlyphDef(12, [rotate180_poly(p, 12, Y_TOP0 + Y_BASE1) for p in E_DEF.polys])
 
-# s = exact sample S shape
-# --- replace your current S_DEF / Z_DEF with these ---
-
+# s (your step diagram)
 S_DEF = GlyphDef(12, [
-    R(0, Y_TOP0, 12, Y_TOP1),        # top bar:  y=9..10
-    R(0, Y_TOP1, 4,  Y_MID0),        # left vertical: y=10..14
-    R(0, Y_MID0, 12, Y_MID1),        # mid bar:  y=14..15
-    R(8, Y_MID1, 12, Y_BASE0),       # right vertical: y=15..19
-    R(0, Y_BASE0, 12, Y_BASE1),      # bottom bar: y=19..20
-])
-
-Z_DEF = GlyphDef(12, [
     R(0, Y_TOP0, 12, Y_TOP1),        # top bar
-    R(8, Y_TOP1, 12, Y_MID0),        # right vertical (mirrored)
+    R(0, Y_TOP1, 4,  Y_MID0),        # left vertical
     R(0, Y_MID0, 12, Y_MID1),        # mid bar
-    R(0, Y_MID1, 4,  Y_BASE0),       # left vertical (mirrored)
+    R(8, Y_MID1, 12, Y_BASE0),       # right vertical
     R(0, Y_BASE0, 12, Y_BASE1),      # bottom bar
 ])
 
-# Fill glyph table (everything except g/x final forms, per your note)
+# z = mirrored s
+Z_DEF = GlyphDef(12, [
+    R(0, Y_TOP0, 12, Y_TOP1),        # top bar
+    R(8, Y_TOP1, 12, Y_MID0),        # right vertical (upper)
+    R(0, Y_MID0, 12, Y_MID1),        # mid bar
+    R(0, Y_MID1, 4,  Y_BASE0),       # left vertical (lower)
+    R(0, Y_BASE0, 12, Y_BASE1),      # bottom bar
+])
+
 GLYPHS.update({
     "a": A_DEF,
 
     "b": GlyphDef(12, [
-        R(0, Y_CAP0, 4, Y_BASE1),        # tall left stem
-        R(4, Y_TOP0, 12, Y_TOP1),        # bowl top
-        R(8, Y_TOP1, 12, Y_BASE0),       # bowl right
-        R(4, Y_BASE0, 12, Y_BASE1),      # bowl bottom
+        R(0, Y_CAP0, 4,  Y_BASE1),   # tall left stem
+        R(4, Y_TOP0, 12, Y_TOP1),    # bowl top
+        R(8, Y_TOP1, 12, Y_BASE0),   # bowl right
+        R(4, Y_BASE0, 12, Y_BASE1),  # bowl bottom
     ]),
 
     "c": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
-        R(0, Y_TOP1, 4, Y_BASE0),
+        R(0, Y_TOP1, 4,  Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
     "d": GlyphDef(12, [
         R(8, Y_CAP0, 12, Y_BASE1),
-        R(0, Y_TOP0, 8, Y_TOP1),
-        R(0, Y_TOP1, 4, Y_BASE0),
-        R(0, Y_BASE0, 8, Y_BASE1),
+        R(0, Y_TOP0, 8,  Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_BASE0),
+        R(0, Y_BASE0, 8,  Y_BASE1),
     ]),
 
     "e": E_DEF,
 
     "f": GlyphDef(12, [
-        R(4, Y_CAP0, 8, Y_BASE1),        # main stem
-        R(4, Y_CAP0, 12, Y_CAP1),        # cap bar (to the right)
-        R(4, Y_TOP0, 12, Y_TOP1),        # x-height bar (to the right)
+        R(4, Y_CAP0, 8,  Y_BASE1),   # main stem
+        R(4, Y_CAP0, 12, Y_CAP1),    # cap bar (to the right)
+        R(4, Y_TOP0, 12, Y_TOP1),    # x-height bar (to the right)
     ]),
 
-    # g: placeholder for now (we’ll revisit)
+    # g: placeholder (we’ll refine later)
     "g": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
-        R(0, Y_TOP1, 4, Y_BASE0),
+        R(0, Y_TOP1, 4,  Y_BASE0),
         R(8, Y_TOP1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
     "h": GlyphDef(12, [
-        R(0, Y_CAP0, 4, Y_BASE1),
+        R(0, Y_CAP0, 4,  Y_BASE1),
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_BASE1),
     ]),
 
     "i": GlyphDef(12, [
-        R(4, Y_TOP0, 8, Y_BASE1),        # stem
-        R(4, 0, 8, 4),                   # square dot
+        R(4, Y_TOP0, 8,  Y_BASE1),   # stem
+        R(4, 0,      8,  4),         # square dot
     ]),
 
     "j": GlyphDef(12, [
-        R(4, Y_TOP0, 8, Y_DESC1),        # stem with descender
-        R(4, 0, 8, 4),                   # square dot
-        R(0, Y_DESC0, 4, Y_DESC1),       # thin hook to the left only
+        R(4, Y_TOP0, 8,  Y_DESC1),   # stem with descender
+        R(4, 0,      8,  4),         # square dot
+        R(0, Y_DESC0, 4,  Y_DESC1),  # thin hook to the left
     ]),
 
     "k": GlyphDef(12, [
-        R(0, Y_CAP0, 4, Y_BASE1),
+        R(0, Y_CAP0, 4,  Y_BASE1),
         R(4, Y_TOP1, 12, Y_MID0),
         R(4, Y_MID1, 12, Y_BASE0),
-        [(4, Y_MID0), (8, Y_MID0), (12, Y_MID1), (8, Y_MID1)],  # tiny knee step
+        [(4, Y_MID0), (8, Y_MID0), (12, Y_MID1), (8, Y_MID1)],  # knee step
     ]),
 
     "l": GlyphDef(12, [
-        R(0, Y_CAP0, 4, Y_BASE1),
+        R(0, Y_CAP0, 4,  Y_BASE1),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # m = double n (width 20, overlap rhythm like your monogram spacing)
+    # m = double n (width 20)
     "m": GlyphDef(20, [
-        R(0, Y_TOP0, 20, Y_TOP1),        # top bar across both humps
-        R(0, Y_TOP0, 4, Y_BASE1),        # left stem
-        R(8, Y_TOP1, 12, Y_BASE1),       # middle stem (starts below top bar)
-        R(16, Y_TOP1, 20, Y_BASE1),      # right stem
+        R(0, Y_TOP0, 20, Y_TOP1),    # top bar across both humps
+        R(0, Y_TOP0, 4,  Y_BASE1),   # left stem
+        R(8, Y_TOP1, 12, Y_BASE1),   # middle stem (starts below top bar)
+        R(16, Y_TOP1, 20, Y_BASE1),  # right stem
     ]),
 
     "n": GlyphDef(12, [
-        R(0, Y_TOP0, 4, Y_BASE1),
+        R(0, Y_TOP0, 4,  Y_BASE1),
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_BASE1),
     ]),
 
     "o": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
-        R(0, Y_TOP1, 4, Y_BASE0),
+        R(0, Y_TOP1, 4,  Y_BASE0),
         R(8, Y_TOP1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # p = like o, but left stem descends (same “amount” as h ascends)
+    # p = like o, with left stem descender
     "p": GlyphDef(12, [
-        R(0, Y_TOP0, 12, Y_TOP1),        # top bar
-        R(0, Y_TOP1, 4, Y_DESC1),        # left stem descender
-        R(8, Y_TOP1, 12, Y_BASE0),       # right bowl wall (only in bowl zone)
-        R(0, Y_BASE0, 12, Y_BASE1),      # baseline bar
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_DESC1),   # descender
+        R(8, Y_TOP1, 12, Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
     # q = mirror of p
     "q": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
-        R(0, Y_TOP1, 4, Y_BASE0),
-        R(8, Y_TOP1, 12, Y_DESC1),       # right stem descender
+        R(0, Y_TOP1, 4,  Y_BASE0),
+        R(8, Y_TOP1, 12, Y_DESC1),   # descender
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # r = only stem + top horizontal line
+    # r = only stem + top bar
     "r": GlyphDef(12, [
-        R(0, Y_TOP0, 4, Y_BASE1),
+        R(0, Y_TOP0, 4,  Y_BASE1),
         R(0, Y_TOP0, 12, Y_TOP1),
     ]),
 
     "s": S_DEF,
 
+    # t = stem + bars at x-height and baseline (to the right)
     "t": GlyphDef(12, [
-        R(4, Y_CAP0, 8, Y_BASE1),        # stem
-        R(8, Y_TOP0, 12, Y_TOP1),        # x-height bar to the right
-        R(8, Y_BASE0, 12, Y_BASE1),      # baseline bar to the right
+        R(4, Y_CAP0, 8,  Y_BASE1),   # stem
+        R(8, Y_TOP0, 12, Y_TOP1),    # x-height bar (right)
+        R(8, Y_BASE0, 12, Y_BASE1),  # baseline bar (right)
     ]),
 
     "u": GlyphDef(12, [
-        R(0, Y_TOP0, 4, Y_BASE1),
+        R(0, Y_TOP0, 4,  Y_BASE1),
         R(8, Y_TOP0, 12, Y_BASE1),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
@@ -258,28 +226,28 @@ GLYPHS.update({
     "v": GlyphDef(12, [
         [(0, Y_TOP0), (4, Y_TOP0), (8, Y_BASE0), (4, Y_BASE0)],
         [(8, Y_TOP0), (12, Y_TOP0), (8, Y_BASE0), (4, Y_BASE0)],
-        R(4, Y_BASE0, 8, Y_BASE1),
+        R(4, Y_BASE0, 8,  Y_BASE1),
     ]),
 
     # w = double u (width 20)
     "w": GlyphDef(20, [
-        R(0, Y_TOP0, 4, Y_BASE1),
+        R(0, Y_TOP0, 4,  Y_BASE1),
         R(8, Y_TOP0, 12, Y_BASE1),
         R(16, Y_TOP0, 20, Y_BASE1),
         R(0, Y_BASE0, 20, Y_BASE1),
     ]),
 
-    # x: placeholder for now (we’ll revisit)
+    # x: placeholder (we’ll refine later)
     "x": GlyphDef(12, [
         [(0, Y_TOP0), (4, Y_TOP0), (12, Y_BASE0), (8, Y_BASE0)],
         [(8, Y_TOP0), (12, Y_TOP0), (4, Y_BASE0), (0, Y_BASE0)],
-        R(4, Y_MID0, 8, Y_MID1),
+        R(4, Y_MID0, 8,  Y_MID1),
     ]),
 
-    # y = u with a descender stem (right side descends)
+    # y = u with right stem descender
     "y": GlyphDef(12, [
-        R(0, Y_TOP0, 4, Y_BASE1),
-        R(8, Y_TOP0, 12, Y_DESC1),
+        R(0, Y_TOP0, 4,  Y_BASE1),
+        R(8, Y_TOP0, 12, Y_DESC1),   # descender
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
@@ -287,25 +255,20 @@ GLYPHS.update({
 })
 
 # -----------------------------
-# Add digits 0-9 (12-wide)
+# Digits 0–9
 # -----------------------------
-DIGITS: Dict[str, GlyphDef] = {
-    # 0: basically "o"
+GLYPHS.update({
     "0": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_BASE0),
         R(8, Y_TOP1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 1: right-side stem + top + base (all thin horizontals)
     "1": GlyphDef(12, [
         R(4, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_BASE1),
         R(4, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 2: top, upper-right, mid, lower-left, bottom (like a “stepped” 2)
     "2": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_MID0),
@@ -313,8 +276,6 @@ DIGITS: Dict[str, GlyphDef] = {
         R(0, Y_MID1, 4,  Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 3: top, upper-right, mid, lower-right, bottom
     "3": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_MID0),
@@ -322,15 +283,11 @@ DIGITS: Dict[str, GlyphDef] = {
         R(8, Y_MID1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 4: right stem + mid bar + left upper stem
     "4": GlyphDef(12, [
         R(8, Y_TOP0, 12, Y_BASE1),
         R(0, Y_TOP0, 4,  Y_MID1),
         R(0, Y_MID0, 12, Y_MID1),
     ]),
-
-    # 5: use your “s” logic (top, left upper, mid, right lower, bottom)
     "5": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_MID0),
@@ -338,8 +295,6 @@ DIGITS: Dict[str, GlyphDef] = {
         R(8, Y_MID1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 6: like 5 but with left stem all the way down; no upper-right wall
     "6": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_BASE1),
@@ -347,14 +302,10 @@ DIGITS: Dict[str, GlyphDef] = {
         R(8, Y_MID1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 7: top bar + right stem
     "7": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_BASE1),
     ]),
-
-    # 8: 0 + mid bar
     "8": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_BASE0),
@@ -362,8 +313,6 @@ DIGITS: Dict[str, GlyphDef] = {
         R(0, Y_MID0, 12, Y_MID1),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-
-    # 9: mirror-ish of 6: right stem all the way down; no lower-left wall
     "9": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(8, Y_TOP1, 12, Y_BASE1),
@@ -371,50 +320,75 @@ DIGITS: Dict[str, GlyphDef] = {
         R(0, Y_MID0, 12, Y_MID1),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-}
-
-GLYPHS.update(DIGITS)
+})
 
 # -----------------------------
 # Ligatures
 # -----------------------------
-def translate_poly(poly: Poly, dx: int, dy: int = 0) -> Poly:
-    return [(x + dx, y + dy) for (x, y) in poly]
-
-def compose_ligature(left_key: str, right_key: str, *, overlap: int = 4) -> GlyphDef:
-    """
-    Compose two existing glyphs into one ligature.
-    overlap=4 usually looks nice in this design language (removes the 'air' between cells).
-    """
+def compose_ligature_overlap(left_key: str, right_key: str, *, overlap: int = 4) -> GlyphDef:
+    """Tight ligature: overlap the two glyph cells."""
     left = GLYPHS[left_key]
     right = GLYPHS[right_key]
-
     dx = left.width - overlap
     width = left.width + right.width - overlap
     polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
     return GlyphDef(width, polys)
 
-# Custom 'st' ligature from your original sample, normalized to x=0..24
+
+def compose_ligature_spaced_with_link(
+    left_key: str,
+    right_key: str,
+    *,
+    gap: int = 4,
+    link_y0: int = Y_TOP0,
+    link_y1: int = Y_TOP1,
+    link_into_glyph: int = 1,
+) -> GlyphDef:
+    """
+    Spacious ligature: keep a gap (like your monogram spacing),
+    and connect them with a thin (1-unit) horizontal link line.
+
+    link_into_glyph controls how far the connector reaches *into* each glyph.
+    """
+    left = GLYPHS[left_key]
+    right = GLYPHS[right_key]
+
+    dx = left.width + gap
+    width = left.width + gap + right.width
+
+    polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
+
+    x0 = max(0, left.width - link_into_glyph)
+    x1 = min(width, left.width + gap + link_into_glyph)
+    polys.append(R(x0, link_y0, x1, link_y1))
+
+    return GlyphDef(width, polys)
+
+
+# Custom 'st' from your original sample, normalized to x=0..24
 ST_POLY: Poly = [
     (24,10),(24,9),(20,9),(20,0),(11,0),(11,9),(0,9),(0,15),(8,15),(8,19),(0,19),(0,20),
     (12,20),(12,14),(4,14),(4,10),(12,10),(12,1),(16,1),(16,20),(24,20),(24,19),(20,19),(20,10)
 ]
 GLYPHS["st"] = GlyphDef(24, [ST_POLY])
 
-# Other ligatures as composed pairs
-GLYPHS["ch"] = compose_ligature("c", "h", overlap=4)
-GLYPHS["fi"] = compose_ligature("f", "i", overlap=4)
-GLYPHS["ij"] = compose_ligature("i", "j", overlap=4)
-GLYPHS["sh"] = compose_ligature("s", "h", overlap=4)
-GLYPHS["ct"] = compose_ligature("c", "t", overlap=4)
+# Tight overlap ligatures
+GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=4)
+GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=4)
+
+# Spaced ligatures with thin connector (more like 'st' vibe)
+GLYPHS["ch"] = compose_ligature_spaced_with_link("c", "h", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=1)
+GLYPHS["sh"] = compose_ligature_spaced_with_link("s", "h", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=1)
+# For 'ct', reach into the 't' far enough to touch its stem at x=4..8
+GLYPHS["ct"] = compose_ligature_spaced_with_link("c", "t", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=4)
 
 # -----------------------------
 # SVG rendering / writing
 # -----------------------------
-def render_glyph_svg(letter: str, g: GlyphDef) -> str:
-    vb = f"0 0 {g.width} {CELL_H}"  # same height for every file
+def render_glyph_svg(key: str, g: GlyphDef) -> str:
+    vb = f"0 0 {g.width} {CELL_H}"
     polys = "\n".join(
-        f'    <polygon class="{letter}" points="{poly_points(poly)}"/>'
+        f'    <polygon class="{key}" points="{poly_points(poly)}"/>'
         for poly in g.polys
     )
     return (
@@ -426,11 +400,9 @@ def render_glyph_svg(letter: str, g: GlyphDef) -> str:
         "</svg>\n"
     )
 
-# -----------------------------
-# Write to: ../src/character-{ch}.svg
-# -----------------------------
+
 def project_root() -> Path:
-    # script is in a subfolder => project root is exactly one dir up from the script folder
+    # Script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
@@ -439,17 +411,16 @@ def write_all_svgs() -> None:
     out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    chars = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "fi", "ij", "sh", "ct"]
-
-    for ch in chars:
-        g = GLYPHS.get(ch)
+    keys = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "ct", "fi", "ij", "sh"]
+    for key in keys:
+        g = GLYPHS.get(key)
         if not g:
-            raise KeyError(f"Missing glyph: {ch}")
+            raise KeyError(f"Missing glyph: {key}")
 
-        svg = render_glyph_svg(ch, g)
-        (out_dir / f"character-{ch}.svg").write_text(svg, encoding="utf-8")
+        svg = render_glyph_svg(key, g)
+        (out_dir / f"character-{key}.svg").write_text(svg, encoding="utf-8")
 
-    print(f"Wrote {len(chars)} SVGs to: {out_dir}")
+    print(f"Wrote {len(keys)} SVGs to: {out_dir}")
 
 
 if __name__ == "__main__":
