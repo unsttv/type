@@ -11,7 +11,6 @@ Poly = List[Point]
 # -----------------------------
 # Grid / metrics (deduced)
 # -----------------------------
-# Default lowercase cell width
 CELL_W = 12
 
 # Common viewBox HEIGHT for *all* characters (includes ascenders + descenders)
@@ -19,12 +18,15 @@ CELL_W = 12
 # so descender depth below baseline is also 9 units (20..29), plus 1 unit stroke thickness => y=30.
 CELL_H = 30
 
-# Horizontal strokes are 1 unit thick at these bands
+# Horizontal stroke bands (1 unit thick)
 Y_CAP0,  Y_CAP1  = 0, 1
 Y_TOP0,  Y_TOP1  = 9, 10
 Y_MID0,  Y_MID1  = 14, 15
 Y_BASE0, Y_BASE1 = 19, 20
 Y_DESC0, Y_DESC1 = 29, 30  # bottom-most thin band for descenders
+
+# Connector band should align with the top of ascenders (same as cap band)
+Y_LINK0, Y_LINK1 = Y_CAP0, Y_CAP1   # 0..1
 
 
 def R(x1: int, y1: int, x2: int, y2: int) -> Poly:
@@ -43,7 +45,7 @@ def poly_points(poly: Poly) -> str:
 
 
 # -----------------------------
-# Simple transforms
+# Simple transforms / helpers
 # -----------------------------
 def rotate180_poly(poly: Poly, w: int, cy2: int) -> Poly:
     """
@@ -76,7 +78,7 @@ E_DEF = GlyphDef(12, [
     R(0, Y_BASE0, 12, Y_BASE1),      # baseline
 ])
 
-# a = e rotated 180° (your latest rule)
+# a = e rotated 180°
 A_DEF = GlyphDef(12, [rotate180_poly(p, 12, Y_TOP0 + Y_BASE1) for p in E_DEF.polys])
 
 # s (your step diagram)
@@ -169,7 +171,7 @@ GLYPHS.update({
     "m": GlyphDef(20, [
         R(0, Y_TOP0, 20, Y_TOP1),    # top bar across both humps
         R(0, Y_TOP0, 4,  Y_BASE1),   # left stem
-        R(8, Y_TOP1, 12, Y_BASE1),   # middle stem (starts below top bar)
+        R(8, Y_TOP1, 12, Y_BASE1),   # middle stem
         R(16, Y_TOP1, 20, Y_BASE1),  # right stem
     ]),
 
@@ -335,20 +337,12 @@ def compose_ligature_overlap(left_key: str, right_key: str, *, overlap: int = 4)
     return GlyphDef(width, polys)
 
 
-def compose_ligature_spaced_with_link(
-    left_key: str,
-    right_key: str,
-    *,
-    gap: int = 4,
-    link_y0: int = Y_TOP0,
-    link_y1: int = Y_TOP1,
-    link_into_glyph: int = 1,
-) -> GlyphDef:
+def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch_x: int = 1) -> GlyphDef:
     """
-    Spacious ligature: keep a gap (like your monogram spacing),
-    and connect them with a thin (1-unit) horizontal link line.
-
-    link_into_glyph controls how far the connector reaches *into* each glyph.
+    'st-like' ligature connector:
+      - start at x-height (y=Y_TOP1 == 10)
+      - go UP to the ascender top (y=0..1 band)
+      - then go RIGHT along that top band into the right glyph
     """
     left = GLYPHS[left_key]
     right = GLYPHS[right_key]
@@ -358,9 +352,15 @@ def compose_ligature_spaced_with_link(
 
     polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
 
-    x0 = max(0, left.width - link_into_glyph)
-    x1 = min(width, left.width + gap + link_into_glyph)
-    polys.append(R(x0, link_y0, x1, link_y1))
+    # Vertical: 1px wide, from x-height (10) up to the connector/top band (0..1)
+    x0 = left.width
+    x1 = left.width + 1
+    polys.append(R(x0, Y_LINK0, x1, Y_TOP1))
+
+    # Horizontal: along top band (0..1), reaching into the right glyph
+    h_x0 = left.width
+    h_x1 = dx + max(1, right_touch_x)
+    polys.append(R(h_x0, Y_LINK0, h_x1, Y_LINK1))
 
     return GlyphDef(width, polys)
 
@@ -376,11 +376,11 @@ GLYPHS["st"] = GlyphDef(24, [ST_POLY])
 GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=4)
 GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=4)
 
-# Spaced ligatures with thin connector (more like 'st' vibe)
-GLYPHS["ch"] = compose_ligature_spaced_with_link("c", "h", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=1)
-GLYPHS["sh"] = compose_ligature_spaced_with_link("s", "h", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=1)
-# For 'ct', reach into the 't' far enough to touch its stem at x=4..8
-GLYPHS["ct"] = compose_ligature_spaced_with_link("c", "t", gap=4, link_y0=Y_TOP0, link_y1=Y_TOP1, link_into_glyph=4)
+# 'st-like' ligatures: spaced + corner connector (up from x-height to cap-top, then right at cap-top)
+GLYPHS["ch"] = ligature_st_like("c", "h", gap=4, right_touch_x=1)
+GLYPHS["sh"] = ligature_st_like("s", "h", gap=4, right_touch_x=1)
+# t's x-height bar is at x=8..12, so reach 8px into the right glyph to touch it
+GLYPHS["ct"] = ligature_st_like("c", "t", gap=4, right_touch_x=8)
 
 # -----------------------------
 # SVG rendering / writing
