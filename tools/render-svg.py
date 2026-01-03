@@ -286,6 +286,94 @@ GLYPHS.update({
     "z": Z_DEF,
 })
 
+# -----------------------------
+# Add digits 0-9 (12-wide)
+# -----------------------------
+DIGITS: Dict[str, GlyphDef] = {
+    # 0: basically "o"
+    "0": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_BASE0),
+        R(8, Y_TOP1, 12, Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 1: right-side stem + top + base (all thin horizontals)
+    "1": GlyphDef(12, [
+        R(4, Y_TOP0, 12, Y_TOP1),
+        R(8, Y_TOP1, 12, Y_BASE1),
+        R(4, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 2: top, upper-right, mid, lower-left, bottom (like a “stepped” 2)
+    "2": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(8, Y_TOP1, 12, Y_MID0),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(0, Y_MID1, 4,  Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 3: top, upper-right, mid, lower-right, bottom
+    "3": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(8, Y_TOP1, 12, Y_MID0),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(8, Y_MID1, 12, Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 4: right stem + mid bar + left upper stem
+    "4": GlyphDef(12, [
+        R(8, Y_TOP0, 12, Y_BASE1),
+        R(0, Y_TOP0, 4,  Y_MID1),
+        R(0, Y_MID0, 12, Y_MID1),
+    ]),
+
+    # 5: use your “s” logic (top, left upper, mid, right lower, bottom)
+    "5": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_MID0),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(8, Y_MID1, 12, Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 6: like 5 but with left stem all the way down; no upper-right wall
+    "6": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_BASE1),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(8, Y_MID1, 12, Y_BASE0),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 7: top bar + right stem
+    "7": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(8, Y_TOP1, 12, Y_BASE1),
+    ]),
+
+    # 8: 0 + mid bar
+    "8": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP1, 4,  Y_BASE0),
+        R(8, Y_TOP1, 12, Y_BASE0),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+
+    # 9: mirror-ish of 6: right stem all the way down; no lower-left wall
+    "9": GlyphDef(12, [
+        R(0, Y_TOP0, 12, Y_TOP1),
+        R(8, Y_TOP1, 12, Y_BASE1),
+        R(0, Y_TOP1, 4,  Y_MID0),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(0, Y_BASE0, 12, Y_BASE1),
+    ]),
+}
+
+GLYPHS.update(DIGITS)
 
 # -----------------------------
 # SVG rendering / writing
@@ -305,28 +393,30 @@ def render_glyph_svg(letter: str, g: GlyphDef) -> str:
         "</svg>\n"
     )
 
+# -----------------------------
+# Write to: ../src/character-{ch}.svg
+# -----------------------------
 def project_root() -> Path:
-    """
-    Script lives in a subfolder (e.g. ./tools/ or ./scripts/),
-    so project root is exactly ONE directory above this file.
-    Works regardless of where you run it from.
-    """
+    # script is in a subfolder => project root is exactly one dir up from the script folder
     return Path(__file__).resolve().parent.parent
 
-def write_all_lowercase_svgs(out_dir_rel: str = "sketches") -> None:
+
+def write_all_svgs() -> None:
     root = project_root()
-    out_dir = root / out_dir_rel
+    out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for letter in "abcdefghijklmnopqrstuvwxyz":
-        g = GLYPHS.get(letter)
+    chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    for ch in chars:
+        g = GLYPHS.get(ch)
         if not g:
-            raise KeyError(f"Missing glyph: {letter}")
+            raise KeyError(f"Missing glyph: {ch}")
 
-        svg = render_glyph_svg(letter, g)
-        (out_dir / f"{letter}.svg").write_text(svg, encoding="utf-8")
+        svg = render_glyph_svg(ch, g)
+        (out_dir / f"character-{ch}.svg").write_text(svg, encoding="utf-8")
 
-    print(f"Wrote 26 SVGs to: {out_dir}")
+    print(f"Wrote {len(chars)} SVGs to: {out_dir}")
+
 
 if __name__ == "__main__":
-    write_all_lowercase_svgs("sketches")
+    write_all_svgs()

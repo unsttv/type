@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" shape-rendering="crispEdges">
+  <g>
+    <polygon class="4" points="8,9 12,9 12,20 8,20"/>
+    <polygon class="4" points="0,9 4,9 4,15 0,15"/>
+    <polygon class="4" points="0,14 12,14 12,15 0,15"/>
+  </g>
+</svg>
