@@ -376,6 +376,39 @@ DIGITS: Dict[str, GlyphDef] = {
 GLYPHS.update(DIGITS)
 
 # -----------------------------
+# Ligatures
+# -----------------------------
+def translate_poly(poly: Poly, dx: int, dy: int = 0) -> Poly:
+    return [(x + dx, y + dy) for (x, y) in poly]
+
+def compose_ligature(left_key: str, right_key: str, *, overlap: int = 4) -> GlyphDef:
+    """
+    Compose two existing glyphs into one ligature.
+    overlap=4 usually looks nice in this design language (removes the 'air' between cells).
+    """
+    left = GLYPHS[left_key]
+    right = GLYPHS[right_key]
+
+    dx = left.width - overlap
+    width = left.width + right.width - overlap
+    polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
+    return GlyphDef(width, polys)
+
+# Custom 'st' ligature from your original sample, normalized to x=0..24
+ST_POLY: Poly = [
+    (24,10),(24,9),(20,9),(20,0),(11,0),(11,9),(0,9),(0,15),(8,15),(8,19),(0,19),(0,20),
+    (12,20),(12,14),(4,14),(4,10),(12,10),(12,1),(16,1),(16,20),(24,20),(24,19),(20,19),(20,10)
+]
+GLYPHS["st"] = GlyphDef(24, [ST_POLY])
+
+# Other ligatures as composed pairs
+GLYPHS["ch"] = compose_ligature("c", "h", overlap=4)
+GLYPHS["fi"] = compose_ligature("f", "i", overlap=4)
+GLYPHS["ij"] = compose_ligature("i", "j", overlap=4)
+GLYPHS["sh"] = compose_ligature("s", "h", overlap=4)
+GLYPHS["ct"] = compose_ligature("c", "t", overlap=4)
+
+# -----------------------------
 # SVG rendering / writing
 # -----------------------------
 def render_glyph_svg(letter: str, g: GlyphDef) -> str:
@@ -406,7 +439,8 @@ def write_all_svgs() -> None:
     out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    chars = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "fi", "ij", "sh", "ct"]
+
     for ch in chars:
         g = GLYPHS.get(ch)
         if not g:
