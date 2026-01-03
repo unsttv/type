@@ -111,10 +111,23 @@ A_DEF = GlyphDef(12, [
 ])
 
 # s = exact sample S shape
-S_DEF = GlyphDef(12, [S_POLY])
+# --- replace your current S_DEF / Z_DEF with these ---
 
-# z = mirrored s
-Z_DEF = GlyphDef(12, [mirrorx_poly(S_POLY, 12)])
+S_DEF = GlyphDef(12, [
+    R(0, Y_TOP0, 12, Y_TOP1),        # top bar:  y=9..10
+    R(0, Y_TOP1, 4,  Y_MID0),        # left vertical: y=10..14
+    R(0, Y_MID0, 12, Y_MID1),        # mid bar:  y=14..15
+    R(8, Y_MID1, 12, Y_BASE0),       # right vertical: y=15..19
+    R(0, Y_BASE0, 12, Y_BASE1),      # bottom bar: y=19..20
+])
+
+Z_DEF = GlyphDef(12, [
+    R(0, Y_TOP0, 12, Y_TOP1),        # top bar
+    R(8, Y_TOP1, 12, Y_MID0),        # right vertical (mirrored)
+    R(0, Y_MID0, 12, Y_MID1),        # mid bar
+    R(0, Y_MID1, 4,  Y_BASE0),       # left vertical (mirrored)
+    R(0, Y_BASE0, 12, Y_BASE1),      # bottom bar
+])
 
 # Fill glyph table (everything except g/x final forms, per your note)
 GLYPHS.update({
@@ -230,10 +243,10 @@ GLYPHS.update({
 
     "s": S_DEF,
 
-    # t = only stem + middle line to the right
     "t": GlyphDef(12, [
         R(4, Y_CAP0, 8, Y_BASE1),        # stem
-        R(8, Y_MID0, 12, Y_MID1),        # mid bar to the right
+        R(8, Y_TOP0, 12, Y_TOP1),        # x-height bar to the right
+        R(8, Y_BASE0, 12, Y_BASE1),      # baseline bar to the right
     ]),
 
     "u": GlyphDef(12, [
