@@ -1,0 +1,9 @@
+{
+  "name": "unst/type",
+  "type": "cakephp-plugin",
+  "autoload": {
+    "psr-4": {
+      "Unst\\": "src/"
+    }
+  }
+}
