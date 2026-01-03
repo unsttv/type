@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 24" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" shape-rendering="crispEdges">
   <g>
     <polygon class="t" points="4,0 8,0 8,20 4,20"/>
     <polygon class="t" points="8,14 12,14 12,15 8,15"/>
