@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 20" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 24" shape-rendering="crispEdges">
   <g>
+    <polygon class="m" points="0,9 20,9 20,10 0,10"/>
     <polygon class="m" points="0,9 4,9 4,20 0,20"/>
     <polygon class="m" points="8,10 12,10 12,20 8,20"/>
-    <polygon class="m" points="0,9 12,9 12,10 0,10"/>
-    <polygon class="m" points="4,10 8,10 8,15 4,15"/>
+    <polygon class="m" points="16,10 20,10 20,20 16,20"/>
   </g>
 </svg>
