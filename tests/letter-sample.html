@@ -1,0 +1,423 @@
+<!-- Save as: tests/letter-sample.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>UNST Variable Font Tester</title>
+
+    <style>
+        /* Adjust paths if your folder layout differs:
+           tests/letter-sample.html
+           dist/fonts/unst-variable.woff2
+        */
+        @font-face {
+            font-family: "unst-var";
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src:
+                    url("../dist/fonts/unst-variable.woff2") format("woff2"),
+                    url("../dist/fonts/unst-variable.woff") format("woff"),
+                    url("../dist/fonts/unst-variable.ttf") format("truetype");
+        }
+
+        :root {
+            --panel: #f6f6f7;
+            --border: #d8d8de;
+            --text: #111;
+            --muted: #666;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--text);
+            background: white;
+        }
+
+        header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            background: white;
+        }
+
+        header h1 {
+            margin: 0 0 6px 0;
+            font-size: 18px;
+            font-weight: 650;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .wrap {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 16px;
+            padding: 16px;
+        }
+
+        @media (max-width: 980px) {
+            .wrap { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .panel h2 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 650;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 120px;
+            gap: 10px;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .row label {
+            font-size: 13px;
+            color: var(--text);
+        }
+
+        .row output {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        input[type="range"] { width: 100%; }
+
+        .toggles {
+            display: grid;
+            gap: 8px;
+            margin: 10px 0 0 0;
+        }
+
+        .toggle {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text);
+            user-select: none;
+        }
+
+        .toggle input { transform: translateY(1px); }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 10px;
+            font-size: 13px;
+            line-height: 1.35;
+            resize: vertical;
+            min-height: 120px;
+            background: white;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button {
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        button:hover { background: #fff; border-color: #bdbdc7; }
+
+        .previewShell {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .previewTop {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            background: #fbfbfc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .previewTop code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 11px;
+            color: #333;
+            background: #f0f0f4;
+            border: 1px solid #e1e1ea;
+            padding: 2px 6px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+
+        .preview {
+            padding: 18px 18px 26px 18px;
+            min-height: 360px;
+            line-height: 1.1;
+            outline: none;
+            white-space: pre-wrap;
+            word-break: break-word;
+            caret-color: #000;
+            background-image:
+                    linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px),
+                    linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px);
+            background-size: 100% 24px, 24px 100%;
+            background-position: 0 0, 0 0;
+        }
+
+        .hint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.35;
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>UNST Variable Font Tester</h1>
+    <p>
+        Tests <code>wdth</code> (25–400) on your variable font.
+        Place this file at <code>tests/letter-sample.html</code> and ensure the font exists at <code>dist/fonts/unst-variable.woff2</code>.
+    </p>
+</header>
+
+<div class="wrap">
+    <section class="panel">
+        <h2>Controls</h2>
+
+        <div class="row">
+            <label for="wdth">Width axis (<code>wdth</code>)</label>
+            <output id="wdthOut">100</output>
+        </div>
+        <input id="wdth" type="range" min="25" max="400" step="1" value="100" />
+
+        <div class="row">
+            <label for="fontSize">Font size (px)</label>
+            <output id="fontSizeOut">96</output>
+        </div>
+        <input id="fontSize" type="range" min="12" max="220" step="1" value="96" />
+
+        <div class="row">
+            <label for="lineHeight">Line height</label>
+            <output id="lineHeightOut">1.10</output>
+        </div>
+        <input id="lineHeight" type="range" min="0.8" max="2.0" step="0.01" value="1.10" />
+
+        <div class="row">
+            <label for="cssLetterSpacing">CSS letter-spacing (em)</label>
+            <output id="cssLetterSpacingOut">0.00</output>
+        </div>
+        <input id="cssLetterSpacing" type="range" min="-0.10" max="0.40" step="0.01" value="0.00" />
+
+        <div class="toggles">
+            <label class="toggle">
+                <input id="liga" type="checkbox" checked />
+                Enable ligatures (<code>liga</code>)
+            </label>
+
+            <label class="toggle">
+                <input id="useFontStretch" type="checkbox" />
+                Also set <code>font-stretch</code> (some browsers map this to <code>wdth</code>)
+            </label>
+
+            <label class="toggle">
+                <input id="showGrid" type="checkbox" checked />
+                Show background grid
+            </label>
+
+            <label class="toggle">
+                <input id="contentEditable" type="checkbox" checked />
+                Edit directly in preview (contenteditable)
+            </label>
+        </div>
+
+        <h2 style="margin-top:14px;">Sample text</h2>
+        <textarea id="textInput" spellcheck="false">unst st ch ct fi ij sh
+abcdefghijklmnopqrstuvwxyz
+0123456789
+the quick brown fox jumps over the lazy dog</textarea>
+
+        <div class="buttons">
+            <button data-preset="alpha">alphabet</button>
+            <button data-preset="alnum">letters + numbers</button>
+            <button data-preset="liga">ligature stress-test</button>
+            <button data-preset="pangram">pangram</button>
+            <button data-preset="reset">reset settings</button>
+        </div>
+
+        <div class="hint">
+            Tip: try <b>wdth 25</b> vs <b>wdth 400</b> on “st ch ct fi ij sh”.
+            If a ligature looks off at extremes, it usually means one master needs a small outline tweak.
+        </div>
+    </section>
+
+    <section class="previewShell">
+        <div class="previewTop">
+            <div>Preview (UNST variable)</div>
+            <code id="cssReadout"></code>
+        </div>
+        <div id="preview" class="preview" contenteditable="true"></div>
+    </section>
+</div>
+
+<script>
+    const el = (id) => document.getElementById(id);
+
+    const wdth = el("wdth");
+    const fontSize = el("fontSize");
+    const lineHeight = el("lineHeight");
+    const cssLetterSpacing = el("cssLetterSpacing");
+    const liga = el("liga");
+    const useFontStretch = el("useFontStretch");
+    const showGrid = el("showGrid");
+    const contentEditable = el("contentEditable");
+
+    const wdthOut = el("wdthOut");
+    const fontSizeOut = el("fontSizeOut");
+    const lineHeightOut = el("lineHeightOut");
+    const cssLetterSpacingOut = el("cssLetterSpacingOut");
+
+    const textInput = el("textInput");
+    const preview = el("preview");
+    const cssReadout = el("cssReadout");
+
+    function apply() {
+        const wdthVal = Number(wdth.value);
+        const sizeVal = Number(fontSize.value);
+        const lhVal = Number(lineHeight.value);
+        const lsVal = Number(cssLetterSpacing.value);
+
+        wdthOut.textContent = wdthVal.toString();
+        fontSizeOut.textContent = sizeVal.toString();
+        lineHeightOut.textContent = lhVal.toFixed(2);
+        cssLetterSpacingOut.textContent = lsVal.toFixed(2);
+
+        // Core font styling
+        preview.style.fontFamily = '"unst-var", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+        preview.style.fontWeight = "400";
+        preview.style.fontStyle = "normal";
+        preview.style.fontSize = sizeVal + "px";
+        preview.style.lineHeight = lhVal.toString();
+        preview.style.letterSpacing = lsVal + "em";
+
+        // Ligatures on/off
+        // (Disable both liga & clig to be safe)
+        preview.style.fontFeatureSettings = liga.checked ? '"liga" 1, "clig" 1' : '"liga" 0, "clig" 0';
+
+        // Variable axis (reliable)
+        preview.style.fontVariationSettings = `"wdth" ${wdthVal}`;
+
+        // Optional font-stretch mapping (some browsers)
+        if (useFontStretch.checked) {
+            preview.style.fontStretch = wdthVal + "%";
+        } else {
+            preview.style.fontStretch = "";
+        }
+
+        // Grid background
+        preview.style.backgroundImage = showGrid.checked
+            ? 'linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px)'
+            : "none";
+
+        // Editable toggle
+        preview.setAttribute("contenteditable", contentEditable.checked ? "true" : "false");
+
+        cssReadout.textContent =
+            `font-variation-settings:"wdth" ${wdthVal}; ` +
+            (useFontStretch.checked ? `font-stretch:${wdthVal}%; ` : "") +
+            `font-size:${sizeVal}px; line-height:${lhVal.toFixed(2)}; ` +
+            `letter-spacing:${lsVal.toFixed(2)}em; ` +
+            (liga.checked ? 'liga:on' : 'liga:off');
+    }
+
+    // Sync input -> preview
+    function syncTextToPreview() {
+        // Preserve line breaks
+        preview.textContent = textInput.value;
+    }
+
+    // If user types in preview, reflect back to textarea
+    function syncPreviewToText() {
+        if (!contentEditable.checked) return;
+        textInput.value = preview.textContent;
+    }
+
+    // Presets
+    const presets = {
+        alpha: "abcdefghijklmnopqrstuvwxyz",
+        alnum: "abcdefghijklmnopqrstuvwxyz\n0123456789",
+        liga: "st ch ct fi ij sh\nunst\ns t c h c t f i i j s h",
+        pangram: "the quick brown fox jumps over the lazy dog\n0123456789\nunst st ch ct fi ij sh",
+    };
+
+    document.querySelectorAll("button[data-preset]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const key = btn.getAttribute("data-preset");
+            if (key === "reset") {
+                wdth.value = "100";
+                fontSize.value = "96";
+                lineHeight.value = "1.10";
+                cssLetterSpacing.value = "0.00";
+                liga.checked = true;
+                useFontStretch.checked = false;
+                showGrid.checked = true;
+                contentEditable.checked = true;
+                textInput.value = "unst st ch ct fi ij sh\nabcdefghijklmnopqrstuvwxyz\n0123456789\nthe quick brown fox jumps over the lazy dog";
+            } else {
+                textInput.value = presets[key] ?? textz;
+            }
+            syncTextToPreview();
+            apply();
+        });
+    });
+
+    // Events
+    [wdth, fontSize, lineHeight, cssLetterSpacing, liga, useFontStretch, showGrid, contentEditable]
+        .forEach((control) => control.addEventListener("input", apply));
+
+    textInput.addEventListener("input", () => {
+        syncTextToPreview();
+        apply();
+    });
+
+    preview.addEventListener("input", () => {
+        syncPreviewToText();
+    });
+
+    // Init
+    syncTextToPreview();
+    apply();
+</script>
+</body>
+</html>

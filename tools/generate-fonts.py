@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Build UNST font(s) from the SVG glyphs in ./src:
+Build UNST variable font (wdth axis) from the SVG glyphs in ./src.
 
+Input SVGs (expected):
   src/character-a.svg
   ...
   src/character-0.svg
@@ -13,10 +14,13 @@ Build UNST font(s) from the SVG glyphs in ./src:
   src/character-ij.svg
   src/character-sh.svg
 
-Outputs (by default):
-  dist/fonts/unst.ttf
-  dist/fonts/unst.woff
-  dist/fonts/unst.woff2   (if brotli is available)
+Output:
+  dist/fonts/unst-variable.ttf
+  dist/fonts/unst-variable.woff
+  dist/fonts/unst-variable.woff2   (if brotli is available)
+
+Axis:
+  wdth: 25 .. 400 (default 100)
 
 Includes GSUB 'liga' substitutions for:
   st, ch, ct, fi, ij, sh
@@ -26,17 +30,23 @@ Requires:
 Optional for woff2:
   pip install brotli
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 import xml.etree.ElementTree as ET
 
+from fontTools.designspaceLib import (
+    AxisDescriptor,
+    DesignSpaceDocument,
+    SourceDescriptor,
+)
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
+from fontTools.varLib import build as var_build
 
 try:
     from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
@@ -49,19 +59,19 @@ except Exception as e:
 # -----------------------------
 UPM = 1000
 
-# SVG coordinate system (y down). Your design’s "baseline" is y=20.
+# SVG coordinate system (y down). Baseline is y=20, total height is 30.
 SVG_BASELINE_Y = 20.0
-SVG_TOTAL_H = 30.0  # viewBox height
+SVG_TOTAL_H = 30.0
 
-# Scale SVG units -> font units
-SCALE = UPM / SVG_TOTAL_H  # 33.333...
+# Scale SVG units -> font units (Y scale). X scaling is driven by wdth axis.
+SCALE_Y = UPM / SVG_TOTAL_H  # 33.333...
 
-# Default spacing BETWEEN glyphs, in SVG units (matches your vertical bar thickness / gap logic)
+# Default spacing BETWEEN glyphs at wdth=100, in SVG units.
+# This spacing will SCALE with wdth (so condensed gets tighter, expanded gets looser).
 LETTER_SPACING_SVG = 4.0
 
-ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE))            # y=0 is top => ~667
-DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE))  # y=30 => ~-333
-# Make sure ascent - descent == UPM
+ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE_Y))            # ~667
+DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE_Y))  # ~-333
 if ASCENT - DESCENT != UPM:
     ASCENT = UPM + DESCENT
 
@@ -88,9 +98,7 @@ DIGIT_GLYPH_NAMES = {
 
 
 def key_to_glyph_name(key: str) -> str:
-    if key in DIGIT_GLYPH_NAMES:
-        return DIGIT_GLYPH_NAMES[key]
-    return key
+    return DIGIT_GLYPH_NAMES.get(key, key)
 
 
 # -----------------------------
@@ -100,7 +108,7 @@ Point = Tuple[float, float]
 
 
 def project_root() -> Path:
-    # script lives in a subfolder => project root is exactly one directory above script folder
+    # Script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
@@ -116,15 +124,17 @@ def parse_polygon_points(points_str: str) -> List[Point]:
     return pts
 
 
-def svg_to_font_xy(x_svg: float, y_svg: float) -> Tuple[int, int]:
-    # Flip Y: font y is up; baseline at 0
-    x = int(round(x_svg * SCALE))
-    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE))
+def svg_to_font_xy(x_svg: float, y_svg: float, x_scale: float) -> Tuple[int, int]:
+    """
+    Convert SVG coords (y down) to font coords (y up) with baseline at y=0.
+    Apply x_scale (wdth axis) to X only.
+    """
+    x = int(round(x_svg * SCALE_Y * x_scale))
+    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE_Y))
     return x, y
 
 
 def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
-    # Standard signed area in Cartesian coords (y up)
     a = 0.0
     n = len(pts)
     for i in range(n):
@@ -134,10 +144,10 @@ def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
     return a / 2.0
 
 
-def load_svg_glyph(svg_path: Path) -> Tuple[int, List[List[Tuple[int, int]]]]:
+def load_svg_glyph(svg_path: Path, *, x_scale: float) -> Tuple[int, List[List[Tuple[int, int]]]]:
     """
     Returns:
-      (advance_width_svg_units, contours_as_int_points_in_font_coords)
+      (width_svg_units, contours_as_int_points_in_font_coords)
     """
     tree = ET.parse(svg_path)
     root = tree.getroot()
@@ -151,20 +161,19 @@ def load_svg_glyph(svg_path: Path) -> Tuple[int, List[List[Tuple[int, int]]]]:
     polys = root.findall(".//{http://www.w3.org/2000/svg}polygon")
     if not polys:
         polys = root.findall(".//polygon")
+    if not polys:
+        raise ValueError(f"No <polygon> elements found in {svg_path}")
 
     contours: List[List[Tuple[int, int]]] = []
     for p in polys:
         pts_svg = parse_polygon_points(p.attrib["points"])
-        pts_font = [svg_to_font_xy(x, y) for (x, y) in pts_svg]
+        pts_font = [svg_to_font_xy(x, y, x_scale) for (x, y) in pts_svg]
 
-        # Ensure contour direction is consistent (clockwise in font coords => negative signed area)
+        # Make direction consistent (clockwise in font coords => negative area)
         if signed_area_xy(pts_font) > 0:
             pts_font = list(reversed(pts_font))
 
         contours.append(pts_font)
-
-    if not contours:
-        raise ValueError(f"No <polygon> elements found in {svg_path}")
 
     return width_svg, contours
 
@@ -197,7 +206,8 @@ def make_notdef_glyph() -> object:
 
 
 def build_fea_liga() -> str:
-    return """
+    return (
+        """
 feature liga {
   sub s t by st;
   sub c h by ch;
@@ -206,32 +216,42 @@ feature liga {
   sub i j by ij;
   sub s h by sh;
 } liga;
-""".strip() + "\n"
+""".strip()
+        + "\n"
+    )
 
 
 # -----------------------------
-# Main build
+# Master builder
 # -----------------------------
-def build_fonts() -> None:
+def build_master_ttf(
+    *,
+    out_path: Path,
+    style_name: str,
+    wdth_value: float,
+) -> None:
+    """
+    Build a static master TTF at a specific wdth value.
+    wdth_value is in percent (25..400). x_scale = wdth_value/100.
+    """
+    x_scale = wdth_value / 100.0
+
     root = project_root()
     src_dir = root / "src"
-    out_dir = root / "dist" / "fonts"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
 
     keys: List[str] = []
     keys.extend(LETTERS)
     keys.extend(DIGITS)
     keys.extend(LIGATURE_KEYS)
 
-    glyph_order: List[str] = [".notdef", "space"]
-    for k in keys:
-        glyph_order.append(key_to_glyph_name(k))
+    glyph_order: List[str] = [".notdef", "space"] + [key_to_glyph_name(k) for k in keys]
 
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
 
-    # Space: one cell (12) + default spacing (4) so it's not tighter than normal letter spacing
-    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE))
+    # Space: (12 + spacing) scaled with wdth
+    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE_Y * x_scale))
     glyf["space"] = TTGlyphPen(None).glyph()
     hmtx["space"] = (space_adv, 0)
     hmtx[".notdef"] = (space_adv, 0)
@@ -241,22 +261,23 @@ def build_fonts() -> None:
         cmap[ord(ch)] = ch
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-    cmap[0x0133] = "ij"  # ĳ
+    cmap[0x0020] = "space"  # space
+    cmap[0x0133] = "ij"     # ĳ
 
-    # Load each SVG
     for k in keys:
         svg_path = src_dir / f"character-{k}.svg"
         if not svg_path.exists():
             raise FileNotFoundError(f"Missing SVG: {svg_path}")
 
         gname = key_to_glyph_name(k)
-        width_svg, contours = load_svg_glyph(svg_path)
+        width_svg, contours = load_svg_glyph(svg_path, x_scale=x_scale)
 
         glyf[gname] = build_tt_glyph(contours)
 
-        # Add default spacing to advance width (right-side bearing effect)
-        adv_svg = float(width_svg) + LETTER_SPACING_SVG
-        adv = int(round(adv_svg * SCALE))
+        # Advance width = (tight viewBox width + base spacing) scaled with wdth
+        # If you ever want spacing NOT to scale with wdth, use:
+        #   adv = int(round(width_svg * SCALE_Y * x_scale + LETTER_SPACING_SVG * SCALE_Y))
+        adv = int(round((float(width_svg) + LETTER_SPACING_SVG) * SCALE_Y * x_scale))
         hmtx[gname] = (adv, 0)
 
     fb = FontBuilder(UPM, isTTF=True)
@@ -274,10 +295,10 @@ def build_fonts() -> None:
     fb.setupNameTable(
         {
             "familyName": "unst",
-            "styleName": "Regular",
-            "uniqueFontIdentifier": "unst Regular",
-            "fullName": "unst Regular",
-            "psName": "unst-Regular",
+            "styleName": style_name,
+            "uniqueFontIdentifier": f"unst {style_name}",
+            "fullName": f"unst {style_name}",
+            "psName": f"unst-{style_name}".replace(" ", ""),
             "version": "Version 1.0",
         }
     )
@@ -287,23 +308,86 @@ def build_fonts() -> None:
 
     addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
 
-    ttf_path = out_dir / "unst.ttf"
-    fb.font.save(ttf_path)
-    print(f"Wrote: {ttf_path}")
+    fb.font.save(out_path)
 
+
+# -----------------------------
+# Variable font builder
+# -----------------------------
+def build_variable_font() -> None:
+    root = project_root()
+    out_dir = root / "dist" / "fonts"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    masters_dir = out_dir / "_vf_masters"
+    masters_dir.mkdir(parents=True, exist_ok=True)
+
+    # Three masters so default is exact and not interpolated.
+    masters = [
+        {"wdth": 25.0, "style": "Condensed"},
+        {"wdth": 100.0, "style": "Regular"},
+        {"wdth": 400.0, "style": "Expanded"},
+    ]
+
+    # Build masters
+    master_paths: Dict[float, Path] = {}
+    for m in masters:
+        p = masters_dir / f"unst-wdth{int(m['wdth'])}.ttf"
+        build_master_ttf(out_path=p, style_name=m["style"], wdth_value=m["wdth"])
+        master_paths[m["wdth"]] = p
+        print(f"Wrote master: {p}")
+
+    # Build designspace (IMPORTANT: location keys must match axis.name, not axis.tag)
+    ds = DesignSpaceDocument()
+
+    axis = AxisDescriptor()
+    axis.tag = "wdth"
+    axis.name = "Width"      # <-- axis NAME
+    axis.minimum = 25.0
+    axis.default = 100.0
+    axis.maximum = 400.0
+    ds.addAxis(axis)
+
+    for m in masters:
+        s = SourceDescriptor()
+        s.name = f"unst-{m['style']}"
+        # store relative path from designspace file (in out_dir) to the master file
+        rel = master_paths[m["wdth"]].relative_to(out_dir).as_posix()
+        s.filename = rel
+        s.location = {"Width": m["wdth"]}  # <-- MUST match axis.name ("Width")
+        if m["wdth"] == 100.0:
+            # Make the default master the base for metadata/features/lib where applicable
+            s.copyInfo = True
+            s.copyLib = True
+            s.copyFeatures = True
+        ds.addSource(s)
+
+    designspace_path = out_dir / "unst.designspace"
+    ds.write(designspace_path)
+
+    # Build VF
+    res = var_build(str(designspace_path), optimize=True)
+    vf = res[0] if isinstance(res, tuple) else res
+
+    var_ttf_path = out_dir / "unst-variable.ttf"
+    vf.save(var_ttf_path)
+    print(f"Wrote: {var_ttf_path}")
+
+    # WOFF
     try:
-        woff_font = TTFont(ttf_path)
+        woff_font = TTFont(var_ttf_path)
         woff_font.flavor = "woff"
-        woff_path = out_dir / "unst.woff"
+        woff_path = out_dir / "unst-variable.woff"
         woff_font.save(woff_path)
         print(f"Wrote: {woff_path}")
     except Exception as e:
         print(f"Skipping WOFF (error): {e}")
 
+    # WOFF2
     try:
-        woff2_font = TTFont(ttf_path)
+        woff2_font = TTFont(var_ttf_path)
         woff2_font.flavor = "woff2"
-        woff2_path = out_dir / "unst.woff2"
+        woff2_path = out_dir / "unst-variable.woff2"
         woff2_font.save(woff2_path)
         print(f"Wrote: {woff2_path}")
     except Exception as e:
@@ -311,4 +395,4 @@ def build_fonts() -> None:
 
 
 if __name__ == "__main__":
-    build_fonts()
+    build_variable_font()
