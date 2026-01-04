@@ -28,6 +28,8 @@ Y_DESC0, Y_DESC1 = 29, 30  # bottom-most thin band for descenders
 # Connector band should align with the top of ascenders (same as cap band)
 Y_LINK0, Y_LINK1 = Y_CAP0, Y_CAP1   # 0..1
 
+# tiny 1px "tail" below the baseline (used for the new v)
+Y_TAIL0, Y_TAIL1 = Y_BASE1, Y_BASE1 + 1  # 20..21
 
 def R(x1: int, y1: int, x2: int, y2: int) -> Poly:
     """Axis-aligned rectangle as a polygon (clockwise)."""
@@ -156,11 +158,11 @@ GLYPHS.update({
     ]),
 
     "k": GlyphDef(12, [
-        R(0, Y_CAP0, 4,  Y_BASE1),
-        R(4, Y_TOP1, 12, Y_MID0),
-        R(4, Y_MID1, 12, Y_BASE0),
-        [(4, Y_MID0), (8, Y_MID0), (12, Y_MID1), (8, Y_MID1)],  # knee step
-    ]),
+            R(0, Y_CAP0, 4,  Y_BASE1),      # main stem |
+            R(8, Y_TOP0, 12, Y_MID0),       # upper right vertical  | |
+            R(0, Y_MID0, 12, Y_MID1),       # middle bar            |_
+            R(8, Y_MID1, 12, Y_BASE1),      # lower right vertical  | |
+        ]),
 
     "l": GlyphDef(12, [
         R(0, Y_CAP0, 4,  Y_BASE1),
@@ -226,10 +228,11 @@ GLYPHS.update({
     ]),
 
     "v": GlyphDef(12, [
-        [(0, Y_TOP0), (4, Y_TOP0), (8, Y_BASE0), (4, Y_BASE0)],
-        [(8, Y_TOP0), (12, Y_TOP0), (8, Y_BASE0), (4, Y_BASE0)],
-        R(4, Y_BASE0, 8,  Y_BASE1),
-    ]),
+            R(0, Y_TOP0, 4,  Y_BASE1),      # left stem
+            R(8, Y_TOP0, 12, Y_BASE1),      # right stem
+            R(0, Y_BASE0, 12, Y_BASE1),     # baseline bar  _|_
+            R(4, Y_TAIL0, 8,  Y_TAIL1),     # little center tail (the final " | ")
+        ]),
 
     # w = double u (width 20)
     "w": GlyphDef(20, [
@@ -241,10 +244,10 @@ GLYPHS.update({
 
     # x: placeholder (we’ll refine later)
     "x": GlyphDef(12, [
-        [(0, Y_TOP0), (4, Y_TOP0), (12, Y_BASE0), (8, Y_BASE0)],
-        [(8, Y_TOP0), (12, Y_TOP0), (4, Y_BASE0), (0, Y_BASE0)],
-        R(4, Y_MID0, 8,  Y_MID1),
-    ]),
+            R(0, Y_TOP0, 12, Y_TOP1),       # top ___
+            R(8, Y_TOP1, 12, Y_BASE0),      # right | (from x-height down)
+            R(0, Y_BASE0, 12, Y_BASE1),     # bottom ___
+        ]),
 
     # y = u with right stem descender
     "y": GlyphDef(12, [
