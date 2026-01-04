@@ -1,79 +1,84 @@
 #!/usr/bin/env python3
 """
-Build UNST variable font from SVG glyphs in ./src with two axes:
+Build UNST font(s) from the SVG glyphs in ./src:
 
-  wdth: 25 .. 400 (default 100)
-  hght: 25 .. 400 (default 100)
+  src/character-a.svg
+  ...
+  src/character-0.svg
+  ...
+  src/character-st.svg
+  src/character-ch.svg
+  src/character-ct.svg
+  src/character-fi.svg
+  src/character-ij.svg
+  src/character-sh.svg
 
-Outputs:
-  dist/fonts/unst-variable.ttf
-  dist/fonts/unst-variable.woff
-  dist/fonts/unst-variable.woff2   (if brotli is available)
+Outputs (by default):
+  dist/fonts/unst.ttf
+  dist/fonts/unst.woff
+  dist/fonts/unst.woff2   (if brotli is available)
 
 Includes GSUB 'liga' substitutions for:
   st, ch, ct, fi, ij, sh
 
-Stroke behavior:
-  - thin vertical connector bars (1 SVG unit wide) do NOT scale in width (ligatures)
-  - thin horizontal strokes (1 SVG unit tall) do NOT scale in height (all glyphs)
-  - IMPORTANT: thin stroke thickness is enforced in FONT UNITS
-  - IMPORTANT: edges that TOUCH thin horizontals are Y-SNAPPED globally per glyph
-               (fixes n/u/ch etc at high hght)
+IMPORTANT (Option A seam-fix):
+  This script unions/merges all polygons from each SVG into continuous outlines
+  (with proper holes) BEFORE building the glyph. This reduces internal edges and
+  helps prevent tiny seams/gaps under rasterization/interpolation.
 
 Requires:
-  pip install fonttools
+  pip install fonttools shapely
+
 Optional for woff2:
   pip install brotli
 """
-
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 import xml.etree.ElementTree as ET
 
-from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, SourceDescriptor
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
-from fontTools.varLib import build as var_build
 
 try:
     from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 except Exception as e:
     raise SystemExit("fontTools.feaLib is required (it ships with fonttools).") from e
 
+# Option A union/merge
+try:
+    from shapely.geometry import Polygon, MultiPolygon
+    from shapely.ops import unary_union
+except Exception as e:
+    raise SystemExit("This script requires shapely. Install with: pip install shapely") from e
+
 
 # -----------------------------
-# Geometry / metrics
+# Geometry / metrics (must match your SVG generator)
 # -----------------------------
 UPM = 1000
 
+# SVG coordinate system (y down). Your design’s "baseline" is y=20.
 SVG_BASELINE_Y = 20.0
-SVG_TOTAL_H = 30.0
+SVG_TOTAL_H = 30.0  # viewBox height
 
-SCALE_BASE = UPM / SVG_TOTAL_H  # 33.333...
-THIN_FU = int(round(1.0 * SCALE_BASE))  # 1 SVG unit in font units (constant thickness)
+# Scale SVG units -> font units
+SCALE = UPM / SVG_TOTAL_H  # 33.333...
 
-LETTER_SPACING_SVG = 4.0  # scales with wdth
+ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE))            # ~667
+DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE))  # ~-333
 
-# Axis limits
-WDTH_MIN, WDTH_DEF, WDTH_MAX = 25.0, 100.0, 400.0
-HGHT_MIN, HGHT_DEF, HGHT_MAX = 25.0, 100.0, 400.0
+# Keep ascent - descent == UPM
+if ASCENT - DESCENT != UPM:
+    ASCENT = UPM + DESCENT
 
-# Vertical metrics large enough for max height (scale about baseline)
-MAX_Y_SCALE = HGHT_MAX / 100.0
-TOP_Y_AT_MAX = SVG_BASELINE_Y + (0.0 - SVG_BASELINE_Y) * MAX_Y_SCALE      # -60
-BOT_Y_AT_MAX = SVG_BASELINE_Y + (SVG_TOTAL_H - SVG_BASELINE_Y) * MAX_Y_SCALE  # 60
-
-ASCENT = int(round((SVG_BASELINE_Y - TOP_Y_AT_MAX) * SCALE_BASE))         # ~2667
-DESCENT = -int(round((BOT_Y_AT_MAX - SVG_BASELINE_Y) * SCALE_BASE))       # ~-1333
-
-EPS = 1e-6
-
-Point = Tuple[float, float]
-IntPoint = Tuple[int, int]
+# Desired default spacing between letters in the FONT (not SVG):
+# “same 4 unit used for the vertical bars”
+LETTER_SPACING_SVG = 4  # add to advance widths in font space
 
 
 # -----------------------------
@@ -98,13 +103,19 @@ DIGIT_GLYPH_NAMES = {
 
 
 def key_to_glyph_name(key: str) -> str:
-    return DIGIT_GLYPH_NAMES.get(key, key)
+    if key in DIGIT_GLYPH_NAMES:
+        return DIGIT_GLYPH_NAMES[key]
+    return key
 
 
 # -----------------------------
-# SVG parsing helpers
+# SVG parsing
 # -----------------------------
+Point = Tuple[float, float]
+
+
 def project_root() -> Path:
+    # script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
@@ -120,228 +131,101 @@ def parse_polygon_points(points_str: str) -> List[Point]:
     return pts
 
 
-def bbox_svg(pts: List[Point]) -> Tuple[float, float, float, float]:
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
-    return min(xs), max(xs), min(ys), max(ys)
+def svg_to_font_xy(x_svg: float, y_svg: float) -> Tuple[int, int]:
+    # Flip Y: font y is up; baseline at 0
+    x = int(round(x_svg * SCALE))
+    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE))
+    return x, y
 
 
-def scale_y_about_baseline(y_svg: float, y_scale: float) -> float:
-    return SVG_BASELINE_Y + (y_svg - SVG_BASELINE_Y) * y_scale
-
-
-def y_font_from_svg(y_svg: float, y_scale: float) -> int:
-    """Convert SVG y (down) to font y (up), scaling about baseline."""
-    y_eff = scale_y_about_baseline(y_svg, y_scale)
-    return int(round((SVG_BASELINE_Y - y_eff) * SCALE_BASE))
-
-
-def is_thin_vertical_connector(minx: float, maxx: float, miny: float, maxy: float) -> bool:
-    w = maxx - minx
-    h = maxy - miny
-    if abs(w - 1.0) > EPS:
-        return False
-    if h < 9.0 - EPS:
-        return False
-    if miny > 0.01:
-        return False
-    return True
-
-
-def find_internal_thin_vstrip_for_st(pts_svg: List[Point]) -> Optional[Tuple[float, float]]:
-    """
-    'st' is a single polygon. Find an internal x pair (x, x+1) in upper zone (y<=10.1)
-    that's top-anchored and tall.
-    """
-    y_cut = 10.1
-    upper = [(x, y) for (x, y) in pts_svg if y <= y_cut]
-    if len(upper) < 4:
-        return None
-
-    xs = sorted({x for (x, _y) in upper})
-    xset = set(xs)
-
-    best: Optional[Tuple[float, float, float]] = None  # (xL, xR, span)
-
-    for xL in xs:
-        xR = xL + 1.0
-        if not any(abs(v - xR) < EPS for v in xset):
-            continue
-
-        ysL = [y for (xx, y) in upper if abs(xx - xL) < EPS]
-        ysR = [y for (xx, y) in upper if abs(xx - xR) < EPS]
-        if not ysL or not ysR:
-            continue
-
-        y_min = min(min(ysL), min(ysR))
-        y_max = max(max(ysL), max(ysR))
-        span = y_max - y_min
-
-        if y_min <= 0.01 and span >= 9.0 - EPS:
-            cand = (xL, xR, span)
-            if best is None or cand[2] > best[2]:
-                best = cand
-
-    if best is None:
-        return None
-    return (best[0], best[1])
-
-
-def y_key(y: float) -> int:
-    # y-values are integral in your system, but keep this robust
-    return int(round(y * 1000.0))
-
-
-def transform_x(
-    x_svg: float,
-    *,
-    x_scale: float,
-    right_threshold: Optional[float],
-    right_shift: float,
-) -> float:
-    x_eff = x_svg * x_scale
-    if right_threshold is not None and right_shift > 0.0 and x_svg >= right_threshold - EPS:
-        x_eff += right_shift
-    return x_eff
+def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
+    # Standard signed area in Cartesian coords (y up)
+    a = 0.0
+    n = len(pts)
+    for i in range(n):
+        x1, y1 = pts[i]
+        x2, y2 = pts[(i + 1) % n]
+        a += x1 * y2 - x2 * y1
+    return a / 2.0
 
 
 # -----------------------------
-# Build per-glyph Y snapping table for thin horizontals
+# Option A: union/merge polygons into continuous outlines
 # -----------------------------
-def build_y_snap(
-    polys_svg: List[List[Point]],
-    *,
-    y_scale: float,
-    glyph_key: str,
-) -> Dict[int, int]:
+def _dedupe_consecutive(pts: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    if not pts:
+        return pts
+    out = [pts[0]]
+    for p in pts[1:]:
+        if p != out[-1]:
+            out.append(p)
+    if len(out) > 1 and out[0] == out[-1]:
+        out.pop()
+    return out
+
+
+def _prune_collinear(pts: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
     """
-    Find all 1-unit-tall horizontal bands (from bbox) and build a snapping table that:
-      - keeps band thickness = THIN_FU
-      - anchors the *structural* edge (whichever is referenced more by non-thin polygons)
-      - snaps ANY point at y=y0 or y=y1 (even in other polygons), fixing joins.
+    Remove strictly collinear points (A-B-C on one straight axis-aligned line).
+    Keeps corners; good for your orthogonal grid shapes.
     """
-    thin_band_indices: List[int] = []
-    bands: List[Tuple[float, float]] = []
+    pts = _dedupe_consecutive(pts)
+    n = len(pts)
+    if n < 4:
+        return pts
 
-    for i, pts in enumerate(polys_svg):
-        _minx, _maxx, miny, maxy = bbox_svg(pts)
-        if abs((maxy - miny) - 1.0) < EPS:
-            thin_band_indices.append(i)
-            bands.append((miny, maxy))
+    def collinear(a, b, c) -> bool:
+        return (a[0] == b[0] == c[0]) or (a[1] == b[1] == c[1])
 
-    # 'st' has no separate thin rectangles; add the canonical system bands if present
-    if glyph_key == "st":
-        # Use these only if the y-values exist in the polygon
-        yset = {y_key(y) for (_x, y) in polys_svg[0]}
-        for (y0, y1) in [(0.0, 1.0), (9.0, 10.0), (14.0, 15.0), (19.0, 20.0)]:
-            if y_key(y0) in yset and y_key(y1) in yset:
-                bands.append((y0, y1))
-
-    # Count y usage in NON-thin polygons (indicates which edge is structural)
-    usage: Dict[int, int] = {}
-    for i, pts in enumerate(polys_svg):
-        if i in thin_band_indices:
+    out: List[Tuple[int, int]] = []
+    for i in range(n):
+        a = pts[(i - 1) % n]
+        b = pts[i]
+        c = pts[(i + 1) % n]
+        if collinear(a, b, c):
             continue
-        for (_x, y) in pts:
-            ky = y_key(y)
-            usage[ky] = usage.get(ky, 0) + 1
+        out.append(b)
 
-    snap: Dict[int, int] = {}
-
-    # Process bands in a stable order (top->bottom) so shared edges resolve nicely
-    bands_sorted = sorted(set(bands), key=lambda t: (t[0], t[1]))
-
-    for (y0, y1) in bands_sorted:
-        k0, k1 = y_key(y0), y_key(y1)
-
-        # If one side already resolved, anchor to it to keep consistency
-        if k0 in snap and k1 in snap:
-            continue
-        if k0 in snap and k1 not in snap:
-            snap[k1] = snap[k0] - THIN_FU
-            continue
-        if k1 in snap and k0 not in snap:
-            snap[k0] = snap[k1] + THIN_FU
-            continue
-
-        c0 = usage.get(k0, 0)
-        c1 = usage.get(k1, 0)
-
-        # Decide anchor edge
-        # - if one side referenced more, anchor that side
-        # - tie: cap band prefers top edge (y0==0), otherwise prefer bottom edge
-        if c0 > c1:
-            anchor = "y0"
-        elif c1 > c0:
-            anchor = "y1"
-        else:
-            anchor = "y0" if abs(y0 - 0.0) < EPS else "y1"
-
-        if anchor == "y0":
-            y0_font = y_font_from_svg(y0, y_scale)
-            y1_font = y0_font - THIN_FU
-        else:
-            y1_font = y_font_from_svg(y1, y_scale)
-            y0_font = y1_font + THIN_FU
-
-        snap[k0] = y0_font
-        snap[k1] = y1_font
-
-    return snap
+    return out if len(out) >= 3 else pts
 
 
-def svg_to_font_xy(
-    x_svg: float,
-    y_svg: float,
-    *,
-    x_scale: float,
-    y_scale: float,
-    right_threshold: Optional[float],
-    right_shift: float,
-    frozen_vstrip: Optional[Tuple[float, float]],
-    vstrip_upper_only: bool,
-    y_snap: Dict[int, int],
-) -> IntPoint:
-    # ---- Y: snap if this y is part of any thin horizontal band in this glyph ----
-    ky = y_key(y_svg)
-    if ky in y_snap:
-        y_font = y_snap[ky]
-    else:
-        y_font = y_font_from_svg(y_svg, y_scale)
-
-    # ---- X: normal scaling + condensed compensation ----
-    x_eff = transform_x(
-        x_svg,
-        x_scale=x_scale,
-        right_threshold=right_threshold,
-        right_shift=right_shift,
-    )
-    x_font = int(round(x_eff * SCALE_BASE))
-
-    # ---- X: freeze thin vertical connector WIDTH in font units ----
-    if frozen_vstrip is not None:
-        xL, xR = frozen_vstrip
-        if (not vstrip_upper_only) or (y_svg <= 10.1 + EPS):
-            if abs(x_svg - xL) < EPS:
-                xL_font = int(round((xL * x_scale) * SCALE_BASE))
-                x_font = xL_font
-            elif abs(x_svg - xR) < EPS:
-                xL_font = int(round((xL * x_scale) * SCALE_BASE))
-                x_font = xL_font + THIN_FU
-
-    return x_font, y_font
+def _force_winding(pts: List[Tuple[int, int]], *, clockwise: bool) -> List[Tuple[int, int]]:
+    """
+    In font coords (y-up), signed_area > 0 => CCW.
+    We use:
+      - exterior: clockwise  (signed_area < 0)
+      - holes:   counterclockwise (signed_area > 0)
+    """
+    a = signed_area_xy(pts)
+    if clockwise and a > 0:
+        return list(reversed(pts))
+    if (not clockwise) and a < 0:
+        return list(reversed(pts))
+    return pts
 
 
-# -----------------------------
-# SVG -> contours loader
-# -----------------------------
-def load_svg_glyph(
-    svg_path: Path,
-    *,
-    x_scale: float,
-    y_scale: float,
-    glyph_key: str,
-) -> Tuple[int, List[List[IntPoint]], float]:
+def _ring_svgcoords_to_font_contour(ring_coords) -> List[Tuple[int, int]]:
+    """
+    ring_coords: sequence of (x,y) from shapely, usually closed (last == first).
+    We round to integer SVG coords (your grid is integer-based),
+    then map to font coords and prune collinear points.
+    """
+    coords = [(int(round(x)), int(round(y))) for (x, y) in ring_coords]
+    if len(coords) > 1 and coords[0] == coords[-1]:
+        coords = coords[:-1]
+    pts_font = [svg_to_font_xy(float(x), float(y)) for (x, y) in coords]
+    pts_font = _prune_collinear(pts_font)
+    return pts_font
+
+
+def load_svg_glyph(svg_path: Path) -> Tuple[int, List[List[Tuple[int, int]]]]:
+    """
+    Returns:
+      (advance_width_svg_units, merged_contours_as_int_points_in_font_coords)
+
+    This unions all SVG polygons first so touching rectangles become one outline
+    (and holes are preserved as interior rings).
+    """
     tree = ET.parse(svg_path)
     root = tree.getroot()
 
@@ -351,87 +235,68 @@ def load_svg_glyph(
     _, _, w_s, _h_s = vb.strip().split()
     width_svg = int(round(float(w_s)))
 
-    polys_el = root.findall(".//{http://www.w3.org/2000/svg}polygon")
-    if not polys_el:
-        polys_el = root.findall(".//polygon")
-    if not polys_el:
+    # collect all polygons
+    polys = root.findall(".//{http://www.w3.org/2000/svg}polygon")
+    if not polys:
+        polys = root.findall(".//polygon")
+    if not polys:
         raise ValueError(f"No <polygon> elements found in {svg_path}")
 
-    # Preserve SVG polygon order exactly
-    polys_svg: List[List[Point]] = [parse_polygon_points(p.attrib["points"]) for p in polys_el]
+    shapes = []
+    for p in polys:
+        pts_svg = parse_polygon_points(p.attrib["points"])
+        pts_svg_i = [(int(round(x)), int(round(y))) for (x, y) in pts_svg]
+        pts_svg_i = _dedupe_consecutive(pts_svg_i)
+        if len(pts_svg_i) < 3:
+            continue
 
-    # Build per-glyph y snapping table (critical fix)
-    y_snap = build_y_snap(polys_svg, y_scale=y_scale, glyph_key=glyph_key)
+        poly = Polygon(pts_svg_i)
+        if not poly.is_valid:
+            poly = poly.buffer(0)  # fix self-touching edge cases
+        if not poly.is_empty:
+            shapes.append(poly)
 
-    # Detect thin vertical connector polygon (if present) to freeze WIDTH
-    vstrip: Optional[Tuple[float, float]] = None
-    thin_v_poly_index: Optional[int] = None
-    for idx, pts in enumerate(polys_svg):
-        minx, maxx, miny, maxy = bbox_svg(pts)
-        if is_thin_vertical_connector(minx, maxx, miny, maxy):
-            vstrip = (minx, maxx)
-            thin_v_poly_index = idx
-            break
+    if not shapes:
+        raise ValueError(f"No valid polygons after parsing: {svg_path}")
 
-    # Special: st may have internal thin v-strip within its single polygon
-    vstrip_upper_only = False
-    if glyph_key == "st" and vstrip is None:
-        vv = find_internal_thin_vstrip_for_st(polys_svg[0])
-        if vv is not None:
-            vstrip = vv
-            vstrip_upper_only = True
+    merged = unary_union(shapes)
+    if merged.is_empty:
+        raise ValueError(f"Union produced empty geometry: {svg_path}")
 
-    # Condensed spacing compensation for frozen vertical strip (wdth < 100%)
-    right_shift = 0.0
-    right_threshold: Optional[float] = None
-    extra_advance_svg = 0.0
+    if isinstance(merged, Polygon):
+        merged_polys = [merged]
+    elif isinstance(merged, MultiPolygon):
+        merged_polys = list(merged.geoms)
+    else:
+        merged_polys = [g for g in getattr(merged, "geoms", []) if isinstance(g, Polygon)]
 
-    if vstrip is not None and x_scale < 1.0 - EPS:
-        right_shift = 1.0 - x_scale
-        extra_advance_svg = right_shift
+    contours: List[List[Tuple[int, int]]] = []
+    for poly in merged_polys:
+        # Exterior (filled)
+        ext = _ring_svgcoords_to_font_contour(poly.exterior.coords)
+        ext = _force_winding(ext, clockwise=True)
+        contours.append(ext)
 
-        xL, xR = vstrip
+        # Holes
+        for hole in poly.interiors:
+            h = _ring_svgcoords_to_font_contour(hole.coords)
+            h = _force_winding(h, clockwise=False)
+            contours.append(h)
 
-        if glyph_key == "st":
-            xs = sorted({x for (x, _y) in polys_svg[0]})
-            candidates = [x for x in xs if x > (xR + 1.0 + EPS)]
-            right_threshold = min(candidates) if candidates else (xR + 1.0 + EPS)
-        else:
-            starts: List[float] = []
-            for i, pts in enumerate(polys_svg):
-                if thin_v_poly_index is not None and i == thin_v_poly_index:
-                    continue
-                minx, _maxx, _miny, _maxy = bbox_svg(pts)
-                if minx > xR + EPS:
-                    starts.append(minx)
-            right_threshold = min(starts) if starts else (xR + 1.0 + EPS)
+    if not contours:
+        raise ValueError(f"No contours produced for {svg_path}")
 
-    contours: List[List[IntPoint]] = []
-    for pts_svg in polys_svg:
-        pts_font = [
-            svg_to_font_xy(
-                x, y,
-                x_scale=x_scale,
-                y_scale=y_scale,
-                right_threshold=right_threshold,
-                right_shift=right_shift,
-                frozen_vstrip=vstrip,
-                vstrip_upper_only=vstrip_upper_only,
-                y_snap=y_snap,
-            )
-            for (x, y) in pts_svg
-        ]
-        contours.append(pts_font)
-
-    return width_svg, contours, extra_advance_svg
+    return width_svg, contours
 
 
 # -----------------------------
 # Glyph construction
 # -----------------------------
-def build_tt_glyph(contours: List[List[IntPoint]]) -> object:
+def build_tt_glyph(contours: List[List[Tuple[int, int]]]) -> object:
     pen = TTGlyphPen(None)
     for contour in contours:
+        if not contour or len(contour) < 3:
+            continue
         pen.moveTo(contour[0])
         for pt in contour[1:]:
             pen.lineTo(pt)
@@ -440,6 +305,7 @@ def build_tt_glyph(contours: List[List[IntPoint]]) -> object:
 
 
 def make_notdef_glyph() -> object:
+    # Simple .notdef box
     pen = TTGlyphPen(None)
     w = int(round(0.6 * UPM))
     h = int(round(0.8 * UPM))
@@ -454,8 +320,8 @@ def make_notdef_glyph() -> object:
 
 
 def build_fea_liga() -> str:
-    return (
-        """
+    # Use glyph names, not unicode literals
+    return """
 feature liga {
   sub s t by st;
   sub c h by ch;
@@ -464,34 +330,35 @@ feature liga {
   sub i j by ij;
   sub s h by sh;
 } liga;
-""".strip()
-        + "\n"
-    )
+""".strip() + "\n"
 
 
 # -----------------------------
-# Master builder
+# Main build
 # -----------------------------
-def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float, hght_value: float) -> None:
-    x_scale = wdth_value / 100.0
-    y_scale = hght_value / 100.0
-
+def build_fonts() -> None:
     root = project_root()
     src_dir = root / "src"
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_dir = root / "dist" / "fonts"
+    out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Define build keys
     keys: List[str] = []
     keys.extend(LETTERS)
     keys.extend(DIGITS)
     keys.extend(LIGATURE_KEYS)
 
-    glyph_order: List[str] = [".notdef", "space"] + [key_to_glyph_name(k) for k in keys]
+    # Glyph order (must include .notdef and space)
+    glyph_order: List[str] = [".notdef", "space"]
+    for k in keys:
+        glyph_order.append(key_to_glyph_name(k))
 
+    # Build glyf + hmtx + cmap
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
 
-    # space advance: (12 + spacing) scaled by wdth
-    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE_BASE * x_scale))
+    # space metrics: one cell + default spacing
+    space_adv = int(round((12 + LETTER_SPACING_SVG) * SCALE))
     glyf["space"] = TTGlyphPen(None).glyph()
     hmtx["space"] = (space_adv, 0)
     hmtx[".notdef"] = (space_adv, 0)
@@ -499,31 +366,29 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float, hght
     cmap: Dict[int, str] = {}
     for ch in LETTERS:
         cmap[ord(ch)] = ch
+
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-    cmap[0x0020] = "space"
-    cmap[0x0133] = "ij"  # ĳ
 
+    # Optional: map U+0133 (ĳ) to the ij ligature glyph if present
+    cmap[0x0133] = "ij"
+
+    # Load each SVG (merged outlines)
+    spacing_adv = int(round(LETTER_SPACING_SVG * SCALE))
     for k in keys:
         svg_path = src_dir / f"character-{k}.svg"
         if not svg_path.exists():
             raise FileNotFoundError(f"Missing SVG: {svg_path}")
 
         gname = key_to_glyph_name(k)
-        width_svg, contours, extra_adv_svg = load_svg_glyph(
-            svg_path,
-            x_scale=x_scale,
-            y_scale=y_scale,
-            glyph_key=k,
-        )
+        width_svg, contours = load_svg_glyph(svg_path)
 
         glyf[gname] = build_tt_glyph(contours)
 
-        # Advance: (tight viewBox width + spacing) scaled by wdth + extra shift if applied
-        adv_svg_scaled = (float(width_svg) + LETTER_SPACING_SVG) * x_scale + extra_adv_svg
-        adv = int(round(adv_svg_scaled * SCALE_BASE))
+        adv = int(round(width_svg * SCALE)) + spacing_adv
         hmtx[gname] = (adv, 0)
 
+    # Build TTF
     fb = FontBuilder(UPM, isTTF=True)
     fb.setupGlyphOrder(glyph_order)
     fb.setupCharacterMap(cmap)
@@ -539,10 +404,10 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float, hght
     fb.setupNameTable(
         {
             "familyName": "unst",
-            "styleName": style_name,
-            "uniqueFontIdentifier": f"unst {style_name}",
-            "fullName": f"unst {style_name}",
-            "psName": f"unst-{style_name}".replace(" ", ""),
+            "styleName": "Regular",
+            "uniqueFontIdentifier": "unst Regular",
+            "fullName": "unst Regular",
+            "psName": "unst-Regular",
             "version": "Version 1.0",
         }
     )
@@ -550,93 +415,29 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float, hght
     fb.setupMaxp()
     fb.setupHead()
 
+    # Add ligature substitutions
     addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
-    fb.font.save(out_path)
 
+    # Save TTF
+    ttf_path = out_dir / "unst.ttf"
+    fb.font.save(ttf_path)
+    print(f"Wrote: {ttf_path}")
 
-# -----------------------------
-# Variable font builder (2-axis, 3x3 masters)
-# -----------------------------
-def build_variable_font() -> None:
-    root = project_root()
-    out_dir = root / "dist" / "fonts"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    masters_dir = out_dir / "_vf_masters"
-    if masters_dir.exists():
-        for p in masters_dir.glob("*.ttf"):
-            p.unlink()
-    masters_dir.mkdir(parents=True, exist_ok=True)
-
-    wdths = [WDTH_MIN, WDTH_DEF, WDTH_MAX]
-    hghts = [HGHT_MIN, HGHT_DEF, HGHT_MAX]
-
-    master_paths: Dict[Tuple[float, float], Path] = {}
-
-    for w in wdths:
-        for h in hghts:
-            style = f"W{int(w)}H{int(h)}"
-            p = masters_dir / f"unst-wdth{int(w)}-hght{int(h)}.ttf"
-            build_master_ttf(out_path=p, style_name=style, wdth_value=w, hght_value=h)
-            master_paths[(w, h)] = p
-            print(f"Wrote master: {p}")
-
-    ds = DesignSpaceDocument()
-
-    ax_w = AxisDescriptor()
-    ax_w.tag = "wdth"
-    ax_w.name = "Width"
-    ax_w.minimum = WDTH_MIN
-    ax_w.default = WDTH_DEF
-    ax_w.maximum = WDTH_MAX
-    ds.addAxis(ax_w)
-
-    ax_h = AxisDescriptor()
-    ax_h.tag = "hght"
-    ax_h.name = "Height"
-    ax_h.minimum = HGHT_MIN
-    ax_h.default = HGHT_DEF
-    ax_h.maximum = HGHT_MAX
-    ds.addAxis(ax_h)
-
-    for w in wdths:
-        for h in hghts:
-            s = SourceDescriptor()
-            s.name = f"unst-W{int(w)}H{int(h)}"
-            rel = master_paths[(w, h)].relative_to(out_dir).as_posix()
-            s.filename = rel
-            s.location = {"Width": w, "Height": h}
-            if w == WDTH_DEF and h == HGHT_DEF:
-                s.copyInfo = True
-                s.copyLib = True
-                s.copyFeatures = True
-            ds.addSource(s)
-
-    designspace_path = out_dir / "unst.designspace"
-    ds.write(designspace_path)
-
-    res = var_build(str(designspace_path), optimize=True)
-    vf = res[0] if isinstance(res, tuple) else res
-
-    var_ttf_path = out_dir / "unst-variable.ttf"
-    vf.save(var_ttf_path)
-    print(f"Wrote: {var_ttf_path}")
-
-    # WOFF
+    # Save WOFF
     try:
-        woff_font = TTFont(var_ttf_path)
+        woff_font = TTFont(ttf_path)
         woff_font.flavor = "woff"
-        woff_path = out_dir / "unst-variable.woff"
+        woff_path = out_dir / "unst.woff"
         woff_font.save(woff_path)
         print(f"Wrote: {woff_path}")
     except Exception as e:
         print(f"Skipping WOFF (error): {e}")
 
-    # WOFF2
+    # Save WOFF2 (requires brotli)
     try:
-        woff2_font = TTFont(var_ttf_path)
+        woff2_font = TTFont(ttf_path)
         woff2_font.flavor = "woff2"
-        woff2_path = out_dir / "unst-variable.woff2"
+        woff2_path = out_dir / "unst.woff2"
         woff2_font.save(woff2_path)
         print(f"Wrote: {woff2_path}")
     except Exception as e:
@@ -644,4 +445,4 @@ def build_variable_font() -> None:
 
 
 if __name__ == "__main__":
-    build_variable_font()
+    build_fonts()
