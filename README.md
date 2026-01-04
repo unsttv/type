@@ -8,3 +8,29 @@
 ## Grid
 
 ![Grid](src/grid.svg)
+
+## Usage
+
+```css
+@font-face {
+  font-family: "unst";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("https://hetcdn.nl/fonts/unst.woff2") format("woff2"),
+    url("https://hetcdn.nl/fonts/unst.woff") format("woff"),
+    url("https://hetcdn.nl/fonts/unst.ttf") format("truetype");
+}
+
+:root {
+    --font--unst: "unst", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Example usage */
+.font--unst {
+  font-family: var(--font--unst);
+  font-weight: 400;
+  font-style: normal;
+}
+```
