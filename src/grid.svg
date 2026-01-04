@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 20 30"
+     width="200" height="300"
+     shape-rendering="crispEdges">
+
+    <!--
+      UNST grid visualization
+      - Width unit: 4 (vertical stems are 4 wide)
+      - Standard glyph cell: 12 wide (0..12)
+      - Double-width glyphs (m/w): 20 wide (0..20)
+      - Key horizontal bands (all 1 unit thick):
+        cap: 0..1, x-height bar: 9..10, mid: 14..15, baseline: 19..20, desc floor: 29..30
+      - Baseline is at y=20, x-height starts at y=9
+    -->
+
+    <!-- Background -->
+    <rect x="0" y="0" width="20" height="30" fill="white"/>
+
+    <!-- Highlight standard 12-unit cell -->
+    <rect x="0" y="0" width="12" height="30" fill="black" opacity="0.03"/>
+    <line x1="12" y1="0" x2="12" y2="30" stroke="black" stroke-width="0.35" opacity="0.5"/>
+    <text x="0.6" y="2.2" font-size="1.6" font-family="monospace" fill="black" opacity="0.8">
+        standard cell: 12
+    </text>
+    <text x="12.6" y="2.2" font-size="1.6" font-family="monospace" fill="black" opacity="0.8">
+        extra cols for m/w: 20
+    </text>
+
+    <!-- Horizontal stroke bands (1 unit thick) -->
+    <rect x="0" y="0"  width="20" height="1"  fill="black" opacity="0.07"/>
+    <rect x="0" y="9"  width="20" height="1"  fill="black" opacity="0.07"/>
+    <rect x="0" y="14" width="20" height="1"  fill="black" opacity="0.07"/>
+    <rect x="0" y="19" width="20" height="1"  fill="black" opacity="0.10"/>
+    <rect x="0" y="29" width="20" height="1"  fill="black" opacity="0.07"/>
+
+    <!-- Major horizontals (x-height + baseline) -->
+    <line x1="0" y1="9"  x2="20" y2="9"  stroke="black" stroke-width="0.35" opacity="0.45"/>
+    <line x1="0" y1="20" x2="20" y2="20" stroke="black" stroke-width="0.45" opacity="0.55"/>
+
+    <!-- Column grid (every 4 units) -->
+    <g stroke="black" stroke-width="0.2" opacity="0.35">
+        <line x1="0"  y1="0" x2="0"  y2="30"/>
+        <line x1="4"  y1="0" x2="4"  y2="30"/>
+        <line x1="8"  y1="0" x2="8"  y2="30"/>
+        <line x1="12" y1="0" x2="12" y2="30"/>
+        <line x1="16" y1="0" x2="16" y2="30"/>
+        <line x1="20" y1="0" x2="20" y2="30"/>
+    </g>
+
+    <!-- Outer border -->
+    <rect x="0" y="0" width="20" height="30" fill="none" stroke="black" stroke-width="0.3" opacity="0.6"/>
+
+    <!-- Band labels -->
+    <g font-family="monospace" font-size="1.5" fill="black" opacity="0.75">
+        <text x="0.6" y="0.9">cap band 0–1 (ligature top)</text>
+        <text x="0.6" y="8.7">x-height starts at y=9</text>
+        <text x="0.6" y="10.7">x-height bar band 9–10</text>
+        <text x="0.6" y="15.7">mid band 14–15</text>
+        <text x="0.6" y="19.7">baseline band 19–20 (baseline y=20)</text>
+        <text x="0.6" y="28.7">descender zone 20–30</text>
+        <text x="0.6" y="30.0" dominant-baseline="ideographic">desc floor band 29–30</text>
+    </g>
+
+    <!-- Quick legend for the 4-unit stem logic -->
+    <g opacity="0.55">
+        <rect x="0" y="23" width="4" height="4" fill="black" opacity="0.10"/>
+        <rect x="8" y="23" width="4" height="4" fill="black" opacity="0.10"/>
+        <text x="0.6" y="22.4" font-size="1.5" font-family="monospace" fill="black" opacity="0.75">
+            typical vertical stems: 4 units wide (0–4, 8–12, …)
+        </text>
+    </g>
+</svg>
