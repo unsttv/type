@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 """
-Build UNST variable font (wdth axis) from the SVG glyphs in ./src.
+Build UNST variable font from SVG glyphs in ./src with two axes:
 
-Output:
+  wdth: 25 .. 400 (default 100)
+  hght: 25 .. 400 (default 100)   (custom axis tag)
+
+Outputs:
   dist/fonts/unst-variable.ttf
   dist/fonts/unst-variable.woff
   dist/fonts/unst-variable.woff2   (if brotli is available)
 
-Axis:
-  wdth: 25 .. 400 (default 100)
-
 Includes GSUB 'liga' substitutions for:
   st, ch, ct, fi, ij, sh
 
-Thin-line behavior:
-  - Thin vertical connector bars (1 SVG unit wide, tall) do NOT scale in thickness.
-  - When wdth < 100%, we also shift the "right side" of the ligature by (1 - x_scale)
-    SVG units, so spacing between the thin connector and the next vertical matches the
-    same scaled spacing as other thick bars.
+Special behavior for ligature connector strokes:
+  - thin vertical connector bars (1 SVG unit wide, tall) do NOT scale in width
+  - thin horizontal connector bars (1 SVG unit tall, at top) do NOT scale in height
+  - when wdth < 100%, we shift the "right side" of the ligature by (1 - x_scale)
+    SVG units to preserve the same spacing as thick bars
+  - for "st" (single polygon), we also:
+      * freeze the internal 1-unit vertical strip in the upper zone
+      * freeze the top 1-unit horizontal strip (y=0..1)
+      * apply the condensed right-side shift only from the true start of the "t" part
+        (prevents the bottom-right of the "s" from being affected)
 
 Requires:
   pip install fonttools
@@ -52,17 +57,30 @@ UPM = 1000
 SVG_BASELINE_Y = 20.0
 SVG_TOTAL_H = 30.0
 
-# Y-scale (SVG units -> font units). X is also based on this, plus wdth scaling.
-SCALE_Y = UPM / SVG_TOTAL_H  # 33.333...
+# Base SVG->font scaling (for wdth=100/hght=100)
+SCALE_BASE = UPM / SVG_TOTAL_H  # 33.333...
 
-# Default spacing between glyphs at wdth=100, in SVG units.
-# This spacing scales with wdth (as in your earlier build).
-LETTER_SPACING_SVG = 4.0
+LETTER_SPACING_SVG = 4.0  # scales with wdth
 
-ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE_Y))
-DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE_Y))
-if ASCENT - DESCENT != UPM:
-    ASCENT = UPM + DESCENT
+# Axis limits
+WDTH_MIN, WDTH_DEF, WDTH_MAX = 25.0, 100.0, 400.0
+HGHT_MIN, HGHT_DEF, HGHT_MAX = 25.0, 100.0, 400.0
+MAX_Y_SCALE = HGHT_MAX / 100.0  # 4.0
+
+# Set font metrics big enough for max height (hght=400%)
+# We scale y about baseline. At hght=400:
+#   top y (0) -> baseline + (0-baseline)*4 = -60
+#   bottom y (30) -> baseline + (30-baseline)*4 = 60
+TOP_Y_AT_MAX = SVG_BASELINE_Y + (0.0 - SVG_BASELINE_Y) * MAX_Y_SCALE      # -60
+BOT_Y_AT_MAX = SVG_BASELINE_Y + (SVG_TOTAL_H - SVG_BASELINE_Y) * MAX_Y_SCALE  # 60
+
+ASCENT = int(round((SVG_BASELINE_Y - TOP_Y_AT_MAX) * SCALE_BASE))   # 80 * 33.33 = 2667
+DESCENT = -int(round((BOT_Y_AT_MAX - SVG_BASELINE_Y) * SCALE_BASE)) # -40 * 33.33 = -1333
+
+EPS = 1e-6
+
+Point = Tuple[float, float]
+IntPoint = Tuple[int, int]
 
 
 # -----------------------------
@@ -90,19 +108,14 @@ def key_to_glyph_name(key: str) -> str:
     return DIGIT_GLYPH_NAMES.get(key, key)
 
 
-# -----------------------------
-# SVG parsing helpers
-# -----------------------------
-Point = Tuple[float, float]
-IntPoint = Tuple[int, int]
-EPS = 1e-6
-
-
 def project_root() -> Path:
     # script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
+# -----------------------------
+# Helpers: parsing + geometry
+# -----------------------------
 def parse_polygon_points(points_str: str) -> List[Point]:
     pts: List[Point] = []
     for token in points_str.replace("\n", " ").replace("\t", " ").split():
@@ -131,6 +144,11 @@ def bbox_svg(pts: List[Point]) -> Tuple[float, float, float, float]:
     return min(xs), max(xs), min(ys), max(ys)
 
 
+def scale_y_about_baseline(y_svg: float, y_scale: float) -> float:
+    # baseline stays fixed
+    return SVG_BASELINE_Y + (y_svg - SVG_BASELINE_Y) * y_scale
+
+
 def is_thin_vertical_connector(minx: float, maxx: float, miny: float, maxy: float) -> bool:
     """
     Detect the vertical thin connector used in st-like ligatures:
@@ -147,11 +165,28 @@ def is_thin_vertical_connector(minx: float, maxx: float, miny: float, maxy: floa
     return True
 
 
-def find_internal_thin_strip_for_st(pts_svg: List[Point]) -> Optional[Tuple[float, float]]:
+def is_thin_horizontal_connector_for_ligature(minx: float, maxx: float, miny: float, maxy: float, glyph_key: str) -> bool:
+    """
+    Detect the top horizontal connector bar in st-like ligatures (ch/ct/sh).
+    We restrict this to those glyph keys to avoid catching normal letter strokes.
+    """
+    if glyph_key not in {"ch", "ct", "sh"}:
+        return False
+    h = maxy - miny
+    if abs(h - 1.0) > EPS:
+        return False
+    if miny > 0.01:  # should be at y=0..1
+        return False
+    # must be "long-ish"
+    if (maxx - minx) < 2.0 - EPS:
+        return False
+    return True
+
+
+def find_internal_thin_vstrip_for_st(pts_svg: List[Point]) -> Optional[Tuple[float, float]]:
     """
     'st' is one combined polygon (not separate thin-rect polygon).
-    Find an internal x pair (x, x+1) that appears in the upper zone (y<=10.1),
-    is top-anchored, and spans tall enough.
+    Find an internal x pair (x, x+1) in the upper zone (y<=10.1) that's top-anchored and tall.
     Returns (x_left, x_right) or None.
     """
     y_cut = 10.1
@@ -162,7 +197,7 @@ def find_internal_thin_strip_for_st(pts_svg: List[Point]) -> Optional[Tuple[floa
     xs = sorted({x for (x, _y) in upper})
     xset = set(xs)
 
-    candidates: List[Tuple[float, float, float]] = []  # (xL, xR, span)
+    best: Optional[Tuple[float, float, float]] = None  # (xL, xR, span)
 
     for xL in xs:
         xR = xL + 1.0
@@ -179,47 +214,80 @@ def find_internal_thin_strip_for_st(pts_svg: List[Point]) -> Optional[Tuple[floa
         span = y_max - y_min
 
         if y_min <= 0.01 and span >= 9.0 - EPS:
-            candidates.append((xL, xR, span))
+            cand = (xL, xR, span)
+            if best is None or cand[2] > best[2]:
+                best = cand
 
-    if not candidates:
+    if best is None:
         return None
-
-    candidates.sort(key=lambda t: t[2], reverse=True)
-    return (candidates[0][0], candidates[0][1])
+    return (best[0], best[1])
 
 
+# -----------------------------
+# Piecewise transforms (wdth + hght + thin connector freezing)
+# -----------------------------
 def transform_x(
     x_svg: float,
     *,
     x_scale: float,
     right_threshold: Optional[float],
     right_shift: float,
-    frozen_strip: Optional[Tuple[float, float]],
+    frozen_vstrip: Optional[Tuple[float, float]],
+    vstrip_upper_only: bool,
+    y_svg: float,
 ) -> float:
     """
-    Piecewise X transform:
-
-    - Default: x * x_scale
-    - If x >= right_threshold and right_shift>0: add right_shift (fix crowding at wdth<100)
-    - If frozen_strip=(xL,xR) and x is exactly on xL or xR: force bar width to stay 1:
-        xL -> xL*x_scale
-        xR -> xL*x_scale + (xR-xL)   (== +1)
-      (no right_shift applied to the strip edges; they stay anchored to the left edge)
+    X transform:
+      - default: x * x_scale
+      - if x >= right_threshold and right_shift>0: add right_shift (condensed spacing compensation)
+      - if frozen_vstrip=(xL,xR): keep strip width constant (=xR-xL), anchored to xL*x_scale
+        If vstrip_upper_only=True, only freeze when y<=10.1 (to match your intent for st).
     """
     x_eff = x_svg * x_scale
 
     if right_threshold is not None and right_shift > 0.0 and x_svg >= right_threshold - EPS:
         x_eff += right_shift
 
-    if frozen_strip is not None:
-        xL, xR = frozen_strip
-        w = xR - xL
-        if abs(x_svg - xL) < EPS:
-            x_eff = xL * x_scale
-        elif abs(x_svg - xR) < EPS:
-            x_eff = (xL * x_scale) + w  # keep bar width constant (w should be 1)
+    if frozen_vstrip is not None:
+        xL, xR = frozen_vstrip
+        w = xR - xL  # should be 1
+        if (not vstrip_upper_only) or (y_svg <= 10.1 + EPS):
+            if abs(x_svg - xL) < EPS:
+                x_eff = xL * x_scale
+            elif abs(x_svg - xR) < EPS:
+                x_eff = (xL * x_scale) + w
 
     return x_eff
+
+
+def transform_y(
+    y_svg: float,
+    *,
+    y_scale: float,
+    frozen_hstrip: Optional[Tuple[float, float]],
+) -> float:
+    """
+    Y transform (SVG y-down):
+      - default: scale about baseline
+      - if frozen_hstrip=(y0,y1): keep thickness constant (=y1-y0), anchored to scaled y0
+    """
+    if frozen_hstrip is None:
+        return scale_y_about_baseline(y_svg, y_scale)
+
+    y0, y1 = frozen_hstrip
+    h = y1 - y0  # should be 1
+
+    # First scale the anchor edge y0 about baseline
+    y0_eff = scale_y_about_baseline(y0, y_scale)
+
+    if abs(y_svg - y0) < EPS:
+        return y0_eff
+    if abs(y_svg - y1) < EPS:
+        return y0_eff + h
+
+    # Fallback: scale relative within the strip (shouldn't happen for axis-aligned rectangle points)
+    t = (y_svg - y0) / h
+    return y0_eff + t * h
 
 
 def svg_to_font_xy(
@@ -227,28 +295,39 @@ def svg_to_font_xy(
     y_svg: float,
     *,
     x_scale: float,
+    y_scale: float,
     right_threshold: Optional[float],
     right_shift: float,
-    frozen_strip: Optional[Tuple[float, float]],
+    frozen_vstrip: Optional[Tuple[float, float]],
+    vstrip_upper_only: bool,
+    frozen_hstrip: Optional[Tuple[float, float]],
 ) -> IntPoint:
-    # Y: flip + scale to UPM space
-    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE_Y))
-    # X: piecewise transform, then scale to font units
+    # Apply transforms in SVG space
+    y_eff = transform_y(y_svg, y_scale=y_scale, frozen_hstrip=frozen_hstrip)
     x_eff = transform_x(
         x_svg,
         x_scale=x_scale,
         right_threshold=right_threshold,
         right_shift=right_shift,
-        frozen_strip=frozen_strip,
+        frozen_vstrip=frozen_vstrip,
+        vstrip_upper_only=vstrip_upper_only,
+        y_svg=y_svg,
     )
-    x = int(round(x_eff * SCALE_Y))
+
+    # Convert to font coords (y up, baseline at 0)
+    x = int(round(x_eff * SCALE_BASE))
+    y = int(round((SVG_BASELINE_Y - y_eff) * SCALE_BASE))
     return x, y
 
 
+# -----------------------------
+# SVG -> contours loader (with thin-stroke logic + condensed compensation)
+# -----------------------------
 def load_svg_glyph(
     svg_path: Path,
     *,
     x_scale: float,
+    y_scale: float,
     glyph_key: str,
 ) -> Tuple[int, List[List[IntPoint]], float]:
     """
@@ -271,69 +350,81 @@ def load_svg_glyph(
     if not polys_el:
         raise ValueError(f"No <polygon> elements found in {svg_path}")
 
-    # Parse all polygons first (we need global info per glyph)
     polys_svg: List[List[Point]] = [parse_polygon_points(p.attrib["points"]) for p in polys_el]
 
-    # Identify a frozen 1-unit strip (either a dedicated thin-rect polygon, or internal strip for 'st')
-    frozen_strip: Optional[Tuple[float, float]] = None
-    thin_poly_index: Optional[int] = None
+    frozen_vstrip: Optional[Tuple[float, float]] = None
+    vstrip_upper_only = False
+    frozen_hstrip: Optional[Tuple[float, float]] = None
+    thin_v_poly_index: Optional[int] = None
 
+    # First pass: detect dedicated connector polygons (ch/ct/sh)
     for idx, pts in enumerate(polys_svg):
         minx, maxx, miny, maxy = bbox_svg(pts)
-        if is_thin_vertical_connector(minx, maxx, miny, maxy):
-            frozen_strip = (minx, maxx)  # width ~1
-            thin_poly_index = idx
-            break
 
-    if frozen_strip is None and glyph_key == "st":
-        # Try internal detection for the monogram polygon
-        frozen_strip = find_internal_thin_strip_for_st(polys_svg[0])
+        if frozen_vstrip is None and is_thin_vertical_connector(minx, maxx, miny, maxy):
+            frozen_vstrip = (minx, maxx)
+            thin_v_poly_index = idx
 
-    # If we freeze a strip and we are CONDENSING (<100%), compensate spacing by shifting "right side"
+        if frozen_hstrip is None and is_thin_horizontal_connector_for_ligature(minx, maxx, miny, maxy, glyph_key):
+            frozen_hstrip = (miny, maxy)  # should be (0,1)
+
+    # Special handling for st (single polygon): internal v-strip + top h-strip
+    if glyph_key == "st":
+        if frozen_vstrip is None:
+            v = find_internal_thin_vstrip_for_st(polys_svg[0])
+            if v is not None:
+                frozen_vstrip = v
+                vstrip_upper_only = True  # only freeze the upper portion
+        # Freeze the top strip height (y=0..1) for the connector in st
+        # (keeps the "thin" horizontal connector line consistent)
+        frozen_hstrip = (0.0, 1.0)
+
+    # Condensed compensation for frozen vertical strip: shift right side by (1 - x_scale)
     right_shift = 0.0
     right_threshold: Optional[float] = None
     extra_advance_svg = 0.0
 
-    if frozen_strip is not None and x_scale < 1.0 - EPS:
-        # This is exactly the amount of "extra thickness" compared to normal scaling:
-        # normal would have scaled the bar width to (1*x_scale); we keep it 1, so + (1-x_scale).
+    if frozen_vstrip is not None and x_scale < 1.0 - EPS:
         right_shift = 1.0 - x_scale
-        extra_advance_svg = right_shift  # add to advance so the glyph doesn't collide with next one
+        extra_advance_svg = right_shift
 
-        xL, xR = frozen_strip
+        xL, xR = frozen_vstrip
 
-        # Prefer to shift only the right glyph portion (not the left part, not the strip itself).
-        # Determine where the right-hand content begins by scanning polygon bboxes.
-        starts: List[float] = []
-        for i, pts in enumerate(polys_svg):
-            if thin_poly_index is not None and i == thin_poly_index:
-                continue  # the vertical thin bar itself
-            minx, maxx, _miny, _maxy = bbox_svg(pts)
-            # anything whose minx is strictly to the right of the strip's right edge is "right side"
-            if minx > xR + EPS:
-                starts.append(minx)
-
-        if starts:
-            right_threshold = min(starts)
+        if glyph_key == "st":
+            # IMPORTANT: st is a single polygon: don't shift the 's' portion.
+            # Find the next "real" x column after the strip that indicates the start of the 't' part.
+            xs = sorted({x for (x, _y) in polys_svg[0]})
+            # Skip the strip and the immediate area of the 's' right edge (xR itself).
+            candidates = [x for x in xs if x > (xR + 1.0 + EPS)]
+            right_threshold = min(candidates) if candidates else (xR + 1.0 + EPS)
         else:
-            # Fallback (shouldn't happen): shift anything to the right of the strip
-            right_threshold = xR + EPS
+            # For multi-polygon ligatures: shift polygons that begin to the right of the strip.
+            starts: List[float] = []
+            for i, pts in enumerate(polys_svg):
+                if thin_v_poly_index is not None and i == thin_v_poly_index:
+                    continue
+                minx, _maxx, _miny, _maxy = bbox_svg(pts)
+                if minx > xR + EPS:
+                    starts.append(minx)
+            right_threshold = min(starts) if starts else (xR + 1.0 + EPS)
 
-    # Convert each polygon to font contours
+    # Build contours
     contours: List[List[IntPoint]] = []
     for pts_svg in polys_svg:
         pts_font = [
             svg_to_font_xy(
                 x, y,
                 x_scale=x_scale,
+                y_scale=y_scale,
                 right_threshold=right_threshold,
                 right_shift=right_shift,
-                frozen_strip=frozen_strip,
+                frozen_vstrip=frozen_vstrip,
+                vstrip_upper_only=vstrip_upper_only,
+                frozen_hstrip=frozen_hstrip,
             )
             for (x, y) in pts_svg
         ]
 
-        # Make contour direction consistent (clockwise in font coords => negative area)
         if signed_area_xy(pts_font) > 0:
             pts_font = list(reversed(pts_font))
 
@@ -388,8 +479,9 @@ feature liga {
 # -----------------------------
 # Master builder
 # -----------------------------
-def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float) -> None:
+def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float, hght_value: float) -> None:
     x_scale = wdth_value / 100.0
+    y_scale = hght_value / 100.0
 
     root = project_root()
     src_dir = root / "src"
@@ -406,7 +498,7 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float) -> N
     hmtx: Dict[str, Tuple[int, int]] = {}
 
     # Space: one cell + spacing, scaled by wdth
-    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE_Y * x_scale))
+    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE_BASE * x_scale))
     glyf["space"] = TTGlyphPen(None).glyph()
     hmtx["space"] = (space_adv, 0)
     hmtx[".notdef"] = (space_adv, 0)
@@ -425,18 +517,18 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float) -> N
             raise FileNotFoundError(f"Missing SVG: {svg_path}")
 
         gname = key_to_glyph_name(k)
-        width_svg, contours, extra_adv_svg = load_svg_glyph(svg_path, x_scale=x_scale, glyph_key=k)
+        width_svg, contours, extra_adv_svg = load_svg_glyph(
+            svg_path,
+            x_scale=x_scale,
+            y_scale=y_scale,
+            glyph_key=k,
+        )
 
         glyf[gname] = build_tt_glyph(contours)
 
-        # Base advance: (tight viewBox width + spacing) scaled by wdth
-        adv_svg_scaled = (float(width_svg) + LETTER_SPACING_SVG) * x_scale
-
-        # If we had to right-shift content to compensate for frozen thin bar at wdth<100,
-        # give the glyph extra advance (in SVG units) so it doesn't collide with next glyph.
-        adv_svg_scaled += extra_adv_svg
-
-        adv = int(round(adv_svg_scaled * SCALE_Y))
+        # Advance: (tight viewBox width + spacing) scaled by wdth + any extra adv from condensed strip compensation
+        adv_svg_scaled = (float(width_svg) + LETTER_SPACING_SVG) * x_scale + extra_adv_svg
+        adv = int(round(adv_svg_scaled * SCALE_BASE))
         hmtx[gname] = (adv, 0)
 
     fb = FontBuilder(UPM, isTTF=True)
@@ -470,7 +562,7 @@ def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float) -> N
 
 
 # -----------------------------
-# Variable font builder
+# Variable font builder (2-axis, 3x3 masters)
 # -----------------------------
 def build_variable_font() -> None:
     root = project_root()
@@ -480,41 +572,50 @@ def build_variable_font() -> None:
     masters_dir = out_dir / "_vf_masters"
     masters_dir.mkdir(parents=True, exist_ok=True)
 
-    masters = [
-        {"wdth": 25.0, "style": "Condensed"},
-        {"wdth": 100.0, "style": "Regular"},
-        {"wdth": 400.0, "style": "Expanded"},
-    ]
+    wdths = [WDTH_MIN, WDTH_DEF, WDTH_MAX]
+    hghts = [HGHT_MIN, HGHT_DEF, HGHT_MAX]
 
-    master_paths: Dict[float, Path] = {}
-    for m in masters:
-        p = masters_dir / f"unst-wdth{int(m['wdth'])}.ttf"
-        build_master_ttf(out_path=p, style_name=m["style"], wdth_value=m["wdth"])
-        master_paths[m["wdth"]] = p
-        print(f"Wrote master: {p}")
+    master_paths: Dict[Tuple[float, float], Path] = {}
 
-    # Designspace: IMPORTANT: source.location keys must match axis.name (not axis.tag)
+    for w in wdths:
+        for h in hghts:
+            style = f"W{int(w)}H{int(h)}"
+            p = masters_dir / f"unst-wdth{int(w)}-hght{int(h)}.ttf"
+            build_master_ttf(out_path=p, style_name=style, wdth_value=w, hght_value=h)
+            master_paths[(w, h)] = p
+            print(f"Wrote master: {p}")
+
+    # Designspace
     ds = DesignSpaceDocument()
 
-    axis = AxisDescriptor()
-    axis.tag = "wdth"
-    axis.name = "Width"
-    axis.minimum = 25.0
-    axis.default = 100.0
-    axis.maximum = 400.0
-    ds.addAxis(axis)
+    ax_w = AxisDescriptor()
+    ax_w.tag = "wdth"
+    ax_w.name = "Width"
+    ax_w.minimum = WDTH_MIN
+    ax_w.default = WDTH_DEF
+    ax_w.maximum = WDTH_MAX
+    ds.addAxis(ax_w)
 
-    for m in masters:
-        s = SourceDescriptor()
-        s.name = f"unst-{m['style']}"
-        rel = master_paths[m["wdth"]].relative_to(out_dir).as_posix()
-        s.filename = rel
-        s.location = {"Width": m["wdth"]}
-        if m["wdth"] == 100.0:
-            s.copyInfo = True
-            s.copyLib = True
-            s.copyFeatures = True
-        ds.addSource(s)
+    ax_h = AxisDescriptor()
+    ax_h.tag = "hght"
+    ax_h.name = "Height"
+    ax_h.minimum = HGHT_MIN
+    ax_h.default = HGHT_DEF
+    ax_h.maximum = HGHT_MAX
+    ds.addAxis(ax_h)
+
+    for w in wdths:
+        for h in hghts:
+            s = SourceDescriptor()
+            s.name = f"unst-W{int(w)}H{int(h)}"
+            rel = master_paths[(w, h)].relative_to(out_dir).as_posix()
+            s.filename = rel
+            s.location = {"Width": w, "Height": h}
+            if w == WDTH_DEF and h == HGHT_DEF:
+                s.copyInfo = True
+                s.copyLib = True
+                s.copyFeatures = True
+            ds.addSource(s)
 
     designspace_path = out_dir / "unst.designspace"
     ds.write(designspace_path)
