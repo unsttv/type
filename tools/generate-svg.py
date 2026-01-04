@@ -165,13 +165,11 @@ GLYPHS.update({
         R(8, Y_TOP1, 12, Y_BASE1),
     ]),
 
-    # width corrected: 12 -> 8
-    "i": GlyphDef(8, [
-        R(4, Y_TOP0, 8,  Y_BASE1),   # stem
-        R(4, 0,      8,  4),         # square dot
+    "i": GlyphDef(4, [
+        R(0, Y_TOP0, 4,  Y_BASE1),   # stem
+        R(0, 0,      4,  4),         # square dot
     ]),
 
-    # width corrected: 12 -> 8
     "j": GlyphDef(8, [
         R(4, Y_TOP0, 8,  Y_DESC1),   # stem with descender
         R(4, 0,      8,  4),         # square dot
@@ -408,8 +406,8 @@ ST_POLY: Poly = [
 GLYPHS["st"] = GlyphDef(24, [ST_POLY])
 
 # Tight overlap ligatures
-GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=4)
-GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=4)
+GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=0)
+GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=0)
 
 # 'st-like' ligatures: spaced + corner connector (up from x-height to cap-top, then right at cap-top)
 GLYPHS["ch"] = ligature_st_like("c", "h", gap=4, right_touch_x=1)
