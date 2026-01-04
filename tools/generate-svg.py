@@ -228,10 +228,10 @@ GLYPHS.update({
     ]),
 
     "v": GlyphDef(12, [
-            R(0, Y_TOP0, 4,  Y_BASE1),      # left stem
-            R(8, Y_TOP0, 12, Y_BASE1),      # right stem
-            R(0, Y_BASE0, 12, Y_BASE1),     # baseline bar  _|_
-            R(4, Y_TAIL0, 8,  Y_TAIL1),     # little center tail (the final " | ")
+            R(0, Y_TOP0, 4,  Y_MID1),        # left stem (top -> mid)
+            R(8, Y_TOP0, 12, Y_MID1),        # right stem (top -> mid)
+            R(0, Y_MID0, 12, Y_MID1),        # wide part in the middle  _|_
+            R(4, Y_MID1, 8,  Y_BASE1),       # narrow stem below the middle   |
         ]),
 
     # w = double u (width 20)
@@ -244,9 +244,9 @@ GLYPHS.update({
 
     # x: placeholder (we’ll refine later)
     "x": GlyphDef(12, [
-            R(0, Y_TOP0, 12, Y_TOP1),       # top ___
-            R(8, Y_TOP1, 12, Y_BASE0),      # right | (from x-height down)
-            R(0, Y_BASE0, 12, Y_BASE1),     # bottom ___
+            R(0, Y_TOP0, 12, Y_TOP1),        # top ___
+            R(4, Y_TOP1, 8,  Y_BASE0),       # centered | (x=4..8)
+            R(0, Y_BASE0, 12, Y_BASE1),      # bottom ___
         ]),
 
     # y = u with right stem descender

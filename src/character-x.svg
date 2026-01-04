@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" shape-rendering="crispEdges">
   <g>
     <polygon class="x" points="0,9 12,9 12,10 0,10"/>
-    <polygon class="x" points="8,10 12,10 12,19 8,19"/>
+    <polygon class="x" points="4,10 8,10 8,19 4,19"/>
     <polygon class="x" points="0,19 12,19 12,20 0,20"/>
   </g>
 </svg>
