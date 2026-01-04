@@ -56,11 +56,13 @@ SVG_TOTAL_H = 30.0  # viewBox height
 # Scale SVG units -> font units
 SCALE = UPM / SVG_TOTAL_H  # 33.333...
 
-ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE))         # y=0 is top => +666/667
-DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE))  # y=30 => -333
-# Make sure ascent - descent == UPM (nice sanity)
+# Default spacing BETWEEN glyphs, in SVG units (matches your vertical bar thickness / gap logic)
+LETTER_SPACING_SVG = 4.0
+
+ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE))            # y=0 is top => ~667
+DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE))  # y=30 => ~-333
+# Make sure ascent - descent == UPM
 if ASCENT - DESCENT != UPM:
-    # Adjust ascent to keep sum consistent (rare rounding edge)
     ASCENT = UPM + DESCENT
 
 
@@ -140,16 +142,12 @@ def load_svg_glyph(svg_path: Path) -> Tuple[int, List[List[Tuple[int, int]]]]:
     tree = ET.parse(svg_path)
     root = tree.getroot()
 
-    # viewBox: "0 0 W H"
     vb = root.attrib.get("viewBox")
     if not vb:
         raise ValueError(f"No viewBox on {svg_path}")
     _, _, w_s, _h_s = vb.strip().split()
     width_svg = int(round(float(w_s)))
 
-    # collect all polygons
-    ns = {"svg": "http://www.w3.org/2000/svg"}
-    # allow no-namespace too
     polys = root.findall(".//{http://www.w3.org/2000/svg}polygon")
     if not polys:
         polys = root.findall(".//polygon")
@@ -185,7 +183,6 @@ def build_tt_glyph(contours: List[List[Tuple[int, int]]]) -> object:
 
 
 def make_notdef_glyph() -> object:
-    # Simple .notdef box
     pen = TTGlyphPen(None)
     w = int(round(0.6 * UPM))
     h = int(round(0.8 * UPM))
@@ -200,7 +197,6 @@ def make_notdef_glyph() -> object:
 
 
 def build_fea_liga() -> str:
-    # Use glyph names, not unicode literals
     return """
 feature liga {
   sub s t by st;
@@ -222,23 +218,20 @@ def build_fonts() -> None:
     out_dir = root / "dist" / "fonts"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Define build keys
     keys: List[str] = []
     keys.extend(LETTERS)
     keys.extend(DIGITS)
     keys.extend(LIGATURE_KEYS)
 
-    # Glyph order (must include .notdef and space)
     glyph_order: List[str] = [".notdef", "space"]
     for k in keys:
         glyph_order.append(key_to_glyph_name(k))
 
-    # Build glyf + hmtx + cmap
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
 
-    # space metrics: one cell
-    space_adv = int(round(12 * SCALE))
+    # Space: one cell (12) + default spacing (4) so it's not tighter than normal letter spacing
+    space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE))
     glyf["space"] = TTGlyphPen(None).glyph()
     hmtx["space"] = (space_adv, 0)
     hmtx[".notdef"] = (space_adv, 0)
@@ -246,13 +239,9 @@ def build_fonts() -> None:
     cmap: Dict[int, str] = {}
     for ch in LETTERS:
         cmap[ord(ch)] = ch
-
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-
-    # Optional: map U+0133 (ĳ) to the ij ligature glyph if present
-    # (Doesn't replace normal 'i'+'j' typing; that's handled by GSUB liga.)
-    cmap[0x0133] = "ij"
+    cmap[0x0133] = "ij"  # ĳ
 
     # Load each SVG
     for k in keys:
@@ -264,10 +253,12 @@ def build_fonts() -> None:
         width_svg, contours = load_svg_glyph(svg_path)
 
         glyf[gname] = build_tt_glyph(contours)
-        adv = int(round(width_svg * SCALE))
+
+        # Add default spacing to advance width (right-side bearing effect)
+        adv_svg = float(width_svg) + LETTER_SPACING_SVG
+        adv = int(round(adv_svg * SCALE))
         hmtx[gname] = (adv, 0)
 
-    # Build TTF
     fb = FontBuilder(UPM, isTTF=True)
     fb.setupGlyphOrder(glyph_order)
     fb.setupCharacterMap(cmap)
@@ -294,15 +285,12 @@ def build_fonts() -> None:
     fb.setupMaxp()
     fb.setupHead()
 
-    # Add ligature substitutions
     addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
 
-    # Save TTF
     ttf_path = out_dir / "unst.ttf"
     fb.font.save(ttf_path)
     print(f"Wrote: {ttf_path}")
 
-    # Save WOFF
     try:
         woff_font = TTFont(ttf_path)
         woff_font.flavor = "woff"
@@ -312,7 +300,6 @@ def build_fonts() -> None:
     except Exception as e:
         print(f"Skipping WOFF (error): {e}")
 
-    # Save WOFF2 (requires brotli)
     try:
         woff2_font = TTFont(ttf_path)
         woff2_font.flavor = "woff2"
