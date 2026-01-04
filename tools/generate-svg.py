@@ -124,10 +124,10 @@ GLYPHS.update({
 
     "e": E_DEF,
 
-    "f": GlyphDef(12, [
-        R(4, Y_CAP0, 8,  Y_BASE1),   # main stem
-        R(4, Y_CAP0, 12, Y_CAP1),    # cap bar (to the right)
-        R(4, Y_TOP0, 12, Y_TOP1),    # x-height bar (to the right)
+    "f": GlyphDef(8, [
+        R(0, Y_CAP0, 4,  Y_BASE1),   # main stem (was 4..8)
+        R(0, Y_CAP0, 8,  Y_CAP1),    # cap bar (was 4..12)
+        R(0, Y_TOP0, 8,  Y_TOP1),    # x-height bar (was 4..12)
     ]),
 
     "g": GlyphDef(12, [
@@ -239,10 +239,10 @@ GLYPHS.update({
     "s": S_DEF,
 
     # t = stem + bars at x-height and baseline (to the right)
-    "t": GlyphDef(12, [
-        R(4, Y_CAP0, 8,  Y_BASE1),   # stem
-        R(8, Y_TOP0, 12, Y_TOP1),    # x-height bar (right)
-        R(8, Y_BASE0, 12, Y_BASE1),  # baseline bar (right)
+    "t": GlyphDef(8, [
+        R(0, Y_CAP0, 4,  Y_BASE1),   # stem (was 4..8)
+        R(4, Y_TOP0, 8,  Y_TOP1),    # x-height bar right (was 8..12)
+        R(4, Y_BASE0, 8,  Y_BASE1),  # baseline bar right (was 8..12)
     ]),
 
     "u": GlyphDef(12, [
@@ -299,10 +299,9 @@ GLYPHS.update({
         R(8, Y_TOP1, 12, Y_BASE0),
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
-    "1": GlyphDef(12, [
-        R(4, Y_TOP0, 12, Y_TOP1),
-        R(8, Y_TOP1, 12, Y_BASE1),
-        R(4, Y_BASE0, 12, Y_BASE1),
+    "1": GlyphDef(8, [
+        R(0, Y_TOP0, 8,  Y_TOP1),    # top bar (was 4..12)
+        R(4, Y_TOP1, 8,  Y_BASE1),   # right stem (was 8..12)
     ]),
     "2": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
@@ -413,7 +412,7 @@ GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=0)
 GLYPHS["ch"] = ligature_st_like("c", "h", gap=4, right_touch_x=1)
 GLYPHS["sh"] = ligature_st_like("s", "h", gap=4, right_touch_x=1)
 # t's x-height bar is at x=8..12, so reach 8px into the right glyph to touch it
-GLYPHS["ct"] = ligature_st_like("c", "t", gap=4, right_touch_x=8)
+GLYPHS["ct"] = ligature_st_like("c", "t", gap=4, right_touch_x=4)
 
 # -----------------------------
 # SVG rendering / writing
