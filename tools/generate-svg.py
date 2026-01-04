@@ -130,12 +130,33 @@ GLYPHS.update({
         R(4, Y_TOP0, 12, Y_TOP1),    # x-height bar (to the right)
     ]),
 
-    # g: placeholder (we’ll refine later)
     "g": GlyphDef(12, [
+        # Row 1: xxx
         R(0, Y_TOP0, 12, Y_TOP1),
-        R(0, Y_TOP1, 4,  Y_BASE0),
-        R(8, Y_TOP1, 12, Y_BASE0),
-        R(0, Y_BASE0, 12, Y_BASE1),
+
+        # Row 2: xox
+        R(0, Y_TOP1, 4,  Y_MID0),
+        R(8, Y_TOP1, 12, Y_MID0),
+
+        # Row 3: xxx
+        R(0, Y_MID0, 12, Y_MID1),
+
+        # Row 4: oox
+        R(8, Y_MID1, 12, Y_BASE1),
+
+        # Row 5: xxx
+        R(0, Y_BASE1, 12, Y_BASE1 + 1),
+
+        # Row 6: xox
+        R(0, Y_BASE1 + 1, 4,  Y_BASE1 + 5),
+        R(8, Y_BASE1 + 1, 12, Y_BASE1 + 5),
+
+        # Row 7: xox
+        R(0, Y_BASE1 + 5, 4,  Y_DESC0),
+        R(8, Y_BASE1 + 5, 12, Y_DESC0),
+
+        # Row 8: xxx
+        R(0, Y_DESC0, 12, Y_DESC1),
     ]),
 
     "h": GlyphDef(12, [

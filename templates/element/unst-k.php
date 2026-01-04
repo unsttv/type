@@ -36,9 +36,9 @@ if (is_array($attrs)) {
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" shape-rendering="crispEdges" class="unst unst-k <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
   <g>
     <polygon class="k" points="0,0 4,0 4,20 0,20"/>
-    <polygon class="k" points="4,10 12,10 12,14 4,14"/>
-    <polygon class="k" points="4,15 12,15 12,19 4,19"/>
-    <polygon class="k" points="4,14 8,14 12,15 8,15"/>
+    <polygon class="k" points="8,9 12,9 12,14 8,14"/>
+    <polygon class="k" points="8,15 12,15 12,20 8,20"/>
+    <polygon class="k" points="4,14 8,14 8,15 4,15"/>
   </g>
 </svg>
 

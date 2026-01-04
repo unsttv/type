@@ -35,9 +35,10 @@ if (is_array($attrs)) {
 ?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" shape-rendering="crispEdges" class="unst unst-v <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
   <g>
-    <polygon class="v" points="0,9 4,9 8,19 4,19"/>
-    <polygon class="v" points="8,9 12,9 8,19 4,19"/>
-    <polygon class="v" points="4,19 8,19 8,20 4,20"/>
+    <polygon class="v" points="0,9 4,9 4,15 0,15"/>
+    <polygon class="v" points="8,9 12,9 12,15 8,15"/>
+    <polygon class="v" points="0,14 12,14 12,15 0,15"/>
+    <polygon class="v" points="4,15 8,15 8,20 4,20"/>
   </g>
 </svg>
 
