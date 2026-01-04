@@ -375,6 +375,9 @@ def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch
       - start at x-height (y=Y_TOP1 == 10)
       - go UP to the ascender top (y=0..1 band)
       - then go RIGHT along that top band into the right glyph
+
+    IMPORTANT: The 1-unit connector is drawn INSIDE the left glyph's last column
+    (x = left.width-1 .. left.width) so it aligns with bars that end at x=left.width.
     """
     left = GLYPHS[left_key]
     right = GLYPHS[right_key]
@@ -384,13 +387,15 @@ def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch
 
     polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
 
-    # Vertical: 1px wide, from x-height (10) up to the connector/top band (0..1)
-    x0 = left.width
-    x1 = left.width + 1
+    # Put the thin vertical in the LAST column of the left glyph
+    x0 = left.width - 1
+    x1 = left.width
+
+    # Vertical: 1px wide, from x-height (10) up to cap-top band (0..1)
     polys.append(R(x0, Y_LINK0, x1, Y_TOP1))
 
-    # Horizontal: along top band (0..1), reaching into the right glyph
-    h_x0 = left.width
+    # Horizontal: along top band (0..1), starting at same x as the vertical
+    h_x0 = x0
     h_x1 = dx + max(1, right_touch_x)
     polys.append(R(h_x0, Y_LINK0, h_x1, Y_LINK1))
 
