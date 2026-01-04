@@ -425,12 +425,15 @@ def render_glyph_svg(key: str, g: GlyphDef) -> str:
     )
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{vb}" shape-rendering="crispEdges">\n'
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{vb}" width="{g.width}" height="{CELL_H}" '
+        'shape-rendering="crispEdges">\n'
         "  <g>\n"
         f"{polys}\n"
         "  </g>\n"
         "</svg>\n"
     )
+
 
 
 def project_root() -> Path:

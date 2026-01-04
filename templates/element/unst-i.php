@@ -33,7 +33,7 @@ if (is_array($attrs)) {
     }
 }
 ?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 30" shape-rendering="crispEdges" class="unst unst-i <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 30" width="4" height="30" shape-rendering="crispEdges" class="unst unst-i <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
   <g>
     <polygon class="i" points="0,9 4,9 4,20 0,20"/>
     <polygon class="i" points="0,0 4,0 4,4 0,4"/>
