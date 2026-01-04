@@ -2,18 +2,6 @@
 """
 Build UNST variable font (wdth axis) from the SVG glyphs in ./src.
 
-Input SVGs (expected):
-  src/character-a.svg
-  ...
-  src/character-0.svg
-  ...
-  src/character-st.svg
-  src/character-ch.svg
-  src/character-ct.svg
-  src/character-fi.svg
-  src/character-ij.svg
-  src/character-sh.svg
-
 Output:
   dist/fonts/unst-variable.ttf
   dist/fonts/unst-variable.woff
@@ -25,6 +13,12 @@ Axis:
 Includes GSUB 'liga' substitutions for:
   st, ch, ct, fi, ij, sh
 
+Special behavior:
+  - Thin vertical connector rectangles (1 SVG unit wide, tall) do NOT scale in thickness.
+    Their position scales, but their width stays 1 unit, anchored to the rectangle's LEFT edge.
+  - For "st" (single combined polygon), we also freeze the internal 1-unit strip in the
+    upper zone (y<=10) so it behaves like the other ligatures.
+
 Requires:
   pip install fonttools
 Optional for woff2:
@@ -34,15 +28,11 @@ Optional for woff2:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import xml.etree.ElementTree as ET
 
-from fontTools.designspaceLib import (
-    AxisDescriptor,
-    DesignSpaceDocument,
-    SourceDescriptor,
-)
+from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, SourceDescriptor
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
@@ -59,19 +49,15 @@ except Exception as e:
 # -----------------------------
 UPM = 1000
 
-# SVG coordinate system (y down). Baseline is y=20, total height is 30.
 SVG_BASELINE_Y = 20.0
 SVG_TOTAL_H = 30.0
 
-# Scale SVG units -> font units (Y scale). X scaling is driven by wdth axis.
 SCALE_Y = UPM / SVG_TOTAL_H  # 33.333...
 
-# Default spacing BETWEEN glyphs at wdth=100, in SVG units.
-# This spacing will SCALE with wdth (so condensed gets tighter, expanded gets looser).
-LETTER_SPACING_SVG = 4.0
+LETTER_SPACING_SVG = 4.0  # scales with wdth
 
-ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE_Y))            # ~667
-DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE_Y))  # ~-333
+ASCENT = int(round((SVG_BASELINE_Y - 0.0) * SCALE_Y))
+DESCENT = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE_Y))
 if ASCENT - DESCENT != UPM:
     ASCENT = UPM + DESCENT
 
@@ -108,7 +94,6 @@ Point = Tuple[float, float]
 
 
 def project_root() -> Path:
-    # Script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
@@ -124,16 +109,6 @@ def parse_polygon_points(points_str: str) -> List[Point]:
     return pts
 
 
-def svg_to_font_xy(x_svg: float, y_svg: float, x_scale: float) -> Tuple[int, int]:
-    """
-    Convert SVG coords (y down) to font coords (y up) with baseline at y=0.
-    Apply x_scale (wdth axis) to X only.
-    """
-    x = int(round(x_svg * SCALE_Y * x_scale))
-    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE_Y))
-    return x, y
-
-
 def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
     a = 0.0
     n = len(pts)
@@ -144,11 +119,141 @@ def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
     return a / 2.0
 
 
-def load_svg_glyph(svg_path: Path, *, x_scale: float) -> Tuple[int, List[List[Tuple[int, int]]]]:
+def bbox_svg(pts: List[Point]) -> Tuple[float, float, float, float]:
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return min(xs), max(xs), min(ys), max(ys)
+
+
+def is_thin_vertical_connector(minx: float, maxx: float, miny: float, maxy: float) -> bool:
     """
-    Returns:
-      (width_svg_units, contours_as_int_points_in_font_coords)
+    Detect the special 1-unit-wide vertical connector used in 'st-like' ligatures.
     """
+    eps = 1e-6
+    w = maxx - minx
+    h = maxy - miny
+
+    if abs(w - 1.0) > eps:
+        return False
+    if h < 9.0 - eps:
+        return False
+    if miny > 0.01:
+        return False
+    return True
+
+
+def find_internal_thin_strip_for_st(pts_svg: List[Point]) -> Optional[Tuple[float, float]]:
+    """
+    "st" is one big polygon. The thin connector is an INTERNAL 1-unit strip in the upper zone.
+    We detect an x pair (x, x+1) that both appear among points with y<=10.1 and span tall enough.
+    Returns (x_left, x_right) in SVG units, or None if not found.
+    """
+    eps = 1e-6
+    y_cut = 10.1
+
+    upper = [(x, y) for (x, y) in pts_svg if y <= y_cut]
+    if len(upper) < 4:
+        return None
+
+    xs = sorted({x for (x, _y) in upper})
+    xset = set(xs)
+
+    candidates: List[Tuple[float, float, float]] = []  # (x, x+1, height_span)
+
+    for x in xs:
+        xp = x + 1.0
+        # Exact integer-ish grid, but be tolerant: require presence of a value ~x+1
+        has_xp = any(abs(v - xp) < eps for v in xset)
+        if not has_xp:
+            continue
+
+        ys_x = [y for (xx, y) in upper if abs(xx - x) < eps]
+        ys_xp = [y for (xx, y) in upper if abs(xx - xp) < eps]
+
+        if not ys_x or not ys_xp:
+            continue
+
+        y_min = min(min(ys_x), min(ys_xp))
+        y_max = max(max(ys_x), max(ys_xp))
+        span = y_max - y_min
+
+        # Prefer top-anchored + tall
+        if y_min <= 0.01 and span >= 9.0 - eps:
+            candidates.append((x, xp, span))
+
+    if not candidates:
+        return None
+
+    # Pick the tallest span candidate (usually unique)
+    candidates.sort(key=lambda t: t[2], reverse=True)
+    return (candidates[0][0], candidates[0][1])
+
+
+def svg_to_font_xy(
+    x_svg: float,
+    y_svg: float,
+    *,
+    x_scale: float,
+    thin_minx: float | None = None,
+    thin_maxx: float | None = None,
+    internal_strip: Tuple[float, float] | None = None,
+) -> Tuple[int, int]:
+    """
+    Convert SVG coords (y down) to font coords (y up) with baseline at y=0.
+
+    X is scaled by x_scale EXCEPT:
+      1) If thin_minx/maxx are given (the whole polygon is the thin bar),
+         freeze its width anchored to left edge.
+      2) If internal_strip is given (for "st"), and point is on one of its x-edges in the
+         upper zone, freeze that strip width anchored to left edge.
+    """
+    eps = 1e-6
+    y = int(round((SVG_BASELINE_Y - y_svg) * SCALE_Y))
+
+    # Case A: the whole polygon is a thin connector rectangle
+    if thin_minx is not None and thin_maxx is not None:
+        w = thin_maxx - thin_minx
+        left = thin_minx * x_scale
+        right = left + w
+
+        if abs(x_svg - thin_minx) < eps:
+            x_eff = left
+        elif abs(x_svg - thin_maxx) < eps:
+            x_eff = right
+        else:
+            t = (x_svg - thin_minx) / w
+            x_eff = left + t * w
+
+        x = int(round(x_eff * SCALE_Y))
+        return x, y
+
+    # Case B: internal strip in "st" (only apply in upper zone, y<=10.1)
+    if internal_strip is not None and y_svg <= 10.1 + eps:
+        xL, xR = internal_strip
+        w = xR - xL
+        if abs(w - 1.0) < 1e-3:  # sanity
+            left = xL * x_scale
+            right = left + w
+            if abs(x_svg - xL) < eps:
+                x_eff = left
+                x = int(round(x_eff * SCALE_Y))
+                return x, y
+            if abs(x_svg - xR) < eps:
+                x_eff = right
+                x = int(round(x_eff * SCALE_Y))
+                return x, y
+
+    # Normal scaling
+    x = int(round((x_svg * x_scale) * SCALE_Y))
+    return x, y
+
+
+def load_svg_glyph(
+    svg_path: Path,
+    *,
+    x_scale: float,
+    glyph_key: str | None = None,
+) -> Tuple[int, List[List[Tuple[int, int]]]]:
     tree = ET.parse(svg_path)
     root = tree.getroot()
 
@@ -165,11 +270,31 @@ def load_svg_glyph(svg_path: Path, *, x_scale: float) -> Tuple[int, List[List[Tu
         raise ValueError(f"No <polygon> elements found in {svg_path}")
 
     contours: List[List[Tuple[int, int]]] = []
+
     for p in polys:
         pts_svg = parse_polygon_points(p.attrib["points"])
-        pts_font = [svg_to_font_xy(x, y, x_scale) for (x, y) in pts_svg]
+        minx, maxx, miny, maxy = bbox_svg(pts_svg)
 
-        # Make direction consistent (clockwise in font coords => negative area)
+        thin = is_thin_vertical_connector(minx, maxx, miny, maxy)
+        thin_minx = minx if thin else None
+        thin_maxx = maxx if thin else None
+
+        internal_strip = None
+        # Only needed for the combined monogram in "st"
+        if glyph_key == "st" and not thin:
+            internal_strip = find_internal_thin_strip_for_st(pts_svg)
+
+        pts_font = [
+            svg_to_font_xy(
+                x, y,
+                x_scale=x_scale,
+                thin_minx=thin_minx,
+                thin_maxx=thin_maxx,
+                internal_strip=internal_strip
+            )
+            for (x, y) in pts_svg
+        ]
+
         if signed_area_xy(pts_font) > 0:
             pts_font = list(reversed(pts_font))
 
@@ -224,16 +349,7 @@ feature liga {
 # -----------------------------
 # Master builder
 # -----------------------------
-def build_master_ttf(
-    *,
-    out_path: Path,
-    style_name: str,
-    wdth_value: float,
-) -> None:
-    """
-    Build a static master TTF at a specific wdth value.
-    wdth_value is in percent (25..400). x_scale = wdth_value/100.
-    """
+def build_master_ttf(*, out_path: Path, style_name: str, wdth_value: float) -> None:
     x_scale = wdth_value / 100.0
 
     root = project_root()
@@ -250,7 +366,6 @@ def build_master_ttf(
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
 
-    # Space: (12 + spacing) scaled with wdth
     space_adv = int(round((12.0 + LETTER_SPACING_SVG) * SCALE_Y * x_scale))
     glyf["space"] = TTGlyphPen(None).glyph()
     hmtx["space"] = (space_adv, 0)
@@ -261,8 +376,8 @@ def build_master_ttf(
         cmap[ord(ch)] = ch
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-    cmap[0x0020] = "space"  # space
-    cmap[0x0133] = "ij"     # ĳ
+    cmap[0x0020] = "space"
+    cmap[0x0133] = "ij"
 
     for k in keys:
         svg_path = src_dir / f"character-{k}.svg"
@@ -270,13 +385,9 @@ def build_master_ttf(
             raise FileNotFoundError(f"Missing SVG: {svg_path}")
 
         gname = key_to_glyph_name(k)
-        width_svg, contours = load_svg_glyph(svg_path, x_scale=x_scale)
+        width_svg, contours = load_svg_glyph(svg_path, x_scale=x_scale, glyph_key=k)
 
         glyf[gname] = build_tt_glyph(contours)
-
-        # Advance width = (tight viewBox width + base spacing) scaled with wdth
-        # If you ever want spacing NOT to scale with wdth, use:
-        #   adv = int(round(width_svg * SCALE_Y * x_scale + LETTER_SPACING_SVG * SCALE_Y))
         adv = int(round((float(width_svg) + LETTER_SPACING_SVG) * SCALE_Y * x_scale))
         hmtx[gname] = (adv, 0)
 
@@ -307,7 +418,6 @@ def build_master_ttf(
     fb.setupHead()
 
     addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
-
     fb.font.save(out_path)
 
 
@@ -322,14 +432,12 @@ def build_variable_font() -> None:
     masters_dir = out_dir / "_vf_masters"
     masters_dir.mkdir(parents=True, exist_ok=True)
 
-    # Three masters so default is exact and not interpolated.
     masters = [
         {"wdth": 25.0, "style": "Condensed"},
         {"wdth": 100.0, "style": "Regular"},
         {"wdth": 400.0, "style": "Expanded"},
     ]
 
-    # Build masters
     master_paths: Dict[float, Path] = {}
     for m in masters:
         p = masters_dir / f"unst-wdth{int(m['wdth'])}.ttf"
@@ -337,12 +445,11 @@ def build_variable_font() -> None:
         master_paths[m["wdth"]] = p
         print(f"Wrote master: {p}")
 
-    # Build designspace (IMPORTANT: location keys must match axis.name, not axis.tag)
     ds = DesignSpaceDocument()
 
     axis = AxisDescriptor()
     axis.tag = "wdth"
-    axis.name = "Width"      # <-- axis NAME
+    axis.name = "Width"
     axis.minimum = 25.0
     axis.default = 100.0
     axis.maximum = 400.0
@@ -351,12 +458,10 @@ def build_variable_font() -> None:
     for m in masters:
         s = SourceDescriptor()
         s.name = f"unst-{m['style']}"
-        # store relative path from designspace file (in out_dir) to the master file
         rel = master_paths[m["wdth"]].relative_to(out_dir).as_posix()
         s.filename = rel
-        s.location = {"Width": m["wdth"]}  # <-- MUST match axis.name ("Width")
+        s.location = {"Width": m["wdth"]}
         if m["wdth"] == 100.0:
-            # Make the default master the base for metadata/features/lib where applicable
             s.copyInfo = True
             s.copyLib = True
             s.copyFeatures = True
@@ -365,7 +470,6 @@ def build_variable_font() -> None:
     designspace_path = out_dir / "unst.designspace"
     ds.write(designspace_path)
 
-    # Build VF
     res = var_build(str(designspace_path), optimize=True)
     vf = res[0] if isinstance(res, tuple) else res
 
