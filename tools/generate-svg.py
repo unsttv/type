@@ -165,12 +165,14 @@ GLYPHS.update({
         R(8, Y_TOP1, 12, Y_BASE1),
     ]),
 
-    "i": GlyphDef(12, [
+    # width corrected: 12 -> 8
+    "i": GlyphDef(8, [
         R(4, Y_TOP0, 8,  Y_BASE1),   # stem
         R(4, 0,      8,  4),         # square dot
     ]),
 
-    "j": GlyphDef(12, [
+    # width corrected: 12 -> 8
+    "j": GlyphDef(8, [
         R(4, Y_TOP0, 8,  Y_DESC1),   # stem with descender
         R(4, 0,      8,  4),         # square dot
         R(0, Y_DESC0, 4,  Y_DESC1),  # thin hook to the left
@@ -184,12 +186,13 @@ GLYPHS.update({
         R(8, Y_MID1, 12, Y_BASE1),      # lower right |
 
         # mid connector ONLY between stem and right bar boundary (like the x)
-        R(4, Y_MID0, 8,  Y_MID1),       # |_  (doesn't fill 8..12)
+        R(4, Y_MID0, 8,  Y_MID1),
     ]),
 
-    "l": GlyphDef(12, [
+    # width corrected: 12 -> 8, and baseline shortened to fit
+    "l": GlyphDef(8, [
         R(0, Y_CAP0, 4,  Y_BASE1),
-        R(0, Y_BASE0, 12, Y_BASE1),
+        R(0, Y_BASE0, 8,  Y_BASE1),
     ]),
 
     # m = double n (width 20)
@@ -229,10 +232,10 @@ GLYPHS.update({
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # r = only stem + top bar
-    "r": GlyphDef(12, [
+    # width corrected: 12 -> 8, and top bar shortened to fit
+    "r": GlyphDef(8, [
         R(0, Y_TOP0, 4,  Y_BASE1),
-        R(0, Y_TOP0, 12, Y_TOP1),
+        R(0, Y_TOP0, 8,  Y_TOP1),
     ]),
 
     "s": S_DEF,
@@ -251,11 +254,11 @@ GLYPHS.update({
     ]),
 
     "v": GlyphDef(12, [
-            R(0, Y_TOP0, 4,  Y_MID1),        # left stem (top -> mid)
-            R(8, Y_TOP0, 12, Y_MID1),        # right stem (top -> mid)
-            R(0, Y_MID0, 12, Y_MID1),        # wide part in the middle  _|_
-            R(4, Y_MID1, 8,  Y_BASE1),       # narrow stem below the middle   |
-        ]),
+        R(0, Y_TOP0, 4,  Y_MID1),        # left stem (top -> mid)
+        R(8, Y_TOP0, 12, Y_MID1),        # right stem (top -> mid)
+        R(0, Y_MID0, 12, Y_MID1),        # wide part in the middle  _|_
+        R(4, Y_MID1, 8,  Y_BASE1),       # narrow stem below the middle   |
+    ]),
 
     # w = double u (width 20)
     "w": GlyphDef(20, [
