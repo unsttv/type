@@ -405,15 +405,15 @@ def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch
 # Build 'st' using the same st-like logic (gap=0), so the thin vertical connector is a true 1-unit rectangle
 # and can behave consistently under variable width rules.
 # We want the top connector to reach the left edge of the 't' stem, which starts at x=4 inside 't' => right_touch_x=4.
-GLYPHS["st"] = ligature_st_like("s", "t", gap=0, right_touch_x=4)
+GLYPHS["st"] = ligature_st_like("s", "t", gap=4, right_touch_x=4)
 
 # Tight overlap ligatures
 GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=4)
 GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=4)
 
 # 'st-like' ligatures: spaced + corner connector
-GLYPHS["ch"] = ligature_st_like("c", "h", gap=4, right_touch_x=1)
-GLYPHS["sh"] = ligature_st_like("s", "h", gap=4, right_touch_x=1)
+GLYPHS["ch"] = ligature_st_like("c", "h", gap=8, right_touch_x=1)
+GLYPHS["sh"] = ligature_st_like("s", "h", gap=8, right_touch_x=1)
 # t's x-height bar is at x=8..12, so reach 8 units into the right glyph to touch it
 GLYPHS["ct"] = ligature_st_like("c", "t", gap=4, right_touch_x=8)
 
