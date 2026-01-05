@@ -218,7 +218,7 @@ def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional
         base += seam_off
 
     # st-only: also shift the left edge of the bottom-right 's' stroke
-    if key == "st" and y is not None:
+    if key in ("st", "sh") and y is not None:
         # This stroke lives in the lower "s" area: y from the MID band down to the baseline band start.
         # We target the vertical stroke band (not the baseline band itself).
         if (y >= Y_MID1 - EPS) and (y <= Y_BASE0 + EPS):
