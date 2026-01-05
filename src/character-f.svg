@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 30" width="8" height="30" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
   <g>
-    <polygon class="f" points="0,0 4,0 4,20 0,20"/>
-    <polygon class="f" points="0,0 8,0 8,1 0,1"/>
-    <polygon class="f" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="f" points="4,0 8,0 8,20 4,20"/>
+    <polygon class="f" points="4,0 12,0 12,1 4,1"/>
+    <polygon class="f" points="4,9 12,9 12,10 4,10"/>
   </g>
 </svg>

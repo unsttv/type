@@ -43,8 +43,8 @@ if (is_array($attrs)) {
     <polygon class="sh" points="16,0 20,0 20,20 16,20"/>
     <polygon class="sh" points="16,9 28,9 28,10 16,10"/>
     <polygon class="sh" points="24,10 28,10 28,20 24,20"/>
-    <polygon class="sh" points="11,0 12,0 12,10 11,10"/>
-    <polygon class="sh" points="11,0 17,0 17,1 11,1"/>
+    <polygon class="sh" points="12,1 13,1 13,10 12,10"/>
+    <polygon class="sh" points="12,0 17,0 17,1 12,1"/>
   </g>
 </svg>
 
