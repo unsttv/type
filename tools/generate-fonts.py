@@ -22,7 +22,8 @@ Axes:
   wdth: 25 .. 400 (default 100)
   hght: 25 .. 400 (default 100)
 
-Key property (your request):
+Key properties:
+  - wdth scales X, but thin vertical connector lines (1 unit wide) stay 1 unit wide.
   - hght is applied via a GLOBAL piecewise-linear Y warp based on the shared grid:
       cap band   0..1
       x-height   9..10
@@ -46,6 +47,7 @@ Optional:
 from __future__ import annotations
 
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -54,8 +56,6 @@ import xml.etree.ElementTree as ET
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
-
-from dataclasses import dataclass
 
 from fontTools.designspaceLib import (
     DesignSpaceDocument,
@@ -118,12 +118,11 @@ SVG_TOTAL_H = 30.0  # original viewBox height (your generator uses this)
 SCALE = UPM / SVG_TOTAL_H  # 33.333...
 
 # Font "typo" metrics (keep normal line height at default)
-ASCENT_BASE = int(round((SVG_BASELINE_Y - 0.0) * SCALE))           # ~667
-DESCENT_BASE = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE)) # ~-333
+ASCENT_BASE = int(round((SVG_BASELINE_Y - 0.0) * SCALE))            # ~667
+DESCENT_BASE = -int(round((SVG_TOTAL_H - SVG_BASELINE_Y) * SCALE))  # ~-333
 if ASCENT_BASE - DESCENT_BASE != UPM:
     ASCENT_BASE = UPM + DESCENT_BASE
 
-# Win metrics to avoid clipping at max hght
 HGHT_MIN, HGHT_DEF, HGHT_MAX = 25.0, 100.0, 400.0
 WDTH_MIN, WDTH_DEF, WDTH_MAX = 25.0, 100.0, 400.0
 
@@ -133,27 +132,22 @@ LETTER_SPACING_SVG = 4.0
 # -----------------------------
 # Height warp (GLOBAL grid-anchored)
 # -----------------------------
-# Breakpoints in SVG units (source)
 SRC_Y = [0.0, 1.0, 9.0, 10.0, 14.0, 15.0, 19.0, 20.0, 29.0, 30.0]
 
 
 def height_dst_breakpoints(scale: float) -> List[float]:
     """
     scale = hght_pct / 100.0, e.g. 0.25 .. 4.0
-
     Keeps band thicknesses (all 1 unit) constant, scales only the gaps.
     Anchors baseline band at 19..20 and baseline at y=20.
     """
-    # Anchor baseline band
     y19, y20 = 19.0, 20.0
 
-    # Scaled gaps (between 1-unit bands)
     gap_15_19 = 4.0 * scale   # 15 -> 19
     gap_10_14 = 4.0 * scale   # 10 -> 14
     gap_1_9   = 8.0 * scale   #  1 ->  9
     gap_20_29 = 9.0 * scale   # 20 -> 29
 
-    # Upwards from baseline band
     y15 = y19 - gap_15_19
     y14 = y15 - 1.0
     y10 = y14 - gap_10_14
@@ -161,7 +155,6 @@ def height_dst_breakpoints(scale: float) -> List[float]:
     y1  = y9  - gap_1_9
     y0  = y1  - 1.0
 
-    # Downwards for descenders
     y29 = y20 + gap_20_29
     y30 = y29 + 1.0
 
@@ -169,16 +162,13 @@ def height_dst_breakpoints(scale: float) -> List[float]:
 
 
 def warp_y(y: float, scale: float) -> float:
-    """Piecewise-linear map from SRC_Y to DST_Y (computed)."""
     dst = height_dst_breakpoints(scale)
-
     for i in range(len(SRC_Y) - 1):
         y0, y1 = SRC_Y[i], SRC_Y[i + 1]
         if y0 <= y <= y1:
             t = 0.0 if y1 == y0 else (y - y0) / (y1 - y0)
             return dst[i] + t * (dst[i + 1] - dst[i])
 
-    # Extrapolate (should rarely happen)
     if y < SRC_Y[0]:
         y0, y1 = SRC_Y[0], SRC_Y[1]
         return dst[0] + (y - y0) * (dst[1] - dst[0]) / (y1 - y0)
@@ -187,7 +177,7 @@ def warp_y(y: float, scale: float) -> float:
     return dst[-1] + (y - y1) * (dst[-1] - dst[-2]) / (y1 - y0)
 
 
-# Compute Win metrics for max height so glyphs don't clip in common renderers
+# Win metrics for max height so glyphs don't clip in common renderers
 _ymin_max = min(height_dst_breakpoints(HGHT_MAX / 100.0))
 _ymax_max = max(height_dst_breakpoints(HGHT_MAX / 100.0))
 US_WIN_ASCENT = int(round((SVG_BASELINE_Y - _ymin_max) * SCALE))
@@ -227,7 +217,6 @@ def is_axis_aligned_rect(poly: Poly) -> Tuple[bool, float, float, float, float]:
 class SvgGlyph:
     width_svg: float
     polys: List[Poly]
-    # per-poly reverse flags (computed once on default master) so point order stays identical across masters
     reverse_flags: List[bool]
 
 
@@ -266,7 +255,6 @@ def load_svg_polys(svg_path: Path) -> Tuple[float, List[Poly]]:
     out: List[Poly] = []
     for p in polys:
         out.append(parse_polygon_points(p.attrib["points"]))
-
     return width_svg, out
 
 
@@ -278,7 +266,6 @@ def compute_reverse_flags_default(polys: List[Poly]) -> List[bool]:
     flags: List[bool] = []
     for poly in polys:
         pts_font = [svg_to_font_xy(x, y) for (x, y) in poly]
-        # In font coords (y up), clockwise contours have negative signed area.
         flags.append(signed_area_xy_int(pts_font) > 0)
     return flags
 
@@ -289,38 +276,38 @@ def compute_reverse_flags_default(polys: List[Poly]) -> List[bool]:
 def transform_poly(poly: Poly, *, wdth_scale: float, hght_scale: float) -> Poly:
     """
     Apply:
-      - width scaling in X (with special-case for 1-unit-wide vertical connector rectangles:
-        keep them 1 unit wide, but position them according to scaled right edge)
+      - width scaling in X, keeping 1-unit-wide vertical connector rectangles at width 1
       - global height warp in Y via warp_y()
+
+    IMPORTANT FIX:
+      For 1-unit-wide vertical rectangles, we keep width=1 BUT anchor by LEFT edge (x0),
+      so they stay aligned with 1-unit horizontal top connectors (which scale from x0).
     """
     is_rect, x0, y0, x1, y1 = is_axis_aligned_rect(poly)
 
-    # width transform (X only)
     if is_rect:
         w = x1 - x0
         h = y1 - y0
 
+        # --- X transform ---
         if abs(w - 1.0) < 1e-9 and h > 1.0:
-            # Thin vertical connector: keep width == 1, anchor by its RIGHT edge
-            nx1 = x1 * wdth_scale
-            nx0 = nx1 - 1.0
+            # Thin vertical connector: keep width == 1, anchor by LEFT edge
+            nx0 = x0 * wdth_scale
+            nx1 = nx0 + 1.0
         else:
             nx0 = x0 * wdth_scale
             nx1 = x1 * wdth_scale
 
-        # height transform (Y warp)
+        # --- Y transform ---
         ny0 = warp_y(y0, hght_scale)
         ny1 = warp_y(y1, hght_scale)
 
-        # Preserve rectangle point order as in R(x0,y0,x1,y1): (x0,y0),(x1,y0),(x1,y1),(x0,y1)
         return [(nx0, ny0), (nx1, ny0), (nx1, ny1), (nx0, ny1)]
 
-    # General polygon (e.g. the custom 'st' polygon): point-wise transform
+    # General polygon (e.g. custom st outline): point-wise transform
     out: Poly = []
     for (x, y) in poly:
-        nx = x * wdth_scale
-        ny = warp_y(y, hght_scale)
-        out.append((nx, ny))
+        out.append((x * wdth_scale, warp_y(y, hght_scale)))
     return out
 
 
@@ -408,21 +395,17 @@ def build_master_font(
         cmap[ord(ch)] = ch
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-    # Optional: U+0133 ĳ maps to ij glyph
     cmap[0x0133] = "ij"
 
-    # Build glyphs
     for k in keys:
         gname = key_to_glyph_name(k)
         sg = glyphs[k]
 
-        # transform each polygon
         tpolys: List[Poly] = [
             transform_poly(p, wdth_scale=wdth_scale, hght_scale=hght_scale)
             for p in sg.polys
         ]
 
-        # convert to font coords (int) + apply the same reverse decision across masters
         contours_font: List[List[Tuple[int, int]]] = []
         for idx, poly in enumerate(tpolys):
             pts = [svg_to_font_xy(x, y) for (x, y) in poly]
@@ -441,7 +424,6 @@ def build_master_font(
     fb.setupGlyf(glyf)
     fb.setupHorizontalMetrics(hmtx)
 
-    # Keep normal line height (typo metrics), but large Win metrics to avoid clipping
     fb.setupHorizontalHeader(ascent=ASCENT_BASE, descent=DESCENT_BASE)
     fb.setupOS2(
         sTypoAscender=ASCENT_BASE,
@@ -464,9 +446,7 @@ def build_master_font(
     fb.setupMaxp()
     fb.setupHead()
 
-    # Add GSUB ligatures into masters (varLib will carry them over)
     addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
-
     fb.font.save(out_path)
 
 
@@ -479,7 +459,6 @@ def build_variable_font() -> None:
     out_dir = root / "dist" / "fonts"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Load SVG glyphs once
     keys = list("abcdefghijklmnopqrstuvwxyz0123456789") + LIGATURE_KEYS
     glyphs: Dict[str, SvgGlyph] = {}
 
@@ -492,7 +471,6 @@ def build_variable_font() -> None:
         reverse_flags = compute_reverse_flags_default(polys)
         glyphs[k] = SvgGlyph(width_svg=w_svg, polys=polys, reverse_flags=reverse_flags)
 
-    # Master grid (only ONE default master at 100/100)
     wdths = [WDTH_MIN, WDTH_DEF, WDTH_MAX]
     hghts = [HGHT_MIN, HGHT_DEF, HGHT_MAX]
     master_locs: List[Tuple[float, float]] = [(w, h) for w in wdths for h in hghts]
@@ -500,14 +478,12 @@ def build_variable_font() -> None:
     with tempfile.TemporaryDirectory(prefix="unst_var_masters_") as td:
         td_path = Path(td)
 
-        # Build master TTFonts
         master_paths: Dict[Tuple[float, float], Path] = {}
         for w, h in master_locs:
             p = td_path / f"unst_master_w{int(w)}_h{int(h)}.ttf"
             build_master_font(glyphs, wdth_value=w, hght_value=h, out_path=p)
             master_paths[(w, h)] = p
 
-        # Build designspace
         ds = DesignSpaceDocument()
 
         ax_w = AxisDescriptor()
@@ -526,10 +502,8 @@ def build_variable_font() -> None:
         ax_h.maximum = HGHT_MAX
         ds.addAxis(ax_h)
 
-        # Ensure the *only* base master is (100,100)
         default_loc = {"wdth": WDTH_DEF, "hght": HGHT_DEF}
 
-        # Add sources; put default first for cleanliness
         ordered_locs = [(WDTH_DEF, HGHT_DEF)] + [loc for loc in master_locs if loc != (WDTH_DEF, HGHT_DEF)]
         for w, h in ordered_locs:
             src = SourceDescriptor()
@@ -538,16 +512,16 @@ def build_variable_font() -> None:
             src.styleName = "Regular"
             src.filename = str(master_paths[(w, h)])
             src.location = {"wdth": float(w), "hght": float(h)}
-            src.copyLib = (src.location == default_loc)
-            src.copyInfo = (src.location == default_loc)
-            src.copyGroups = (src.location == default_loc)
-            src.copyFeatures = (src.location == default_loc)
+            is_default = (src.location == default_loc)
+            src.copyLib = is_default
+            src.copyInfo = is_default
+            src.copyGroups = is_default
+            src.copyFeatures = is_default
             ds.addSource(src)
 
         ds_path = td_path / "unst.designspace"
         ds.write(ds_path)
 
-        # Build variable font
         vf, _model, _master_ttfs = var_build(str(ds_path))
         var_ttf_path = out_dir / "unst-variable.ttf"
         vf.save(var_ttf_path)
