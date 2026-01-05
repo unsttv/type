@@ -407,7 +407,7 @@ ST_POLY: Poly = [
     (24,10),(24,9),(20,9),(20,0),(11,0),(11,9),(0,9),(0,15),(8,15),(8,19),(0,19),(0,20),
     (12,20),(12,14),(4,14),(4,10),(12,10),(12,1),(16,1),(16,20),(24,20),(24,19),(20,19),(20,10)
 ]
-GLYPHS["st"] = GlyphDef(24, [ST_POLY])
+GLYPHS["st"] = ligature_st_like("s", "t", gap=4, right_touch_x=4)
 
 # Tight overlap ligatures
 GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=0)
