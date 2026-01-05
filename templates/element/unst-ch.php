@@ -33,16 +33,16 @@ if (is_array($attrs)) {
     }
 }
 ?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 30" width="32" height="30" shape-rendering="crispEdges" class="unst unst-ch <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" class="unst unst-ch <?= htmlspecialchars($class, ENT_QUOTES) ?>"<?= $attr_str ?>>
   <g>
     <polygon class="ch" points="0,9 12,9 12,10 0,10"/>
     <polygon class="ch" points="0,10 4,10 4,19 0,19"/>
     <polygon class="ch" points="0,19 12,19 12,20 0,20"/>
-    <polygon class="ch" points="20,0 24,0 24,20 20,20"/>
-    <polygon class="ch" points="20,9 32,9 32,10 20,10"/>
-    <polygon class="ch" points="28,10 32,10 32,20 28,20"/>
-    <polygon class="ch" points="12,1 13,1 13,10 12,10"/>
-    <polygon class="ch" points="12,0 21,0 21,1 12,1"/>
+    <polygon class="ch" points="16,0 20,0 20,20 16,20"/>
+    <polygon class="ch" points="16,9 28,9 28,10 16,10"/>
+    <polygon class="ch" points="24,10 28,10 28,20 24,20"/>
+    <polygon class="ch" points="11,0 12,0 12,10 11,10"/>
+    <polygon class="ch" points="11,0 17,0 17,1 11,1"/>
   </g>
 </svg>
 
