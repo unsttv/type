@@ -27,7 +27,6 @@
     --font--unst: "unst", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* Example usage */
 .font--unst {
   font-family: var(--font--unst);
   font-weight: 400;
