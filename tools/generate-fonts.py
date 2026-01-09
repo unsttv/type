@@ -101,7 +101,7 @@ Y_DESC0, Y_DESC1 = 29.0, 30.0
 # -----------------------------
 LETTERS = list("abcdefghijklmnopqrstuvwxyz")
 DIGITS = list("0123456789")
-LIGATURE_KEYS = ["st", "ch", "ct", "fi", "ij", "sh"]
+LIGATURE_KEYS = ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
 
 DIGIT_GLYPH_NAMES = {
     "0": "zero",
@@ -448,6 +448,8 @@ feature liga {
   sub f i by fi;
   sub i j by ij;
   sub s h by sh;
+  sub e s by es;
+  sub y p by yp;
 } liga;
 """.strip() + "\n"
 

@@ -13,9 +13,6 @@ Poly = List[Point]
 # -----------------------------
 CELL_W = 12
 
-# Common viewBox HEIGHT for *all* characters (includes ascenders + descenders)
-# Baseline at y=20, x-height starts at y=9. Ascender height above x-height is 9 units (0..9),
-# so descender depth below baseline is also 9 units (20..29), plus 1 unit stroke thickness => y=30.
 CELL_H = 30
 
 # Horizontal stroke bands (1 unit thick)
@@ -125,11 +122,13 @@ GLYPHS.update({
     "e": E_DEF,
 
     "f": GlyphDef(8, [
-        R(0, Y_CAP0, 4,  Y_BASE1),   # main stem (was 4..8)
-        R(0, Y_CAP0, 8,  Y_CAP1),    # cap bar (was 4..12)
-        R(0, Y_TOP0, 8,  Y_TOP1),    # x-height bar (was 4..12)
+        R(0, Y_CAP0, 4,  Y_BASE1),   # main stem
+        R(0, Y_CAP0, 8,  Y_CAP1),    # cap bar
+        R(0, Y_TOP0, 8,  Y_TOP1),    # x-height bar
     ]),
 
+    # FIXED g: move the lower-loop top bar from 20..21 to 19..20 (baseline band),
+    # and start the lower-loop side stems at y=20 so the loop stays closed.
     "g": GlyphDef(12, [
         # Row 1: xxx
         R(0, Y_TOP0, 12, Y_TOP1),
@@ -144,12 +143,12 @@ GLYPHS.update({
         # Row 4: oox
         R(8, Y_MID1, 12, Y_BASE1),
 
-        # Row 5: xxx
-        R(0, Y_BASE1, 12, Y_BASE1 + 1),
+        # Row 5: xxx  (NOW baseline band 19..20)
+        R(0, Y_BASE0, 12, Y_BASE1),
 
-        # Row 6: xox
-        R(0, Y_BASE1 + 1, 4,  Y_BASE1 + 5),
-        R(8, Y_BASE1 + 1, 12, Y_BASE1 + 5),
+        # Row 6: xox  (start at 20 now, so it touches the bar)
+        R(0, Y_BASE1, 4,  Y_BASE1 + 5),
+        R(8, Y_BASE1, 12, Y_BASE1 + 5),
 
         # Row 7: xox
         R(0, Y_BASE1 + 5, 4,  Y_DESC0),
@@ -183,17 +182,15 @@ GLYPHS.update({
         R(8, Y_TOP0, 12, Y_MID0),       # upper right |
         R(8, Y_MID1, 12, Y_BASE1),      # lower right |
 
-        # mid connector ONLY between stem and right bar boundary (like the x)
+        # mid connector ONLY between stem and right bar boundary
         R(4, Y_MID0, 8,  Y_MID1),
     ]),
 
-    # width corrected: 12 -> 8, and baseline shortened to fit
     "l": GlyphDef(8, [
         R(0, Y_CAP0, 4,  Y_BASE1),
         R(0, Y_BASE0, 8,  Y_BASE1),
     ]),
 
-    # m = double n (width 20)
     "m": GlyphDef(20, [
         R(0, Y_TOP0, 20, Y_TOP1),    # top bar across both humps
         R(0, Y_TOP0, 4,  Y_BASE1),   # left stem
@@ -214,7 +211,6 @@ GLYPHS.update({
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # p = like o, with left stem descender
     "p": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_DESC1),   # descender
@@ -222,7 +218,6 @@ GLYPHS.update({
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # q = mirror of p
     "q": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
         R(0, Y_TOP1, 4,  Y_BASE0),
@@ -230,7 +225,6 @@ GLYPHS.update({
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
 
-    # width corrected: 12 -> 8, and top bar shortened to fit
     "r": GlyphDef(8, [
         R(0, Y_TOP0, 4,  Y_BASE1),
         R(0, Y_TOP0, 8,  Y_TOP1),
@@ -238,11 +232,10 @@ GLYPHS.update({
 
     "s": S_DEF,
 
-    # t = stem + bars at x-height and baseline (to the right)
     "t": GlyphDef(8, [
-        R(0, Y_CAP0, 4,  Y_BASE1),   # stem (was 4..8)
-        R(4, Y_TOP0, 8,  Y_TOP1),    # x-height bar right (was 8..12)
-        R(4, Y_BASE0, 8,  Y_BASE1),  # baseline bar right (was 8..12)
+        R(0, Y_CAP0, 4,  Y_BASE1),   # stem
+        R(4, Y_TOP0, 8,  Y_TOP1),    # x-height bar right
+        R(4, Y_BASE0, 8,  Y_BASE1),  # baseline bar right
     ]),
 
     "u": GlyphDef(12, [
@@ -252,13 +245,12 @@ GLYPHS.update({
     ]),
 
     "v": GlyphDef(12, [
-        R(0, Y_TOP0, 4,  Y_MID1),        # left stem (top -> mid)
-        R(8, Y_TOP0, 12, Y_MID1),        # right stem (top -> mid)
-        R(0, Y_MID0, 12, Y_MID1),        # wide part in the middle  _|_
-        R(4, Y_MID1, 8,  Y_BASE1),       # narrow stem below the middle   |
+        R(0, Y_TOP0, 4,  Y_MID1),
+        R(8, Y_TOP0, 12, Y_MID1),
+        R(0, Y_MID0, 12, Y_MID1),
+        R(4, Y_MID1, 8,  Y_BASE1),
     ]),
 
-    # w = double u (width 20)
     "w": GlyphDef(20, [
         R(0, Y_TOP0, 4,  Y_BASE1),
         R(8, Y_TOP0, 12, Y_BASE1),
@@ -267,19 +259,15 @@ GLYPHS.update({
     ]),
 
     "x": GlyphDef(12, [
-        # left bar, split above/below the mid band
         R(0, Y_TOP0, 4,  Y_MID0),
         R(0, Y_MID1, 4,  Y_BASE1),
 
-        # right bar, split above/below the mid band
         R(8, Y_TOP0, 12, Y_MID0),
         R(8, Y_MID1, 12, Y_BASE1),
 
-        # mid connector (bridges the gap)
         R(4, Y_MID0, 8,  Y_MID1),
     ]),
 
-    # y = u with right stem descender
     "y": GlyphDef(12, [
         R(0, Y_TOP0, 4,  Y_BASE1),
         R(8, Y_TOP0, 12, Y_DESC1),   # descender
@@ -300,8 +288,8 @@ GLYPHS.update({
         R(0, Y_BASE0, 12, Y_BASE1),
     ]),
     "1": GlyphDef(8, [
-        R(0, Y_TOP0, 8,  Y_TOP1),    # top bar (was 4..12)
-        R(4, Y_TOP1, 8,  Y_BASE1),   # right stem (was 8..12)
+        R(0, Y_TOP0, 8,  Y_TOP1),
+        R(4, Y_TOP1, 8,  Y_BASE1),
     ]),
     "2": GlyphDef(12, [
         R(0, Y_TOP0, 12, Y_TOP1),
@@ -375,9 +363,6 @@ def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch
       - start at x-height (y=Y_TOP1 == 10)
       - go UP to the ascender top (y=0..1 band)
       - then go RIGHT along that top band into the right glyph
-
-    IMPORTANT: The 1-unit connector is drawn INSIDE the left glyph's last column
-    (x = left.width-1 .. left.width) so it aligns with bars that end at x=left.width.
     """
     left = GLYPHS[left_key]
     right = GLYPHS[right_key]
@@ -387,37 +372,81 @@ def ligature_st_like(left_key: str, right_key: str, *, gap: int = 4, right_touch
 
     polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
 
-    # Put the thin vertical in the LAST column of the left glyph
     x0 = left.width - 1
     x1 = left.width
 
-    # Vertical: 1px wide, from x-height (10) up to cap-top band (0..1)
-    polys.append(R(x0, Y_LINK0, x1, Y_TOP1))
-
-    # Horizontal: along top band (0..1), starting at same x as the vertical
+    polys.append(R(x0, Y_LINK0, x1, Y_TOP1))  # vertical
     h_x0 = x0
     h_x1 = dx + max(1, right_touch_x)
-    polys.append(R(h_x0, Y_LINK0, h_x1, Y_LINK1))
+    polys.append(R(h_x0, Y_LINK0, h_x1, Y_LINK1))  # horizontal (top band)
 
     return GlyphDef(width, polys)
 
 
-# Custom 'st' from your original sample, normalized to x=0..24
+def ligature_bottom_like(left_key: str, right_key: str, *, gap: int = 4, right_touch_x: int = 1) -> GlyphDef:
+    """
+    Bottom-connected ligature:
+      - keep a normal gap
+      - extend the BASELINE band (19..20) across the gap into the right glyph
+    This keeps the connection in a canonical 1-unit band.
+    """
+    left = GLYPHS[left_key]
+    right = GLYPHS[right_key]
+
+    dx = left.width + gap
+    width = left.width + gap + right.width
+
+    polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
+
+    # extend baseline band across the gap
+    x0 = left.width - 1
+    x1 = dx + max(1, right_touch_x)
+    polys.append(R(x0, Y_BASE0, x1, Y_BASE1))
+
+    return GlyphDef(width, polys)
+
+def ligature_bottom_desc_like(left_key: str, right_key: str, *, gap: int = 4, right_touch_x: int = 1) -> GlyphDef:
+    """
+    Bottom-connected ligature at the *descender bottom* (29..30 band), not baseline.
+    Useful for ligatures like 'yp' where the visual connection should be at the very bottom.
+    """
+    left = GLYPHS[left_key]
+    right = GLYPHS[right_key]
+
+    dx = left.width + gap
+    width = left.width + gap + right.width
+
+    polys = list(left.polys) + [translate_poly(p, dx, 0) for p in right.polys]
+
+    # extend bottom-most thin band across the gap
+    x0 = left.width - 1
+    x1 = dx + max(1, right_touch_x)
+    polys.append(R(x0, Y_DESC0, x1, Y_DESC1))
+
+    return GlyphDef(width, polys)
+
+
+# (kept for reference; not used)
 ST_POLY: Poly = [
     (24,10),(24,9),(20,9),(20,0),(11,0),(11,9),(0,9),(0,15),(8,15),(8,19),(0,19),(0,20),
     (12,20),(12,14),(4,14),(4,10),(12,10),(12,1),(16,1),(16,20),(24,20),(24,19),(20,19),(20,10)
 ]
+
+# st (st-like, as per your current setup)
 GLYPHS["st"] = ligature_st_like("s", "t", gap=4, right_touch_x=4)
 
 # Tight overlap ligatures
 GLYPHS["fi"] = compose_ligature_overlap("f", "i", overlap=0)
 GLYPHS["ij"] = compose_ligature_overlap("i", "j", overlap=0)
 
-# 'st-like' ligatures: spaced + corner connector (up from x-height to cap-top, then right at cap-top)
+# st-like ligatures
 GLYPHS["ch"] = ligature_st_like("c", "h", gap=4, right_touch_x=1)
 GLYPHS["sh"] = ligature_st_like("s", "h", gap=4, right_touch_x=1)
-# t's x-height bar is at x=8..12, so reach 8px into the right glyph to touch it
 GLYPHS["ct"] = ligature_st_like("c", "t", gap=4, right_touch_x=4)
+
+# NEW bottom-connected ligatures
+GLYPHS["es"] = ligature_bottom_like("e", "s", gap=4, right_touch_x=1)
+GLYPHS["yp"] = ligature_bottom_desc_like("y", "p", gap=4, right_touch_x=1)
 
 # -----------------------------
 # SVG rendering / writing
@@ -440,9 +469,7 @@ def render_glyph_svg(key: str, g: GlyphDef) -> str:
     )
 
 
-
 def project_root() -> Path:
-    # Script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
@@ -451,7 +478,7 @@ def write_all_svgs() -> None:
     out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    keys = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "ct", "fi", "ij", "sh"]
+    keys = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
     for key in keys:
         g = GLYPHS.get(key)
         if not g:
