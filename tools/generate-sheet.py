@@ -4,7 +4,7 @@ UNST variable-font sheet (local)
 
 - 1080×1080 PNG, black on white
 - Left-aligned
-- Fixed font size: 64px
+- Fixed font size: 80px
 - NO anti-aliasing (FreeType MONO 1-bit)
 - Wrap to next line when it doesn't fit
 - 4 axis settings rendered as 4 sections, one after the other:
@@ -15,7 +15,7 @@ UNST variable-font sheet (local)
 
 Ligatures appended at the end (if present as glyph names):
 ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
-with TWO normal spaces between ligatures.
+with NO extra spacing between ligatures.
 
 Spacing:
 - 1 px between lines
@@ -55,14 +55,10 @@ LIGATURES = ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
 MARGIN_X = 24
 MARGIN_Y = 24
 
-FONT_PX = 64
+FONT_PX = 80
 
-# EXACTLY what you asked for:
-LINE_GAP_PX = 1       # space between lines
-SECTION_GAP_PX = 1    # extra space between sections (after moving to next line)
-
-# TWO normal spaces between ligatures
-LIGATURE_SPACE_COUNT = 2
+LINE_GAP_PX = 12       # space between lines
+SECTION_GAP_PX = 12    # extra space between sections (after moving to the next line)
 
 # 1-bit monochrome rendering (no AA)
 FT_FLAGS_MONO = freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_MONO | freetype.FT_LOAD_MONOCHROME
@@ -111,7 +107,6 @@ def ft_bitmap_to_mask(bmp: freetype.Bitmap) -> Image.Image:
             out = out.transpose(Image.FLIP_TOP_BOTTOM)
         return out
 
-    # fallback (shouldn't happen with MONO flags, but keep robust)
     im = Image.frombytes("L", (w, h), buf, "raw", "L", pitch, 0) if pitch not in (0, w) else Image.frombytes("L", (w, h), buf)
     if flip:
         im = im.transpose(Image.FLIP_TOP_BOTTOM)
@@ -139,7 +134,7 @@ def paste_mask_clipped(dst: Image.Image, mask: Image.Image, x: int, y: int) -> N
     dst.paste(0, (ix0, iy0, ix1, iy1), m)
 
 
-Token = Tuple[str, Optional[str]]  # ("char","a") | ("glyph","st") | ("gap",None)
+Token = Tuple[str, Optional[str]]  # ("char","a") | ("glyph","st")
 
 
 def build_tokens(base_tt: TTFont) -> List[Token]:
@@ -156,20 +151,12 @@ def build_tokens(base_tt: TTFont) -> List[Token]:
     chars = sorted(set(chars), key=char_sort_key)
     tokens: List[Token] = [("char", ch) for ch in chars]
 
-    # append ligatures by glyph name if present
     glyph_order = set(base_tt.getGlyphOrder())
     ligs_present = [g for g in LIGATURES if g in glyph_order]
 
-    if ligs_present:
-        # keep a little separation before the ligature run (two spaces, as requested style)
-        for _ in range(LIGATURE_SPACE_COUNT):
-            tokens.append(("gap", None))
-
-        for i, g in enumerate(ligs_present):
-            tokens.append(("glyph", g))
-            if i != len(ligs_present) - 1:
-                for _ in range(LIGATURE_SPACE_COUNT):
-                    tokens.append(("gap", None))
+    # Append ligatures with NO extra spacing at all
+    for g in ligs_present:
+        tokens.append(("glyph", g))
 
     return tokens
 
@@ -184,32 +171,9 @@ def make_instance(font_path: Path, tmpdir: Path, wdth: float, hght: float) -> Pa
     return out_path
 
 
-def normal_space_advance_px(face: freetype.Face, font_px: int) -> float:
-    """
-    Use the font's real space advance, BUT clamp it to a sane range so a broken
-    space width can't explode spacing.
-    """
-    adv = None
-    try:
-        face.load_char(" ", freetype.FT_LOAD_DEFAULT)
-        a = face.glyph.advance.x / 64.0
-        if a > 0:
-            adv = float(a)
-    except Exception:
-        adv = None
-
-    if adv is None:
-        adv = 0.5 * font_px  # reasonable fallback
-
-    # Clamp: prevents huge gaps while still behaving like "normal space"
-    lo = 0.20 * font_px
-    hi = 0.75 * font_px
-    return float(max(lo, min(hi, adv)))
-
-
 def compute_tight_line_metrics(face: freetype.Face, tokens: List[Token], gmap: Dict[str, int]) -> Tuple[int, int, int]:
     """
-    Compute line step from *actual rendered bitmap extents*:
+    Compute line step from actual rendered bitmap extents:
       above = max(bitmap_top)
       below = max(bitmap_rows - bitmap_top)
       line_step = above + below + LINE_GAP_PX
@@ -218,8 +182,6 @@ def compute_tight_line_metrics(face: freetype.Face, tokens: List[Token], gmap: D
     below = 0
 
     for kind, val in tokens:
-        if kind == "gap":
-            continue
         try:
             if kind == "char":
                 face.load_char(val or "", FT_FLAGS_MONO)
@@ -256,10 +218,9 @@ def render_section(canvas: Image.Image, inst_path: Path, tokens: List[Token], y_
     order = tt.getGlyphOrder()
     gmap = {name: i for i, name in enumerate(order)}
 
-    space_px = normal_space_advance_px(face, font_px)
     above, below, line_step = compute_tight_line_metrics(face, tokens, gmap)
-
     baseline_y = y_cursor + above
+
     pen_x = 0.0
 
     def new_line() -> bool:
@@ -275,18 +236,6 @@ def render_section(canvas: Image.Image, inst_path: Path, tokens: List[Token], y_
         return CANVAS_H
 
     for kind, val in tokens:
-        if kind == "gap":
-            if pen_x == 0.0:
-                continue
-            adv = space_px
-            if pen_x > 0.0 and (pen_x + adv) > avail_w:
-                if not new_line():
-                    break
-                continue
-            pen_x += adv
-            continue
-
-        # render glyph
         try:
             if kind == "char":
                 face.load_char(val or "", FT_FLAGS_MONO)
