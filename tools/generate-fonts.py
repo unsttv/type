@@ -19,10 +19,13 @@ NEW/RESTORED:
   Requires: pip install shapely
   (If shapely is missing, the script falls back to non-unioned polygons.)
 
-Outputs:
-  dist/fonts/unst-variable.ttf
-  dist/fonts/unst-variable.woff
-  dist/fonts/unst-variable.woff2  (if brotli is available)
+Build artifacts:
+- Masters + designspace are written to: build/fonts/_vf_masters/
+
+Outputs (end-user files):
+- dist/fonts/unst.ttf
+- dist/fonts/unst.woff
+- dist/fonts/unst.woff2  (if brotli is available)
 
 Requires:
   pip install fonttools
@@ -33,7 +36,6 @@ Optional:
 from __future__ import annotations
 
 import math
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Iterable
@@ -101,6 +103,8 @@ Y_DESC0, Y_DESC1 = 29.0, 30.0
 # -----------------------------
 LETTERS = list("abcdefghijklmnopqrstuvwxyz")
 DIGITS = list("0123456789")
+
+# ✅ include new ligatures here
 LIGATURE_KEYS = ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
 
 DIGIT_GLYPH_NAMES = {
@@ -217,7 +221,6 @@ def _flatten_polygons(geom) -> Iterable["ShpPolygon"]:
         for g in geom.geoms:
             yield from _flatten_polygons(g)
     else:
-        # ignore non-area geoms
         return
 
 
@@ -231,20 +234,17 @@ def _shapely_union_to_rings(polys: List[Poly]) -> List[Ring]:
         try:
             shp_polys.append(ShpPolygon(p))
         except Exception:
-            # attempt to fix with buffer(0)
             shp_polys.append(ShpPolygon(p).buffer(0))
 
     u = shp_unary_union(shp_polys)
     rings: List[Ring] = []
 
     for poly in _flatten_polygons(u):
-        # exterior
         ext = list(poly.exterior.coords)
         if len(ext) >= 2 and ext[0] == ext[-1]:
             ext = ext[:-1]
         rings.append(Ring([(float(x), float(y)) for (x, y) in ext], is_hole=False))
 
-        # holes
         for interior in poly.interiors:
             inn = list(interior.coords)
             if len(inn) >= 2 and inn[0] == inn[-1]:
@@ -252,7 +252,6 @@ def _shapely_union_to_rings(polys: List[Poly]) -> List[Ring]:
             rings.append(Ring([(float(x), float(y)) for (x, y) in inn], is_hole=True))
 
     if not rings:
-        # Fallback: treat each input poly as its own exterior
         return [Ring(p, False) for p in polys]
 
     return rings
@@ -268,7 +267,6 @@ def load_svg_glyph(svg_path: Path, key: str) -> SvgGlyph:
     _, _, w_s, _h_s = vb.strip().split()
     width_svg = float(w_s)
 
-    # collect polygons
     polys = root.findall(".//{http://www.w3.org/2000/svg}polygon")
     if not polys:
         polys = root.findall(".//polygon")
@@ -277,16 +275,16 @@ def load_svg_glyph(svg_path: Path, key: str) -> SvgGlyph:
 
     poly_list: List[Poly] = [parse_polygon_points(p.attrib["points"]) for p in polys]
 
-    # detect seam using ORIGINAL polys (before union)
     seam_x = detect_seam_x(key, width_svg, poly_list)
 
-    # combine shapes (recommended) to avoid seams
     if COMBINE_SHAPES and _HAVE_SHAPELY:
         rings = _shapely_union_to_rings(poly_list)
     else:
         if COMBINE_SHAPES and not _HAVE_SHAPELY:
-            print("[warn] shapely not installed -> not combining shapes (you may see tiny seams). "
-                  "Install with: pip install shapely")
+            print(
+                "[warn] shapely not installed -> not combining shapes (you may see tiny seams). "
+                "Install with: pip install shapely"
+            )
         rings = [Ring(p, False) for p in poly_list]
 
     return SvgGlyph(width_svg=width_svg, rings=rings, seam_x=seam_x, key=key)
@@ -320,10 +318,8 @@ def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional
 
     seam_off = (1.0 - s)
 
-    # seam compensation
     base = x * s if x < seam_x else (x * s + seam_off)
 
-    # st/sh correction band
     if key in ("st", "sh") and y is not None:
         if (y >= Y_MID1 - EPS) and (y <= Y_BASE0 + EPS):
             stroke_left = seam_x - 4.0
@@ -440,6 +436,7 @@ def make_notdef_glyph() -> object:
 
 
 def build_fea_liga() -> str:
+    # ✅ include new ligatures here
     return """
 feature liga {
   sub s t by st;
@@ -493,7 +490,7 @@ def build_master_ttf(
     cmap: Dict[int, str] = {ord(ch): ch for ch in LETTERS}
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-    cmap[0x0133] = "ij"
+    cmap[0x0133] = "ij"  # optional ĳ mapping
 
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
@@ -512,7 +509,6 @@ def build_master_ttf(
         warped_rings = [transform_ring(r, s=s, t=t, seam_x=sg.seam_x, key=sg.key) for r in sg.rings]
         glyf[gname] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
 
-        # advance width: (viewBox width + letter space), warped with seam compensation if applicable
         adv_svg = sg.width_svg + LETTER_SPACE_SVG
         adv_warped = warp_x(adv_svg, s, sg.seam_x, key=sg.key, y=None)
         adv_font = int(round(adv_warped * SCALE))
@@ -561,6 +557,10 @@ def build_variable_font() -> None:
     out_dir = root / "dist" / "fonts"
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # ✅ build artifacts go here (not dist/)
+    masters_dir = root / "build" / "fonts" / "_vf_masters"
+    masters_dir.mkdir(parents=True, exist_ok=True)
+
     keys: List[str] = []
     keys.extend(LETTERS)
     keys.extend(DIGITS)
@@ -576,73 +576,84 @@ def build_variable_font() -> None:
     wdths = [25.0, 100.0, 400.0]
     hghts = [25.0, 100.0, 400.0]
 
-    with tempfile.TemporaryDirectory() as td:
-        td_path = Path(td)
-
-        master_paths: Dict[Tuple[float, float], Path] = {}
-        for w in wdths:
-            for h in hghts:
-                p = td_path / f"unst-master-w{int(w)}-h{int(h)}.ttf"
-                build_master_ttf(out_path=p, glyph_svgs=glyph_svgs, wdth_value=w, hght_value=h)
-                master_paths[(w, h)] = p
-
-        ds = DesignSpaceDocument()
-
-        ax_w = AxisDescriptor()
-        ax_w.tag = "wdth"
-        ax_w.name = "wdth"
-        ax_w.minimum = 25.0
-        ax_w.default = 100.0
-        ax_w.maximum = 400.0
-        ds.addAxis(ax_w)
-
-        ax_h = AxisDescriptor()
-        ax_h.tag = "hght"
-        ax_h.name = "hght"
-        ax_h.minimum = 25.0
-        ax_h.default = 100.0
-        ax_h.maximum = 400.0
-        ds.addAxis(ax_h)
-
-        for (w, h), p in master_paths.items():
-            src = SourceDescriptor()
-            src.path = str(p)
-            src.name = f"master_w{int(w)}_h{int(h)}"
-            src.familyName = "unst"
-            src.styleName = "Regular"
-            src.location = {"wdth": w, "hght": h}
-            is_default = (w == 100.0 and h == 100.0)
-            src.copyLib = is_default
-            src.copyInfo = is_default
-            src.copyGroups = is_default
-            src.copyFeatures = is_default
-            ds.addSource(src)
-
-        ds_path = td_path / "unst.designspace"
-        ds.write(ds_path)
-
-        vf, _model, _masters = var_build(str(ds_path))
-        out_ttf = out_dir / "unst-variable.ttf"
-        vf.save(out_ttf)
-        print(f"Wrote: {out_ttf}")
-
+    # Clean prior masters/designspace for this project (optional but nice)
+    for p in masters_dir.glob("unst-master-w*-h*.ttf"):
         try:
-            woff_font = TTFont(out_ttf)
-            woff_font.flavor = "woff"
-            woff_path = out_dir / "unst-variable.woff"
-            woff_font.save(woff_path)
-            print(f"Wrote: {woff_path}")
-        except Exception as e:
-            print(f"Skipping WOFF (error): {e}")
-
+            p.unlink()
+        except Exception:
+            pass
+    ds_path = masters_dir / "unst.designspace"
+    if ds_path.exists():
         try:
-            woff2_font = TTFont(out_ttf)
-            woff2_font.flavor = "woff2"
-            woff2_path = out_dir / "unst-variable.woff2"
-            woff2_font.save(woff2_path)
-            print(f"Wrote: {woff2_path}")
-        except Exception as e:
-            print(f"Skipping WOFF2 (install 'brotli' to enable) (error): {e}")
+            ds_path.unlink()
+        except Exception:
+            pass
+
+    master_paths: Dict[Tuple[float, float], Path] = {}
+    for w in wdths:
+        for h in hghts:
+            p = masters_dir / f"unst-master-w{int(w)}-h{int(h)}.ttf"
+            build_master_ttf(out_path=p, glyph_svgs=glyph_svgs, wdth_value=w, hght_value=h)
+            master_paths[(w, h)] = p
+
+    ds = DesignSpaceDocument()
+
+    ax_w = AxisDescriptor()
+    ax_w.tag = "wdth"
+    ax_w.name = "wdth"
+    ax_w.minimum = 25.0
+    ax_w.default = 100.0
+    ax_w.maximum = 400.0
+    ds.addAxis(ax_w)
+
+    ax_h = AxisDescriptor()
+    ax_h.tag = "hght"
+    ax_h.name = "hght"
+    ax_h.minimum = 25.0
+    ax_h.default = 100.0
+    ax_h.maximum = 400.0
+    ds.addAxis(ax_h)
+
+    for (w, h), p in master_paths.items():
+        src = SourceDescriptor()
+        src.path = str(p)  # absolute is fine and avoids path surprises
+        src.name = f"master_w{int(w)}_h{int(h)}"
+        src.familyName = "unst"
+        src.styleName = "Regular"
+        src.location = {"wdth": w, "hght": h}
+        is_default = (w == 100.0 and h == 100.0)
+        src.copyLib = is_default
+        src.copyInfo = is_default
+        src.copyGroups = is_default
+        src.copyFeatures = is_default
+        ds.addSource(src)
+
+    ds.write(ds_path)
+
+    vf, _model, _masters = var_build(str(ds_path))
+
+    # ✅ end-user names: unst.{ext}
+    out_ttf = out_dir / "unst.ttf"
+    vf.save(out_ttf)
+    print(f"Wrote: {out_ttf}")
+
+    try:
+        woff_font = TTFont(out_ttf)
+        woff_font.flavor = "woff"
+        woff_path = out_dir / "unst.woff"
+        woff_font.save(woff_path)
+        print(f"Wrote: {woff_path}")
+    except Exception as e:
+        print(f"Skipping WOFF (error): {e}")
+
+    try:
+        woff2_font = TTFont(out_ttf)
+        woff2_font.flavor = "woff2"
+        woff2_path = out_dir / "unst.woff2"
+        woff2_font.save(woff2_path)
+        print(f"Wrote: {woff2_path}")
+    except Exception as e:
+        print(f"Skipping WOFF2 (install 'brotli' to enable) (error): {e}")
 
 
 if __name__ == "__main__":
