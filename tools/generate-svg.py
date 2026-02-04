@@ -12,7 +12,6 @@ Poly = List[Point]
 # Grid / metrics (deduced)
 # -----------------------------
 CELL_W = 12
-
 CELL_H = 30
 
 # Horizontal stroke bands (1 unit thick)
@@ -345,6 +344,243 @@ GLYPHS.update({
 })
 
 # -----------------------------
+# Capital letters A–Z (same rectangle/band logic)
+# Cap zone is y=0..20 (cap band 0..1, baseline band 19..20).
+# -----------------------------
+def cap_stem_left() -> Poly:
+    return R(0, Y_CAP0, 4, Y_BASE1)
+
+def cap_stem_right() -> Poly:
+    return R(8, Y_CAP0, 12, Y_BASE1)
+
+def cap_top_bar() -> Poly:
+    return R(0, Y_CAP0, 12, Y_CAP1)
+
+def cap_bottom_bar() -> Poly:
+    return R(0, Y_BASE0, 12, Y_BASE1)
+
+def cap_mid_bar() -> Poly:
+    return R(0, Y_MID0, 12, Y_MID1)
+
+def diag_steps_5_down_right(x0: int, y0: int, w: int = 4) -> List[Poly]:
+    """5-step staircase diagonal from top-left to bottom-right within 0..20."""
+    # y slices: 0..4, 4..8, 8..12, 12..16, 16..20
+    ys = [(0, 4), (4, 8), (8, 12), (12, 16), (16, 20)]
+    xs = [(x0 + 0, x0 + 0 + w),
+          (x0 + 2, x0 + 2 + w),
+          (x0 + 4, x0 + 4 + w),
+          (x0 + 6, x0 + 6 + w),
+          (x0 + 8, x0 + 8 + w)]
+    return [R(xa, ya, xb, yb) for (xa, xb), (ya, yb) in zip(xs, ys)]
+
+def diag_steps_5_down_left(x0: int, y0: int, w: int = 4) -> List[Poly]:
+    """5-step staircase diagonal from top-right to bottom-left within 0..20."""
+    ys = [(0, 4), (4, 8), (8, 12), (12, 16), (16, 20)]
+    xs = [(x0 + 8, x0 + 8 + w),
+          (x0 + 6, x0 + 6 + w),
+          (x0 + 4, x0 + 4 + w),
+          (x0 + 2, x0 + 2 + w),
+          (x0 + 0, x0 + 0 + w)]
+    return [R(xa, ya, xb, yb) for (xa, xb), (ya, yb) in zip(xs, ys)]
+
+GLYPHS.update({
+    "A": GlyphDef(12, [
+        cap_stem_left(),
+        cap_stem_right(),
+        cap_top_bar(),
+        cap_mid_bar(),
+    ]),
+
+    "B": GlyphDef(12, [
+        cap_stem_left(),
+        cap_top_bar(),
+        cap_mid_bar(),
+        cap_bottom_bar(),
+        R(8, Y_CAP1, 12, Y_MID0),  # upper right
+        R(8, Y_MID1, 12, Y_BASE0), # lower right
+    ]),
+
+    "C": GlyphDef(12, [
+        cap_top_bar(),
+        R(0, Y_CAP1, 4, Y_BASE0),
+        cap_bottom_bar(),
+    ]),
+
+    # D differs from O by leaving the top-right & bottom-right corners "open":
+    # right stem starts at y=1 and ends at y=19 (no pixels in the 0..1 and 19..20 bands).
+    "D": GlyphDef(12, [
+        cap_stem_left(),
+        R(0, Y_CAP0, 8, Y_CAP1),         # top bar stops at x=8
+        R(0, Y_BASE0, 8, Y_BASE1),       # bottom bar stops at x=8
+        R(8, Y_CAP1, 12, Y_BASE0),       # right vertical (no corners)
+    ]),
+
+    "E": GlyphDef(12, [
+        cap_stem_left(),
+        cap_top_bar(),
+        cap_mid_bar(),
+        cap_bottom_bar(),
+    ]),
+
+    "F": GlyphDef(12, [
+        cap_stem_left(),
+        cap_top_bar(),
+        cap_mid_bar(),
+    ]),
+
+    "G": GlyphDef(12, [
+        cap_top_bar(),
+        R(0, Y_CAP1, 4, Y_BASE0),
+        cap_bottom_bar(),
+        R(8, Y_MID1, 12, Y_BASE1),       # right lower
+        R(4, Y_MID0, 12, Y_MID1),        # inward mid bar
+    ]),
+
+    "H": GlyphDef(12, [
+        cap_stem_left(),
+        cap_stem_right(),
+        cap_mid_bar(),
+    ]),
+
+    "I": GlyphDef(12, [
+        cap_top_bar(),
+        R(4, Y_CAP1, 8, Y_BASE0),        # center stem
+        cap_bottom_bar(),
+    ]),
+
+    "J": GlyphDef(12, [
+        cap_top_bar(),
+        R(8, Y_CAP1, 12, Y_BASE0),       # right stem
+        cap_bottom_bar(),
+        R(0, 15, 4, Y_BASE0),            # left hook up
+    ]),
+
+    "K": GlyphDef(12, [
+        cap_stem_left(),
+        R(8, Y_CAP0, 12, Y_MID0),        # upper right
+        R(8, Y_MID1, 12, Y_BASE1),       # lower right
+        cap_mid_bar(),                    # mid connector across
+        R(4, Y_MID0, 8, Y_MID1),         # reinforce connector thickness
+    ]),
+
+    "L": GlyphDef(12, [
+        cap_stem_left(),
+        cap_bottom_bar(),
+    ]),
+
+    "M": GlyphDef(20, [
+        R(0,  Y_CAP0, 4,  Y_BASE1),      # left stem
+        R(8,  Y_CAP0, 12, Y_BASE1),      # middle stem
+        R(16, Y_CAP0, 20, Y_BASE1),      # right stem
+        R(0,  Y_CAP0, 20, Y_CAP1),       # cap bar (ties it together)
+    ]),
+
+    "N": GlyphDef(12, [
+        cap_stem_left(),
+        cap_stem_right(),
+        R(4, 0,  8,  5),
+        R(5, 5,  9, 10),
+        R(6, 10, 10, 15),
+        R(7, 15, 11, 20),
+    ]),
+
+    "O": GlyphDef(12, [
+        cap_top_bar(),
+        R(0, Y_CAP1, 4, Y_BASE0),
+        R(8, Y_CAP1, 12, Y_BASE0),
+        cap_bottom_bar(),
+    ]),
+
+    "P": GlyphDef(12, [
+        cap_stem_left(),
+        cap_top_bar(),
+        cap_mid_bar(),
+        R(8, Y_CAP1, 12, Y_MID0),        # upper right
+    ]),
+
+    "Q": GlyphDef(12, [
+        cap_top_bar(),
+        R(0, Y_CAP1, 4, Y_BASE0),
+        R(8, Y_CAP1, 12, Y_BASE0),
+        cap_bottom_bar(),
+        R(8, 20, 12, 24),                # small tail below baseline
+    ]),
+
+    "R": GlyphDef(12, [
+        cap_stem_left(),
+        cap_top_bar(),
+        cap_mid_bar(),
+        R(8, Y_CAP1, 12, Y_MID0),        # upper right (like P)
+        R(8, Y_MID1, 12, Y_BASE1),       # leg down
+    ]),
+
+    "S": GlyphDef(12, [
+        cap_top_bar(),
+        R(0, Y_CAP1, 4, Y_MID0),         # upper-left
+        cap_mid_bar(),
+        R(8, Y_MID1, 12, Y_BASE0),       # lower-right
+        cap_bottom_bar(),
+    ]),
+
+    "T": GlyphDef(12, [
+        cap_top_bar(),
+        R(4, Y_CAP1, 8, Y_BASE1),        # center stem
+    ]),
+
+    "U": GlyphDef(12, [
+        R(0, Y_CAP0, 4, Y_BASE0),        # left stem (no bottom band)
+        R(8, Y_CAP0, 12, Y_BASE0),       # right stem
+        cap_bottom_bar(),
+    ]),
+
+    "V": GlyphDef(12, [
+        R(0, 0, 4, 5),
+        R(1, 5, 5, 10),
+        R(2, 10, 6, 15),
+        R(3, 15, 7, 19),
+
+        R(8, 0, 12, 5),
+        R(7, 5, 11, 10),
+        R(6, 10, 10, 15),
+        R(5, 15, 9, 19),
+
+        R(4, Y_BASE0, 8, Y_BASE1),       # point
+    ]),
+
+    "W": GlyphDef(20, [
+        R(0,  Y_CAP0, 4,  Y_BASE0),
+        R(8,  Y_CAP0, 12, Y_BASE0),
+        R(16, Y_CAP0, 20, Y_BASE0),
+        R(0,  Y_BASE0, 20, Y_BASE1),     # baseline
+    ]),
+
+    "X": GlyphDef(12, [
+        *diag_steps_5_down_right(0, 0, 4),
+        *diag_steps_5_down_left(0, 0, 4),
+    ]),
+
+    "Y": GlyphDef(12, [
+        R(0, 0, 4, 5),
+        R(2, 5, 6, 10),
+
+        R(8, 0, 12, 5),
+        R(6, 5, 10, 10),
+
+        R(4, 10, 8, 20),                 # stem down
+    ]),
+
+    "Z": GlyphDef(12, [
+        cap_top_bar(),
+        cap_bottom_bar(),
+        R(8, 1, 12, 5),
+        R(6, 5, 10, 9),
+        R(4, 9, 8, 13),
+        R(2, 13, 6, 17),
+        R(0, 17, 4, 19),
+    ]),
+})
+
+# -----------------------------
 # Ligatures
 # -----------------------------
 def compose_ligature_overlap(left_key: str, right_key: str, *, overlap: int = 4) -> GlyphDef:
@@ -404,6 +640,7 @@ def ligature_bottom_like(left_key: str, right_key: str, *, gap: int = 4, right_t
     polys.append(R(x0, Y_BASE0, x1, Y_BASE1))
 
     return GlyphDef(width, polys)
+
 
 def ligature_bottom_desc_like(left_key: str, right_key: str, *, gap: int = 4, right_touch_x: int = 1) -> GlyphDef:
     """
@@ -478,14 +715,28 @@ def write_all_svgs() -> None:
     out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    keys = list("abcdefghijklmnopqrstuvwxyz0123456789") + ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
+    # NOTE: Capitals are written as character-A-cap.svg etc. to avoid overwrites on
+    # case-insensitive filesystems (character-a.svg vs character-A.svg).
+    keys = (
+        list("abcdefghijklmnopqrstuvwxyz")
+        + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        + list("0123456789")
+        + ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
+    )
+
     for key in keys:
         g = GLYPHS.get(key)
         if not g:
             raise KeyError(f"Missing glyph: {key}")
 
         svg = render_glyph_svg(key, g)
-        (out_dir / f"character-{key}.svg").write_text(svg, encoding="utf-8")
+
+        if len(key) == 1 and key.isupper():
+            fname = f"character-{key}-cap.svg"
+        else:
+            fname = f"character-{key}.svg"
+
+        (out_dir / fname).write_text(svg, encoding="utf-8")
 
     print(f"Wrote {len(keys)} SVGs to: {out_dir}")
 

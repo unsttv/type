@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
+  <g>
+    <polygon class="Z" points="0,0 12,0 12,1 0,1"/>
+    <polygon class="Z" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="Z" points="8,1 12,1 12,5 8,5"/>
+    <polygon class="Z" points="6,5 10,5 10,9 6,9"/>
+    <polygon class="Z" points="4,9 8,9 8,13 4,13"/>
+    <polygon class="Z" points="2,13 6,13 6,17 2,17"/>
+    <polygon class="Z" points="0,17 4,17 4,19 0,19"/>
+  </g>
+</svg>

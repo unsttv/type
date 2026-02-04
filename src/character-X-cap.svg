@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
+  <g>
+    <polygon class="X" points="0,0 4,0 4,4 0,4"/>
+    <polygon class="X" points="2,4 6,4 6,8 2,8"/>
+    <polygon class="X" points="4,8 8,8 8,12 4,12"/>
+    <polygon class="X" points="6,12 10,12 10,16 6,16"/>
+    <polygon class="X" points="8,16 12,16 12,20 8,20"/>
+    <polygon class="X" points="8,0 12,0 12,4 8,4"/>
+    <polygon class="X" points="6,4 10,4 10,8 6,8"/>
+    <polygon class="X" points="4,8 8,8 8,12 4,12"/>
+    <polygon class="X" points="2,12 6,12 6,16 2,16"/>
+    <polygon class="X" points="0,16 4,16 4,20 0,20"/>
+  </g>
+</svg>
