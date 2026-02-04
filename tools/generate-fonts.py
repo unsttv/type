@@ -26,6 +26,7 @@ Outputs (end-user files):
 - dist/fonts/unst.ttf
 - dist/fonts/unst.woff
 - dist/fonts/unst.woff2  (if brotli is available)
+- dist/fonts/unst.css    (copied from src/style/main.css)
 
 Requires:
   pip install fonttools
@@ -123,6 +124,30 @@ DIGIT_GLYPH_NAMES = {
 
 def key_to_glyph_name(key: str) -> str:
     return DIGIT_GLYPH_NAMES.get(key, key)
+
+
+# -----------------------------
+# CSS copy helper
+# -----------------------------
+def write_unst_css(*, root: Path, out_dir: Path) -> None:
+    """
+    Copy src/style/main.css -> dist/fonts/unst.css (verbatim).
+    """
+    src_css = root / "src" / "style" / "main.css"
+    out_css = out_dir / "unst.css"
+
+    if not src_css.exists():
+        raise FileNotFoundError(f"Missing CSS source file: {src_css}")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    css_text = src_css.read_text(encoding="utf-8")
+    # Preserve content exactly; just ensure file ends with a newline (optional but nice)
+    if css_text and not css_text.endswith("\n"):
+        css_text += "\n"
+
+    out_css.write_text(css_text, encoding="utf-8")
+    print(f"Wrote: {out_css}")
 
 
 # -----------------------------
@@ -556,6 +581,9 @@ def build_variable_font() -> None:
     src_dir = root / "src"
     out_dir = root / "dist" / "fonts"
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # ✅ also copy CSS as part of the build
+    write_unst_css(root=root, out_dir=out_dir)
 
     # ✅ build artifacts go here (not dist/)
     masters_dir = root / "build" / "fonts" / "_vf_masters"
