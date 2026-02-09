@@ -103,6 +103,7 @@ Y_DESC0, Y_DESC1 = 29.0, 30.0
 # Glyph selection / naming
 # -----------------------------
 LETTERS = list("abcdefghijklmnopqrstuvwxyz")
+CAPS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 DIGITS = list("0123456789")
 
 # ✅ include new ligatures here
@@ -142,7 +143,6 @@ def write_unst_css(*, root: Path, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     css_text = src_css.read_text(encoding="utf-8")
-    # Preserve content exactly; just ensure file ends with a newline (optional but nice)
     if css_text and not css_text.endswith("\n"):
         css_text += "\n"
 
@@ -461,7 +461,6 @@ def make_notdef_glyph() -> object:
 
 
 def build_fea_liga() -> str:
-    # ✅ include new ligatures here
     return """
 feature liga {
   sub s t by st;
@@ -507,14 +506,22 @@ def build_master_ttf(
 
     keys: List[str] = []
     keys.extend(LETTERS)
+    keys.extend(CAPS)
     keys.extend(DIGITS)
     keys.extend(LIGATURE_KEYS)
 
     glyph_order: List[str] = [".notdef", "space"] + [key_to_glyph_name(k) for k in keys]
 
-    cmap: Dict[int, str] = {ord(ch): ch for ch in LETTERS}
+    # cmap: include lowercase + uppercase
+    cmap: Dict[int, str] = {}
+    for ch in LETTERS:
+        cmap[ord(ch)] = ch
+    for ch in CAPS:
+        cmap[ord(ch)] = ch
+
     for d in DIGITS:
         cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
+
     cmap[0x0133] = "ij"  # optional ĳ mapping
 
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
@@ -576,6 +583,23 @@ def build_master_ttf(
 # -----------------------------
 # Variable font build
 # -----------------------------
+def svg_path_for_key(src_dir: Path, key: str) -> Path:
+    """
+    Resolve the SVG filename for a given glyph key.
+
+    Lowercase/digits/ligatures: character-{key}.svg
+    Capitals: prefer character-{key}-cap.svg (safe on case-insensitive FS),
+              fallback to character-{key}.svg if present.
+    """
+    p = src_dir / f"character-{key}.svg"
+    if len(key) == 1 and key.isupper():
+        p_cap = src_dir / f"character-{key}-cap.svg"
+        if p_cap.exists():
+            return p_cap
+        return p  # fallback
+    return p
+
+
 def build_variable_font() -> None:
     root = project_root()
     src_dir = root / "src"
@@ -591,14 +615,15 @@ def build_variable_font() -> None:
 
     keys: List[str] = []
     keys.extend(LETTERS)
+    keys.extend(CAPS)
     keys.extend(DIGITS)
     keys.extend(LIGATURE_KEYS)
 
     glyph_svgs: Dict[str, SvgGlyph] = {}
     for k in keys:
-        svg_path = src_dir / f"character-{k}.svg"
+        svg_path = svg_path_for_key(src_dir, k)
         if not svg_path.exists():
-            raise FileNotFoundError(f"Missing SVG: {svg_path}")
+            raise FileNotFoundError(f"Missing SVG for {k!r}: {svg_path}")
         glyph_svgs[k] = load_svg_glyph(svg_path, k)
 
     wdths = [25.0, 100.0, 400.0]

@@ -1,8 +1,8 @@
 
 # TODO
 
-- [ ] Attempt to add capital letters?
 - [ ] Build tool that can generate SVG for characters with arbitrary width values for thing and heavy lines.
+- [ ] Improve capital letter glyphs.
 
 ## Done
 
@@ -10,3 +10,4 @@
 - [x] Render font files.
 - [x] Add es ligature.
 - [x] Add yp ligature.
+- [x] Attempt to add capital letters?
