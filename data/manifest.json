@@ -1,0 +1,81 @@
+{
+  "manifestVersion": 1,
+  "generatedAt": "2026-02-18T11:34:42.571562+00:00",
+  "name": "unst",
+  "metadata": {
+    "family": "unst",
+    "subfamily": "Regular",
+    "fullName": "unst Regular",
+    "postScriptName": "unst-Regular",
+    "unitsPerEm": 1000,
+    "glyphCount": 72
+  },
+  "files": [
+    {
+      "ext": "woff2",
+      "file": "unst.woff2",
+      "recommendedFile": "unst.woff2",
+      "bytes": 4572,
+      "sha256": "05ca718ff521fdf4718a4131678fd3519c13321a2ebf26469972929c2e882c67"
+    },
+    {
+      "ext": "woff",
+      "file": "unst.woff",
+      "recommendedFile": "unst.woff",
+      "bytes": 5900,
+      "sha256": "183b7c8c74f9ec98134629e334a481eef9f9ffabb363db452d2d1e2e725c4cb5"
+    },
+    {
+      "ext": "ttf",
+      "file": "unst.ttf",
+      "recommendedFile": "unst.ttf",
+      "bytes": 13236,
+      "sha256": "d727954fefd7a7a3b9ccdd68fa91b692fc2a895cb17b9952a4045479bfb4ceb8"
+    }
+  ],
+  "unicodeRanges": [
+    [
+      48,
+      57
+    ],
+    [
+      65,
+      90
+    ],
+    [
+      97,
+      122
+    ],
+    [
+      307,
+      307
+    ]
+  ],
+  "counts": {
+    "codepointsTotal": 63,
+    "codepointsBMP": 63,
+    "codepointsAstral": 0
+  },
+  "features": {
+    "GSUB": [
+      "liga"
+    ],
+    "GPOS": []
+  },
+  "hints": {
+    "commonBlocks": {
+      "basicLatin": true,
+      "latin1Supplement": false,
+      "latinExtendedA": true,
+      "latinExtendedB": false
+    },
+    "preferredLowercaseFilenames": true,
+    "hasCasingMismatches": false,
+    "notes": [
+      "unicodeRanges is derived from cmap.getBestCmap() across all parseable font files.",
+      "GSUB/GPOS feature tags are extracted when those tables exist.",
+      "Ligature contents are not enumerated here (by design); use shaping in your sample to demonstrate them.",
+      "If files[].file differs from files[].recommendedFile, consider renaming to the recommended lowercase filenames for portability (CDN/Linux)."
+    ]
+  }
+}
