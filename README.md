@@ -33,3 +33,11 @@
   font-style: normal;
 }
 ```
+
+## Add glyphs
+
+1. Design new glyph using the [glyph designer](tools/glyph-designer.html).
+2. Save SVG to ``src``.
+3. Run `py tools\generate-data.py`.
+4. Run `py tools\generate-fonts.py`.
+5. Run `py tools\generate-manifest.py`.

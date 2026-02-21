@@ -2,7 +2,6 @@
 # TODO
 
 - [ ] Build tool that can generate SVG for characters with arbitrary width values for thing and heavy lines.
-- [ ] Improve capital letter glyphs.
 
 ## Done
 
@@ -11,3 +10,4 @@
 - [x] Add es ligature.
 - [x] Add yp ligature.
 - [x] Attempt to add capital letters?
+- [x] Improve capital letter glyphs.

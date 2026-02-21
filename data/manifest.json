@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-02-21T20:18:36.367136+00:00",
+  "generatedAt": "2026-02-21T20:51:26.338276+00:00",
   "name": "unst",
   "metadata": {
     "family": "unst",
@@ -8,29 +8,29 @@
     "fullName": "unst Regular",
     "postScriptName": "unst-Regular",
     "unitsPerEm": 1000,
-    "glyphCount": 83
+    "glyphCount": 96
   },
   "files": [
     {
       "ext": "woff2",
       "file": "unst.woff2",
       "recommendedFile": "unst.woff2",
-      "bytes": 4856,
-      "sha256": "ed1cd932d03e979069c4dacf7efe39a92d89e0abfe64a25041e869e8d5dc5abf"
+      "bytes": 5500,
+      "sha256": "bef00ac22e24f2fcfd673b44ced8da143bf7452e91dd47339d6932e3bc7f50e6"
     },
     {
       "ext": "woff",
       "file": "unst.woff",
       "recommendedFile": "unst.woff",
-      "bytes": 6252,
-      "sha256": "108d813c28c7dc36775a1cd808215d3b09824b9bdc2c092e581020e65bf35f0b"
+      "bytes": 7064,
+      "sha256": "85187bc14c3c8ad1b4312cae9acd2fe966e038ee7d78f0f2420085e5868db4f9"
     },
     {
       "ext": "ttf",
       "file": "unst.ttf",
       "recommendedFile": "unst.ttf",
-      "bytes": 14756,
-      "sha256": "89cb5ebfe661fb85ea2b610f245c661e06fafae42c0af862496f4768d3ccd0fd"
+      "bytes": 16844,
+      "sha256": "960d10dee12afa0e3845f9c3b366679e948538022bf1e39c063edbaa137b3ce3"
     }
   ],
   "unicodeRanges": [
@@ -44,10 +44,6 @@
     ],
     [
       43,
-      43
-    ],
-    [
-      45,
       46
     ],
     [
@@ -64,24 +60,48 @@
     ],
     [
       65,
-      90
+      91
+    ],
+    [
+      93,
+      93
+    ],
+    [
+      95,
+      95
     ],
     [
       97,
-      122
+      125
     ],
     [
-      124,
-      124
+      166,
+      167
+    ],
+    [
+      247,
+      247
+    ],
+    [
+      305,
+      305
     ],
     [
       307,
       307
+    ],
+    [
+      8383,
+      8383
+    ],
+    [
+      9632,
+      9632
     ]
   ],
   "counts": {
-    "codepointsTotal": 75,
-    "codepointsBMP": 75,
+    "codepointsTotal": 87,
+    "codepointsBMP": 87,
     "codepointsAstral": 0
   },
   "features": {
@@ -93,7 +113,7 @@
   "hints": {
     "commonBlocks": {
       "basicLatin": true,
-      "latin1Supplement": false,
+      "latin1Supplement": true,
       "latinExtendedA": true,
       "latinExtendedB": false
     },
