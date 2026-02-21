@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-02-18T11:34:42.571562+00:00",
+  "generatedAt": "2026-02-21T18:37:56.983101+00:00",
   "name": "unst",
   "metadata": {
     "family": "unst",
@@ -15,22 +15,22 @@
       "ext": "woff2",
       "file": "unst.woff2",
       "recommendedFile": "unst.woff2",
-      "bytes": 4572,
-      "sha256": "05ca718ff521fdf4718a4131678fd3519c13321a2ebf26469972929c2e882c67"
+      "bytes": 4616,
+      "sha256": "16bb53df574646c7010aea943cec7eb50d0b2be0f9f7b9de5774271e33ff90c7"
     },
     {
       "ext": "woff",
       "file": "unst.woff",
       "recommendedFile": "unst.woff",
       "bytes": 5900,
-      "sha256": "183b7c8c74f9ec98134629e334a481eef9f9ffabb363db452d2d1e2e725c4cb5"
+      "sha256": "e8f1cb1cc283e737dbb1d9f9073b9ba73c92bd224aa1c4a5dddd40e575b4a985"
     },
     {
       "ext": "ttf",
       "file": "unst.ttf",
       "recommendedFile": "unst.ttf",
       "bytes": 13236,
-      "sha256": "d727954fefd7a7a3b9ccdd68fa91b692fc2a895cb17b9952a4045479bfb4ceb8"
+      "sha256": "787c259eda66274083f166568edfe33010ae7a0af072e7842cfdb726d178b993"
     }
   ],
   "unicodeRanges": [

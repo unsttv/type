@@ -1,138 +1,278 @@
 #!/usr/bin/env python3
 """
-Generate per-character templates from ./src/character-*.svg
+Generate shared character templates for UNST.
 
 Outputs:
-1) templates/element/unst-{character}.php          (INLINE SVG)
-2) templates/_unst-{character}.svg.twig           (INLINE SVG)
+1) templates/element/character.php      (CakePHP element, reads SVG from ./src at runtime)
+2) templates/_character.svg.twig        (Twig partial, reads SVG via Twig `source()` from a Twig path alias)
+
+Filename schemes supported in ./src:
+- New:
+    character-uXXXX.svg
+    ligature-uXXXX-uYYYY.svg
+- Legacy (fallback while migrating):
+    character-a.svg
+    character-A-cap.svg
+    character-st.svg
 
 Assumptions:
 - This script lives in a subfolder (e.g. ./tools/), so project root is: script_dir/..
-- Source SVGs exist as: src/character-{ch}.svg
+- Source SVGs exist in: ./src
 """
 from __future__ import annotations
 
 from pathlib import Path
 import re
-from typing import Tuple
+from typing import Dict, List, Optional, Tuple
+
 
 XML_DECL_RE = re.compile(r"^\s*<\?xml\b.*?\?>\s*$", re.IGNORECASE)
+
+# New filename patterns
+RE_NEW_SINGLE = re.compile(r"^character-u([0-9a-fA-F]{1,8})\.svg$")
+RE_NEW_LIGA = re.compile(r"^ligature-((?:u[0-9a-fA-F]{1,8})(?:-u[0-9a-fA-F]{1,8})+)\.svg$")
+
+# Legacy filename patterns (kept for migration friendliness)
+RE_OLD_CAP = re.compile(r"^character-(.)-cap\.svg$")
+RE_OLD_CHAR = re.compile(r"^character-(.+)\.svg$")
 
 
 def project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def read_svg_strip_xml(svg_path: Path) -> str:
-    txt = svg_path.read_text(encoding="utf-8")
-    lines = [ln for ln in txt.splitlines() if not XML_DECL_RE.match(ln)]
-    return "\n".join(lines).strip() + "\n"
-
-
-def split_svg_open_tag(svg_text: str) -> Tuple[str, str, str]:
+def decode_svg_filename_to_key(filename: str) -> Optional[str]:
     """
-    Returns: (prefix_before_<svg, open_tag_including_>, suffix_after_open_tag)
+    Convert a source SVG filename into the glyph key string:
+      character-u0061.svg        -> "a"
+      ligature-u0073-u0074.svg   -> "st"
+      character-A-cap.svg        -> "A"   (legacy)
+      character-st.svg           -> "st"  (legacy)
     """
-    i = svg_text.lower().find("<svg")
-    if i < 0:
-        raise ValueError("No <svg> tag found")
+    m = RE_NEW_SINGLE.match(filename)
+    if m:
+        cp = int(m.group(1), 16)
+        try:
+            return chr(cp)
+        except ValueError:
+            return None
 
-    j = svg_text.find(">", i)
-    if j < 0:
-        raise ValueError("Malformed SVG: no closing '>' for <svg ...>")
+    m = RE_NEW_LIGA.match(filename)
+    if m:
+        parts = m.group(1).split("-")
+        chars: List[str] = []
+        for p in parts:
+            cp = int(p[1:], 16)  # strip leading "u"
+            try:
+                chars.append(chr(cp))
+            except ValueError:
+                return None
+        return "".join(chars)
 
-    return svg_text[:i], svg_text[i : j + 1], svg_text[j + 1 :]
+    m = RE_OLD_CAP.match(filename)
+    if m:
+        return m.group(1)
+
+    m = RE_OLD_CHAR.match(filename)
+    if m:
+        # legacy catch-all (single chars or ligature keys)
+        return m.group(1)
+
+    return None
 
 
-def remove_attr(open_tag: str, attr_name: str) -> str:
+def collect_svg_map(src_dir: Path) -> Dict[str, str]:
     """
-    Removes attr_name="..." or attr_name='...' from the open tag (best-effort).
+    Returns mapping:
+      glyph_key -> source filename (basename only)
+
+    If duplicates exist, prefer new filename scheme over legacy.
     """
-    # remove e.g.  class="..."  or class='...'
-    pat = re.compile(rf"""\s+{re.escape(attr_name)}\s*=\s*(["']).*?\1""", re.IGNORECASE | re.DOTALL)
-    return pat.sub("", open_tag, count=1)
+    out: Dict[str, str] = {}
+
+    # Deterministic order
+    files = sorted([p for p in src_dir.glob("*.svg") if p.is_file()], key=lambda p: p.name.lower())
+
+    for p in files:
+        key = decode_svg_filename_to_key(p.name)
+        if not key:
+            continue
+
+        # Prefer new filenames when both old/new exist
+        existing = out.get(key)
+        if existing is None:
+            out[key] = p.name
+            continue
+
+        is_new = bool(RE_NEW_SINGLE.match(p.name) or RE_NEW_LIGA.match(p.name))
+        existing_is_new = bool(RE_NEW_SINGLE.match(existing) or RE_NEW_LIGA.match(existing))
+        if is_new and not existing_is_new:
+            out[key] = p.name
+
+    return out
 
 
-def inject_twig_svg(open_tag: str, ch: str) -> str:
+def key_sort_tuple(key: str) -> Tuple[int, Tuple[int, ...]]:
+    return (len(key), tuple(ord(c) for c in key))
+
+
+def twig_escape_single_quoted(s: str) -> str:
+    # Twig single-quoted strings use backslash escapes
+    return s.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def build_twig_template(svg_map: Dict[str, str]) -> str:
     """
-    Ensure root <svg> has:
-      class="unst unst-{ch} {% if class is defined and class %}{{ class }}{% endif %}"
-    and optional attrs:
-      {% if attrs is defined and attrs %} {{ attrs|raw }}{% endif %}
+    One shared Twig template:
+      - expects `character`
+      - optional `svg_namespace` (defaults to '@unst_src')
+      - returns inline SVG source (if available)
     """
-    open_tag = remove_attr(open_tag, "class")
+    items = sorted(svg_map.items(), key=lambda kv: key_sort_tuple(kv[0]))
+    map_lines = []
+    for key, fname in items:
+        map_lines.append(
+            f"  '{twig_escape_single_quoted(key)}': '{twig_escape_single_quoted(fname)}',"
+        )
 
-    # insert before the closing '>'
-    if not open_tag.endswith(">"):
-        raise ValueError("Open tag does not end with '>'")
+    map_block = "\n".join(map_lines)
 
-    class_attr = (
-        f' class="unst unst-{ch}'
-        f'{{% if class is defined and class %}} {{ {{ class }} }}{{% endif %}}"'
-    )
-    attrs_hook = '{% if attrs is defined and attrs %} {{ attrs|raw }}{% endif %}'
+    return f"""{{# Auto-generated shared UNST character SVG partial. #}}
+{{#
+Usage (Twig / Symfony):
+  {{% include '_character.svg.twig' with {{ character: 'a' }} %}}
+  {{% include '_character.svg.twig' with {{ character: 'st' }} %}}
 
-    return open_tag[:-1] + class_attr + " " + attrs_hook + ">"
+Optional:
+  - svg_namespace: Twig path alias to the package's /src directory (default: '@unst_src')
+
+Expected Twig config (example):
+  twig:
+    paths:
+      '%kernel.project_dir%/vendor/<vendor>/<package>/src': unst_src
+#}}
+
+{{% set _unst_svg_namespace = svg_namespace|default('@unst_src') %}}
+{{% set _unst_character = character|default('') %}}
+
+{{% set _unst_svg_map = {{
+{map_block}
+}} %}}
+
+{{% set _unst_file = attribute(_unst_svg_map, _unst_character)|default(null) %}}
+{{% if _unst_file %}}
+{{{{ source(_unst_svg_namespace ~ '/' ~ _unst_file, true)
+    |replace({{
+        '<?xml version="1.0" encoding="utf-8"?>\\n': '',
+        '<?xml version="1.0" encoding="utf-8"?>': ''
+    }})
+    |raw }}}}
+{{% endif %}}
+"""
 
 
-def inject_php_svg(open_tag: str, ch: str) -> str:
+def build_cake_template() -> str:
     """
-    Ensure root <svg> has:
-      class="unst unst-{ch} <?= htmlspecialchars($class, ENT_QUOTES) ?>"
-      <?= $attr_str ?>
+    One shared CakePHP element:
+      - expects $character
+      - resolves src path relative to this template file
+      - supports single-char + ligature keys
+      - outputs SVG contents if file exists
     """
-    open_tag = remove_attr(open_tag, "class")
-
-    if not open_tag.endswith(">"):
-        raise ValueError("Open tag does not end with '>'")
-
-    class_attr = f' class="unst unst-{ch} <?= htmlspecialchars($class, ENT_QUOTES) ?>"'
-    attrs_hook = "<?= $attr_str ?>"
-
-    return open_tag[:-1] + class_attr + attrs_hook + ">"
-
-
-def php_element_template(ch: str, svg_inline: str) -> str:
-    """
-    $class (string) optional extra classes
-    $attrs (array) optional extra svg attributes, e.g. ['aria-hidden' => 'true', 'role' => 'img', 'class' => '...']
-    """
-    return f"""<?php
+    return """<?php
 /**
- * Auto-generated UNST SVG element for "{ch}"
+ * Auto-generated shared UNST SVG element.
  *
  * Usage (CakePHP):
- *   echo $this->element('unst-{ch}');
+ *   echo $this->element('character', ['character' => 'a']);
+ *   echo $this->element('character', ['character' => 'st']);
  *
  * Variables:
- *   - $class (string) extra classes to append
- *   - $attrs (array)  extra SVG attributes (key => value). Use true for boolean attrs.
+ *   - $character (string) required; single glyph char or ligature key (e.g. "st")
  */
-$class = trim((string)($class ?? ''));
 
-// Allow class via $attrs too (merged)
-$attrs = $attrs ?? [];
-if (is_array($attrs) && isset($attrs['class'])) {{
-    $class = trim($class . ' ' . (string)$attrs['class']);
-    unset($attrs['class']);
-}}
+$character = (string)($character ?? '');
+if ($character === '') {
+    return;
+}
 
-// Build attribute string for SVG root
-$attr_str = '';
-if (is_array($attrs)) {{
-    foreach ($attrs as $k => $v) {{
-        if ($v === null || $v === false) continue;
-        $k_esc = htmlspecialchars((string)$k, ENT_QUOTES);
-        if ($v === true) {{
-            $attr_str .= ' ' . $k_esc;
-            continue;
-        }}
-        $v_esc = htmlspecialchars((string)$v, ENT_QUOTES);
-        $attr_str .= ' ' . $k_esc . '="' . $v_esc . '"';
-    }}
-}}
-?>
-{svg_inline}
+/**
+ * Split UTF-8 string into chars.
+ *
+ * @return list<string>
+ */
+$unst_split_chars = static function (string $s): array {
+    $parts = preg_split('//u', $s, -1, PREG_SPLIT_NO_EMPTY);
+    return is_array($parts) ? $parts : [];
+};
+
+/**
+ * Convert one UTF-8 character to lowercase hex codepoint (min 4 digits), e.g. "A" => "0041".
+ */
+$unst_codepoint_hex = static function (string $ch): ?string {
+    $cp = null;
+
+    if (function_exists('mb_ord')) {
+        $cp = mb_ord($ch, 'UTF-8');
+    } elseif (class_exists('IntlChar')) {
+        $cp = \\IntlChar::ord($ch);
+    } else {
+        // Fallback: only works for single-byte chars
+        $bytes = @unpack('C*', $ch);
+        if (is_array($bytes) && count($bytes) === 1) {
+            $cp = (int)array_values($bytes)[0];
+        }
+    }
+
+    if (!is_int($cp) || $cp < 0) {
+        return null;
+    }
+
+    $hex = strtolower(dechex($cp));
+    return str_pad($hex, 4, '0', STR_PAD_LEFT);
+};
+
+$chars = $unst_split_chars($character);
+if (!$chars) {
+    return;
+}
+
+$hexes = [];
+foreach ($chars as $ch) {
+    $hx = $unst_codepoint_hex($ch);
+    if ($hx === null) {
+        return;
+    }
+    $hexes[] = $hx;
+}
+
+if (count($hexes) === 1) {
+    $filename = 'character-u' . $hexes[0] . '.svg';
+} else {
+    $parts = [];
+    foreach ($hexes as $hx) {
+        $parts[] = 'u' . $hx;
+    }
+    $filename = 'ligature-' . implode('-', $parts) . '.svg';
+}
+
+// templates/element/character.php -> project root is two levels up
+$srcDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'src';
+$svgPath = $srcDir . DIRECTORY_SEPARATOR . $filename;
+
+if (!is_file($svgPath) || !is_readable($svgPath)) {
+    return;
+}
+
+$svg = @file_get_contents($svgPath);
+if ($svg === false) {
+    return;
+}
+
+// Strip XML declaration for inline SVG usage in HTML
+$svg = preg_replace('/^\\s*<\\?xml\\b.*?\\?>\\s*/is', '', $svg, 1);
+
+echo $svg;
 """
 
 
@@ -143,41 +283,31 @@ def main() -> None:
     php_dir = root / "templates" / "element"
     twig_dir = root / "templates"
 
+    if not src_dir.exists():
+        raise SystemExit(f"Source directory not found: {src_dir}")
+
     php_dir.mkdir(parents=True, exist_ok=True)
     twig_dir.mkdir(parents=True, exist_ok=True)
 
-    svgs = sorted(src_dir.glob("character-*.svg"))
-    if not svgs:
-        raise SystemExit(f"No SVGs found in {src_dir} (expected src/character-*.svg)")
-
-    count = 0
-    for svg_path in svgs:
-        ch = svg_path.stem.replace("character-", "", 1)
-        if not ch:
-            continue
-
-        svg_text = read_svg_strip_xml(svg_path)
-        prefix, open_tag, suffix = split_svg_open_tag(svg_text)
-
-        # --- Twig SVG partial ---
-        twig_open = inject_twig_svg(open_tag, ch)
-        twig_svg = prefix + twig_open + suffix
-        twig_path = twig_dir / f"_unst-{ch}.svg.twig"
-        twig_path.write_text(
-            "{# Auto-generated. Edit /src/character-*.svg if needed. #}\n" + twig_svg,
-            encoding="utf-8",
+    svg_map = collect_svg_map(src_dir)
+    if not svg_map:
+        raise SystemExit(
+            f"No supported SVG glyph files found in {src_dir} "
+            "(expected character-uXXXX.svg / ligature-uXXXX-uYYYY.svg)"
         )
 
-        # --- PHP element (INLINE SVG) ---
-        php_open = inject_php_svg(open_tag, ch)
-        php_svg = prefix + php_open + suffix
-        php_path = php_dir / f"unst-{ch}.php"
-        php_path.write_text(php_element_template(ch, php_svg), encoding="utf-8")
+    twig_path = twig_dir / "_character.svg.twig"
+    php_path = php_dir / "character.php"
 
-        count += 1
+    twig_path.write_text(build_twig_template(svg_map), encoding="utf-8")
+    php_path.write_text(build_cake_template(), encoding="utf-8")
 
-    print(f"Generated {count} PHP inline-SVG elements in: {php_dir}")
-    print(f"Generated {count} Twig inline-SVG partials in: {twig_dir}")
+    single_count = sum(1 for k in svg_map if len(k) == 1)
+    liga_count = sum(1 for k in svg_map if len(k) > 1)
+
+    print(f"Wrote Twig template: {twig_path}")
+    print(f"Wrote CakePHP template: {php_path}")
+    print(f"Indexed {len(svg_map)} glyphs from {src_dir} ({single_count} single, {liga_count} ligatures)")
 
 
 if __name__ == "__main__":

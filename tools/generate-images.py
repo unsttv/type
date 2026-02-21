@@ -2,10 +2,12 @@
 """
 Render SVG glyphs from ./src into PNGs at ./dist/images with filenames:
 
-  dist/images/unst-{character}.png
+  dist/images/unst-uXXXX.png
+  dist/images/unst-uXXXX-uYYYY.png   (ligatures)
 
 Input files are expected as:
-  src/character-{character}.svg
+  src/character-uXXXX.svg
+  src/ligature-uXXXX-uYYYY.svg
 
 This script is meant to live in a subfolder (e.g. ./tools/), so project root
 is computed as: <this_file_dir>/..
@@ -27,7 +29,7 @@ import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 # Optional CairoSVG backend
 try:
@@ -122,6 +124,20 @@ def pick_backend(requested: str) -> str:
     return "none"
 
 
+def output_token_from_svg_path(svg_path: Path) -> Optional[str]:
+    """
+    Convert:
+      character-u0061.svg         -> u0061
+      ligature-u0073-u0074.svg    -> u0073-u0074
+    """
+    stem = svg_path.stem
+    if stem.startswith("character-"):
+        return stem[len("character-"):]
+    if stem.startswith("ligature-"):
+        return stem[len("ligature-"):]
+    return None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--height", type=int, default=512, help="Output PNG height in pixels (default: 512)")
@@ -144,17 +160,21 @@ def main() -> None:
             "- Install Inkscape and ensure 'inkscape' is on your PATH."
         )
 
-    svgs = sorted(src_dir.glob("character-*.svg"))
+    # New filename scheme
+    svgs = sorted(list(src_dir.glob("character-u*.svg")) + list(src_dir.glob("ligature-u*.svg")))
     if not svgs:
-        raise SystemExit(f"No input SVGs found in: {src_dir} (expected files like character-a.svg)")
+        raise SystemExit(
+            f"No input SVGs found in: {src_dir} "
+            "(expected files like character-u0061.svg / ligature-u0073-u0074.svg)"
+        )
 
     ok = 0
     for svg_path in svgs:
-        ch = svg_path.stem.replace("character-", "", 1)
-        if not ch:
+        token = output_token_from_svg_path(svg_path)
+        if not token:
             continue
 
-        png_path = out_dir / f"unst-{ch}.png"
+        png_path = out_dir / f"unst-{token}.png"
         ensure_parent_dir(png_path)
 
         if backend == "cairosvg":

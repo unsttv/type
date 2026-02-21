@@ -273,7 +273,11 @@ def render_section(canvas: Image.Image, inst_path: Path, tokens: List[Token], y_
 
 def main() -> None:
     script_dir = Path(__file__).resolve().parent
-    default_font = (script_dir / "../dist/fonts/unst-variable.ttf").resolve()
+    candidates = [
+        (script_dir / "../dist/fonts/unst.ttf").resolve(),
+        (script_dir / "../dist/fonts/unst-variable.ttf").resolve(),  # fallback for older builds
+    ]
+    default_font = next((p for p in candidates if p.exists()), candidates[0])
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--font", type=Path, default=default_font)

@@ -583,21 +583,26 @@ def build_master_ttf(
 # -----------------------------
 # Variable font build
 # -----------------------------
+def codepoint_hex(ch: str) -> str:
+    """Lowercase hex Unicode codepoint, minimum 4 digits."""
+    return f"{ord(ch):04x}"
+
+
 def svg_path_for_key(src_dir: Path, key: str) -> Path:
     """
-    Resolve the SVG filename for a given glyph key.
+    Resolve the SVG filename for a given glyph key using the new scheme:
 
-    Lowercase/digits/ligatures: character-{key}.svg
-    Capitals: prefer character-{key}-cap.svg (safe on case-insensitive FS),
-              fallback to character-{key}.svg if present.
+    Single codepoint glyphs:
+      character-uXXXX.svg
+
+    Ligatures / multi-codepoint glyphs:
+      ligature-uXXXX-uYYYY.svg
     """
-    p = src_dir / f"character-{key}.svg"
-    if len(key) == 1 and key.isupper():
-        p_cap = src_dir / f"character-{key}-cap.svg"
-        if p_cap.exists():
-            return p_cap
-        return p  # fallback
-    return p
+    if len(key) == 1:
+        return src_dir / f"character-u{codepoint_hex(key)}.svg"
+
+    cps = "-".join(f"u{codepoint_hex(ch)}" for ch in key)
+    return src_dir / f"ligature-{cps}.svg"
 
 
 def build_variable_font() -> None:

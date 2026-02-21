@@ -1,0 +1,100 @@
+{# Auto-generated shared UNST character SVG partial. #}
+{#
+Usage (Twig / Symfony):
+  {% include '_character.svg.twig' with { character: 'a' } %}
+  {% include '_character.svg.twig' with { character: 'st' } %}
+
+Optional:
+  - svg_namespace: Twig path alias to the package's /src directory (default: '@unst_src')
+
+Expected Twig config (example):
+  twig:
+    paths:
+      '%kernel.project_dir%/vendor/<vendor>/<package>/src': unst_src
+#}
+
+{% set _unst_svg_namespace = svg_namespace|default('@unst_src') %}
+{% set _unst_character = character|default('') %}
+
+{% set _unst_svg_map = {
+  '0': 'character-u0030.svg',
+  '1': 'character-u0031.svg',
+  '2': 'character-u0032.svg',
+  '3': 'character-u0033.svg',
+  '4': 'character-u0034.svg',
+  '5': 'character-u0035.svg',
+  '6': 'character-u0036.svg',
+  '7': 'character-u0037.svg',
+  '8': 'character-u0038.svg',
+  '9': 'character-u0039.svg',
+  'A': 'character-u0041.svg',
+  'B': 'character-u0042.svg',
+  'C': 'character-u0043.svg',
+  'D': 'character-u0044.svg',
+  'E': 'character-u0045.svg',
+  'F': 'character-u0046.svg',
+  'G': 'character-u0047.svg',
+  'H': 'character-u0048.svg',
+  'I': 'character-u0049.svg',
+  'J': 'character-u004a.svg',
+  'K': 'character-u004b.svg',
+  'L': 'character-u004c.svg',
+  'M': 'character-u004d.svg',
+  'N': 'character-u004e.svg',
+  'O': 'character-u004f.svg',
+  'P': 'character-u0050.svg',
+  'Q': 'character-u0051.svg',
+  'R': 'character-u0052.svg',
+  'S': 'character-u0053.svg',
+  'T': 'character-u0054.svg',
+  'U': 'character-u0055.svg',
+  'V': 'character-u0056.svg',
+  'W': 'character-u0057.svg',
+  'X': 'character-u0058.svg',
+  'Y': 'character-u0059.svg',
+  'Z': 'character-u005a.svg',
+  'a': 'character-u0061.svg',
+  'b': 'character-u0062.svg',
+  'c': 'character-u0063.svg',
+  'd': 'character-u0064.svg',
+  'e': 'character-u0065.svg',
+  'f': 'character-u0066.svg',
+  'g': 'character-u0067.svg',
+  'h': 'character-u0068.svg',
+  'i': 'character-u0069.svg',
+  'j': 'character-u006a.svg',
+  'k': 'character-u006b.svg',
+  'l': 'character-u006c.svg',
+  'm': 'character-u006d.svg',
+  'n': 'character-u006e.svg',
+  'o': 'character-u006f.svg',
+  'p': 'character-u0070.svg',
+  'q': 'character-u0071.svg',
+  'r': 'character-u0072.svg',
+  's': 'character-u0073.svg',
+  't': 'character-u0074.svg',
+  'u': 'character-u0075.svg',
+  'v': 'character-u0076.svg',
+  'w': 'character-u0077.svg',
+  'x': 'character-u0078.svg',
+  'y': 'character-u0079.svg',
+  'z': 'character-u007a.svg',
+  'ch': 'ligature-u0063-u0068.svg',
+  'ct': 'ligature-u0063-u0074.svg',
+  'es': 'ligature-u0065-u0073.svg',
+  'fi': 'ligature-u0066-u0069.svg',
+  'ij': 'ligature-u0069-u006a.svg',
+  'sh': 'ligature-u0073-u0068.svg',
+  'st': 'ligature-u0073-u0074.svg',
+  'yp': 'ligature-u0079-u0070.svg',
+} %}
+
+{% set _unst_file = attribute(_unst_svg_map, _unst_character)|default(null) %}
+{% if _unst_file %}
+{{ source(_unst_svg_namespace ~ '/' ~ _unst_file, true)
+    |replace({
+        '<?xml version="1.0" encoding="utf-8"?>\n': '',
+        '<?xml version="1.0" encoding="utf-8"?>': ''
+    })
+    |raw }}
+{% endif %}
