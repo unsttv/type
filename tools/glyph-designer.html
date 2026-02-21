@@ -263,6 +263,15 @@
         #editorSvg .guide.base { stroke: var(--guide-base); }
         #editorSvg .guide.desc { stroke: var(--guide-desc); }
 
+        /* Dedicated visible baseline line (drawn above cells) */
+        #editorSvg .guide.baseline {
+            stroke: #3b82f6;
+            stroke-width: 0.2;
+            vector-effect: non-scaling-stroke;
+            pointer-events: none;
+            shape-rendering: crispEdges;
+        }
+
         .right {
             display: grid;
             grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
@@ -334,6 +343,7 @@
             color: var(--danger);
             font-size: 12px;
             min-height: 16px;
+            white-space: pre-wrap;
         }
 
         @media (max-width: 1040px) {
@@ -382,6 +392,7 @@
             </div>
 
             <div class="btns">
+                <button id="spaceBtn" type="button">Space</button>
                 <button id="clearBtn" type="button">Clear</button>
                 <button id="invertBtn" type="button">Invert in width</button>
                 <button id="fitWidthBtn" type="button">Fit width</button>
@@ -390,7 +401,7 @@
             </div>
 
             <div class="hint">
-                Click to toggle. Drag to paint. The grid structure is based on your lowercase/digit band system, but you can design any character now (including capitals).
+                Click to toggle. Drag to paint. The grid follows your lowercase/digit band system, but you can design any character (including capitals and space).
             </div>
             <div id="warn" class="warn"></div>
             <div class="status">
@@ -518,11 +529,12 @@
     function inBoundsCell(r, c) { return X_BREAKS[c + 1] <= currentWidth(); }
 
     function getRawInput() {
-        return (glyphCharInput.value || "").trim();
+        // Don't trim: space (U+0020) must remain valid
+        return glyphCharInput.value ?? "";
     }
 
     function getGlyphChar() {
-        const chars = Array.from(getRawInput());
+        const chars = Array.from(getRawInput()); // codepoint-safe
         return chars[0] || "";
     }
 
@@ -533,6 +545,12 @@
     function codepointHex(ch) {
         if (!ch) return "0000";
         return ch.codePointAt(0).toString(16).padStart(4, "0");
+    }
+
+    function printableName(ch) {
+        if (ch === "") return "(none)";
+        if (ch === " ") return "SPACE";
+        return ch;
     }
 
     function filenameForCurrentGlyph(ext) {
@@ -639,11 +657,13 @@
         const width = currentWidth();
         return {
             key: ch,
+            label: printableName(ch),
             codepoint: ch ? `U+${codepointHex(ch).toUpperCase()}` : "",
             width,
             cellHeight: CELL_H,
             xBreaks: X_BREAKS.slice(),
             yBreaks: Y_BREAKS.slice(),
+            baselineY: Y.BASE0,
             polys: currentPolys(),
             presetAvailable: hasPreset(ch)
         };
@@ -660,9 +680,11 @@
         ).join("\n");
 
         const charAttr = ch ? ` data-char="${escapeXmlAttr(ch)}"` : "";
+        const codeAttr = ch ? ` data-codepoint="U+${codepointHex(ch).toUpperCase()}"` : "";
+
         return [
             `<?xml version="1.0" encoding="utf-8"?>`,
-            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${CELL_H}" width="${width}" height="${CELL_H}" shape-rendering="crispEdges"${charAttr}>`,
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${CELL_H}" width="${width}" height="${CELL_H}" shape-rendering="crispEdges"${charAttr}${codeAttr}>`,
             `  <g>`,
             polyMarkup || `    <!-- empty glyph -->`,
             `  </g>`,
@@ -681,7 +703,7 @@
 
     // -----------------------------
     // Presets (lowercase + digits only)
-    // You can still design any other glyph manually.
+    // Manual editing works for any character.
     // -----------------------------
     const E_RECTS = [
         R(0, Y.TOP0, 12, Y.TOP1),
@@ -776,7 +798,18 @@
     // -----------------------------
     // Editor SVG build
     // -----------------------------
+    function makeLine(x1, y1, x2, y2, cls) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(x1));
+        line.setAttribute("y1", String(y1));
+        line.setAttribute("x2", String(x2));
+        line.setAttribute("y2", String(y2));
+        line.setAttribute("class", cls);
+        return line;
+    }
+
     function buildEditorSvg() {
+        // Subtle guides under cells
         const guideDefs = [
             { y: Y.CAP1, cls: "cap" },
             { y: Y.TOP0, cls: "xheight" },
@@ -786,15 +819,10 @@
         ];
 
         for (const g of guideDefs) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", "0");
-            line.setAttribute("x2", "20");
-            line.setAttribute("y1", String(g.y));
-            line.setAttribute("y2", String(g.y));
-            line.setAttribute("class", `guide ${g.cls}`);
-            editorSvg.appendChild(line);
+            editorSvg.appendChild(makeLine(0, g.y, 20, g.y, `guide ${g.cls}`));
         }
 
+        // Cells
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const [x1, y1, x2, y2] = cellRect(r, c);
@@ -815,6 +843,7 @@
             }
         }
 
+        // Outline
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         outline.setAttribute("x", "0");
         outline.setAttribute("y", "0");
@@ -825,6 +854,9 @@
         outline.setAttribute("stroke-width", "0.2");
         outline.setAttribute("pointer-events", "none");
         editorSvg.appendChild(outline);
+
+        // Visible baseline overlay (drawn ABOVE cells so it never disappears)
+        editorSvg.appendChild(makeLine(0, Y.BASE0, 20, Y.BASE0, "guide baseline"));
 
         editorSvg.addEventListener("pointerup", stopDragging);
         editorSvg.addEventListener("pointercancel", stopDragging);
@@ -873,7 +905,7 @@
             return;
         }
         if (!hasPreset(ch)) {
-            warnEl.textContent = "No built-in preset for this character. Manual editing is enabled.";
+            warnEl.textContent = `No built-in preset for "${printableName(ch)}". Manual editing is enabled.`;
             return;
         }
         warnEl.textContent = "";
@@ -924,6 +956,11 @@
         updateUI();
     });
 
+    $("spaceBtn").addEventListener("click", () => {
+        glyphCharInput.value = " ";
+        updateUI();
+    });
+
     $("clearBtn").addEventListener("click", () => {
         clearState();
         updateUI();
@@ -933,8 +970,6 @@
     $("fitWidthBtn").addEventListener("click", fitWidthToContent);
 
     glyphCharInput.addEventListener("input", () => {
-        const chars = Array.from(glyphCharInput.value || "");
-        glyphCharInput.value = chars.join(""); // keep user input visible
         const ch = getGlyphChar();
         if (hasPreset(ch)) {
             loadPresetForChar(ch);
