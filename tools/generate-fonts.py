@@ -1,52 +1,47 @@
 #!/usr/bin/env python3
 """
-Build UNST variable font from SVG polygons in ./src.
+Build UNST variable font from:
+- Single glyph geometry in data/glyphs.py
+- Ligature SVGs in ./src (ligature-uXXXX-uYYYY.svg)
 
 Key behaviors implemented:
 - Axes: wdth (25..400, default 100), hght (25..400, default 100)
 - Thick geometry scales with axes, BUT:
   - canonical 1-unit horizontal bands stay 1 unit tall under hght changes (piecewise Y warp)
   - st-like seam compensation keeps the seam column 1 unit wide under wdth changes
-- For st-like ligatures (ch/sh/ct and also st even if st is one polygon):
-  apply seam compensation in X so the "gap" behaves like thick bars and the seam column stays 1 unit:
+- For st-like ligatures (ch/sh/ct and also st):
+  apply seam compensation in X so the seam column stays 1 unit:
     x' = x*s              for x < seam
     x' = x*s + (1-s)      for x >= seam
   plus an additional seam-region correction for st/sh so the bottom-right 's' stroke scales correctly.
 
-NEW/RESTORED:
-- Combine/union all SVG polygons per glyph (once, in base SVG space) before generating masters.
-  This prevents tiny seams/gaps between adjacent shapes during interpolation/rasterization.
-  Requires: pip install shapely
-  (If shapely is missing, the script falls back to non-unioned polygons.)
+Optional (recommended):
+- Shapely union of polygons before master generation to prevent tiny seams:
+  pip install shapely
 
 Build artifacts:
-- Masters + designspace are written to: build/fonts/_vf_masters/
+- Masters + designspace: build/fonts/_vf_masters/
 
-Outputs (end-user files):
+Outputs:
 - dist/fonts/unst.ttf
 - dist/fonts/unst.woff
-- dist/fonts/unst.woff2  (if brotli is available)
+- dist/fonts/unst.woff2 (if brotli available)
 - dist/fonts/unst.css    (copied from src/style/main.css)
-
-Requires:
-  pip install fonttools
-Optional:
-  pip install brotli  (for woff2)
-  pip install shapely (recommended: removes hairline seams)
 """
 from __future__ import annotations
 
+import importlib.util
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Iterable
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import xml.etree.ElementTree as ET
 
+from fontTools.designspaceLib import AxisDescriptor, DesignSpaceDocument, SourceDescriptor
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
-from fontTools.designspaceLib import DesignSpaceDocument, AxisDescriptor, SourceDescriptor
 from fontTools.varLib import build as var_build
 
 try:
@@ -67,31 +62,29 @@ COMBINE_SHAPES = True
 
 EPS = 1e-9
 
-
 # -----------------------------
 # Project paths
 # -----------------------------
 def project_root() -> Path:
-    # script lives in a subfolder => project root is exactly one directory above script folder
     return Path(__file__).resolve().parent.parent
 
 
 # -----------------------------
-# Geometry / metrics (must match your SVG generator)
+# Geometry / metrics (must match your design system)
 # -----------------------------
 UPM = 1000
 
-# SVG coordinate system (y down). Your design’s "baseline" is y=20.
+# SVG coordinate system (y down). Design baseline is y=20.
 SVG_BASELINE_Y = 20.0
-SVG_BASE_H = 30.0  # base viewBox height in SVG units
+SVG_BASE_H = 30.0
 
 # Scale SVG units -> font units
-SCALE = UPM / SVG_BASE_H  # 33.333...
+SCALE = UPM / SVG_BASE_H
 
-# Default letter spacing in SVG units (like your thick bar width)
+# Default letter spacing in SVG units
 LETTER_SPACE_SVG = 4.0
 
-# Canonical bands (in SVG units) used to keep global alignment under hght changes
+# Canonical horizontal bands (in SVG units)
 Y_CAP0,  Y_CAP1  = 0.0, 1.0
 Y_TOP0,  Y_TOP1  = 9.0, 10.0
 Y_MID0,  Y_MID1  = 14.0, 15.0
@@ -100,14 +93,20 @@ Y_DESC0, Y_DESC1 = 29.0, 30.0
 
 
 # -----------------------------
-# Glyph selection / naming
+# Ligatures (still loaded from SVG)
 # -----------------------------
-LETTERS = list("abcdefghijklmnopqrstuvwxyz")
-CAPS = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-DIGITS = list("0123456789")
-
-# ✅ include new ligatures here
 LIGATURE_KEYS = ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
+
+LIGATURE_RULES = [
+    ("s", "t", "st"),
+    ("c", "h", "ch"),
+    ("c", "t", "ct"),
+    ("f", "i", "fi"),
+    ("i", "j", "ij"),
+    ("s", "h", "sh"),
+    ("e", "s", "es"),
+    ("y", "p", "yp"),
+]
 
 DIGIT_GLYPH_NAMES = {
     "0": "zero",
@@ -123,17 +122,30 @@ DIGIT_GLYPH_NAMES = {
 }
 
 
+def char_to_glyph_name(ch: str) -> str:
+    """Stable glyph naming for singles loaded from data/glyphs.py."""
+    if ch == " ":
+        return "space"
+    if ch in DIGIT_GLYPH_NAMES:
+        return DIGIT_GLYPH_NAMES[ch]
+    if len(ch) == 1 and (("a" <= ch <= "z") or ("A" <= ch <= "Z")):
+        return ch
+
+    cp = ord(ch)
+    if cp <= 0xFFFF:
+        return f"uni{cp:04X}"
+    return f"u{cp:X}"
+
+
 def key_to_glyph_name(key: str) -> str:
-    return DIGIT_GLYPH_NAMES.get(key, key)
+    """Ligature glyphs keep literal names (st, ch, fi, ...)."""
+    return key
 
 
 # -----------------------------
 # CSS copy helper
 # -----------------------------
 def write_unst_css(*, root: Path, out_dir: Path) -> None:
-    """
-    Copy src/style/main.css -> dist/fonts/unst.css (verbatim).
-    """
     src_css = root / "src" / "style" / "main.css"
     out_css = out_dir / "unst.css"
 
@@ -151,22 +163,10 @@ def write_unst_css(*, root: Path, out_dir: Path) -> None:
 
 
 # -----------------------------
-# SVG parsing
+# Geometry types
 # -----------------------------
 Point = Tuple[float, float]
 Poly = List[Point]
-
-
-def parse_polygon_points(points_str: str) -> Poly:
-    pts: List[Point] = []
-    for token in points_str.replace("\n", " ").replace("\t", " ").split():
-        if not token.strip():
-            continue
-        x_s, y_s = token.split(",")
-        pts.append((float(x_s), float(y_s)))
-    if len(pts) < 3:
-        raise ValueError(f"Polygon has too few points: {points_str!r}")
-    return pts
 
 
 @dataclass(frozen=True)
@@ -178,62 +178,23 @@ class Ring:
 @dataclass
 class SvgGlyph:
     width_svg: float
-    rings: List[Ring]              # merged rings (exteriors + holes)
-    seam_x: Optional[float]        # for st-like ligature seam compensation
-    key: str
+    rings: List[Ring]
+    seam_x: Optional[float]
+    key: str  # debug / seam-logic key
 
 
-def is_axis_aligned_rect(poly: Poly) -> Optional[Tuple[float, float, float, float]]:
-    """
-    If poly is an axis-aligned rectangle (4 points), return (x0,y0,x1,y1) with x0<x1, y0<y1.
-    """
-    if len(poly) != 4:
-        return None
-    xs = sorted({p[0] for p in poly})
-    ys = sorted({p[1] for p in poly})
-    if len(xs) != 2 or len(ys) != 2:
-        return None
-    x0, x1 = xs
-    y0, y1 = ys
-    corners = {(x0, y0), (x1, y0), (x1, y1), (x0, y1)}
-    if set(poly) != corners:
-        if set(poly) == corners:
-            return (x0, y0, x1, y1)
-        return None
-    return (x0, y0, x1, y1)
+@dataclass(frozen=True)
+class SingleGlyph:
+    char: str
+    codepoint: int
+    glyph_name: str
+    geom: SvgGlyph
 
 
-def detect_seam_x(key: str, width_svg: float, polys: List[Poly]) -> Optional[float]:
-    """
-    Find seam_x for st-like ligatures by detecting the 1-unit-wide vertical connector rectangle.
-    Seam is the RIGHT edge (x1) of that 1-unit rectangle.
-
-    If not found:
-      - for 'st' (often a single polygon), fall back to seam=12
-    """
-    best: Optional[float] = None
-    for poly in polys:
-        r = is_axis_aligned_rect(poly)
-        if not r:
-            continue
-        x0, y0, x1, y1 = r
-        w = x1 - x0
-        h = y1 - y0
-        if abs(w - 1.0) < 1e-9 and h > 1.0:
-            if best is None or x1 > best:
-                best = x1
-
-    if best is not None:
-        return best
-
-    if key == "st":
-        return 12.0
-
-    return None
-
-
+# -----------------------------
+# Shared polygon helpers
+# -----------------------------
 def _flatten_polygons(geom) -> Iterable["ShpPolygon"]:
-    """Yield Shapely Polygons from Polygon/MultiPolygon/GeometryCollection."""
     if geom is None:
         return
     gtype = getattr(geom, "geom_type", "")
@@ -245,15 +206,9 @@ def _flatten_polygons(geom) -> Iterable["ShpPolygon"]:
     elif gtype == "GeometryCollection":
         for g in geom.geoms:
             yield from _flatten_polygons(g)
-    else:
-        return
 
 
 def _shapely_union_to_rings(polys: List[Poly]) -> List[Ring]:
-    """
-    Union the list of polygons and return rings (exteriors + holes).
-    Done once in base SVG space so all masters share identical topology/point counts.
-    """
     shp_polys = []
     for p in polys:
         try:
@@ -282,14 +237,174 @@ def _shapely_union_to_rings(polys: List[Poly]) -> List[Ring]:
     return rings
 
 
-def load_svg_glyph(svg_path: Path, key: str) -> SvgGlyph:
+def rings_from_polys(polys: List[Poly]) -> List[Ring]:
+    if not polys:
+        return []
+
+    if COMBINE_SHAPES and _HAVE_SHAPELY:
+        return _shapely_union_to_rings(polys)
+
+    if COMBINE_SHAPES and not _HAVE_SHAPELY:
+        print(
+            "[warn] shapely not installed -> not combining shapes (you may see tiny seams). "
+            "Install with: pip install shapely"
+        )
+    return [Ring(p, False) for p in polys]
+
+
+# -----------------------------
+# data/glyphs.py loading (singles)
+# -----------------------------
+def load_data_module(data_py_path: Path):
+    if not data_py_path.exists():
+        raise FileNotFoundError(
+            f"Missing glyph data file: {data_py_path}\n"
+            "Run tools/generate-data.py first."
+        )
+
+    spec = importlib.util.spec_from_file_location("unst_glyph_data", str(data_py_path))
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Could not load module from {data_py_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _poly_from_data(poly_data) -> Poly:
+    return [(float(x), float(y)) for (x, y) in poly_data]
+
+
+def load_single_glyphs_from_data(data_py_path: Path) -> List[SingleGlyph]:
+    mod = load_data_module(data_py_path)
+
+    data = getattr(mod, "DATA", None)
+    if not isinstance(data, dict):
+        raise RuntimeError(f"{data_py_path} does not expose DATA dict")
+
+    glyphs = data.get("glyphs")
+    if not isinstance(glyphs, dict):
+        raise RuntimeError(f"{data_py_path} DATA['glyphs'] missing or invalid")
+
+    singles: List[SingleGlyph] = []
+
+    for _u_key, rec in glyphs.items():
+        if not isinstance(rec, dict):
+            continue
+
+        ch = rec.get("key")
+        cp = rec.get("codepointInt")
+        width = rec.get("width")
+        polys_data = rec.get("polys", [])
+
+        if not isinstance(ch, str) or len(ch) != 1:
+            # data/glyphs.py should only contain single-codepoint glyphs
+            continue
+        if not isinstance(cp, int):
+            continue
+        if width is None:
+            raise RuntimeError(f"Glyph record for U+{cp:04X} missing width")
+
+        polys: List[Poly] = []
+        for p in polys_data:
+            polys.append(_poly_from_data(p))
+
+        rings = rings_from_polys(polys)
+        geom = SvgGlyph(width_svg=float(width), rings=rings, seam_x=None, key=ch)
+
+        singles.append(
+            SingleGlyph(
+                char=ch,
+                codepoint=cp,
+                glyph_name=char_to_glyph_name(ch),
+                geom=geom,
+            )
+        )
+
+    singles.sort(key=lambda g: g.codepoint)
+
+    # Detect glyph-name collisions (rare, but better to fail loudly)
+    seen_names: Dict[str, SingleGlyph] = {}
+    for g in singles:
+        if g.glyph_name in seen_names:
+            prev = seen_names[g.glyph_name]
+            raise RuntimeError(
+                f"Glyph name collision: {g.glyph_name!r} for "
+                f"U+{prev.codepoint:04X} and U+{g.codepoint:04X}"
+            )
+        seen_names[g.glyph_name] = g
+
+    return singles
+
+
+# -----------------------------
+# Ligature SVG parsing
+# -----------------------------
+def parse_polygon_points(points_str: str) -> Poly:
+    pts: List[Point] = []
+    for token in points_str.replace("\n", " ").replace("\t", " ").split():
+        if not token.strip():
+            continue
+        x_s, y_s = token.split(",")
+        pts.append((float(x_s), float(y_s)))
+    if len(pts) < 3:
+        raise ValueError(f"Polygon has too few points: {points_str!r}")
+    return pts
+
+
+def is_axis_aligned_rect(poly: Poly) -> Optional[Tuple[float, float, float, float]]:
+    if len(poly) != 4:
+        return None
+    xs = sorted({p[0] for p in poly})
+    ys = sorted({p[1] for p in poly})
+    if len(xs) != 2 or len(ys) != 2:
+        return None
+    x0, x1 = xs
+    y0, y1 = ys
+    corners = {(x0, y0), (x1, y0), (x1, y1), (x0, y1)}
+    if set(poly) != corners:
+        return None
+    return (x0, y0, x1, y1)
+
+
+def detect_seam_x(key: str, polys: List[Poly]) -> Optional[float]:
+    """
+    Find seam_x for st-like ligatures by detecting the 1-unit-wide vertical connector rectangle.
+    Seam is the RIGHT edge (x1) of that 1-unit rectangle.
+
+    If not found:
+      - for 'st' (often a single polygon), fall back to seam=12
+    """
+    best: Optional[float] = None
+    for poly in polys:
+        r = is_axis_aligned_rect(poly)
+        if not r:
+            continue
+        x0, y0, x1, y1 = r
+        w = x1 - x0
+        h = y1 - y0
+        if abs(w - 1.0) < EPS and h > 1.0:
+            if best is None or x1 > best:
+                best = x1
+
+    if best is not None:
+        return best
+    if key == "st":
+        return 12.0
+    return None
+
+
+def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
     tree = ET.parse(svg_path)
     root = tree.getroot()
 
     vb = root.attrib.get("viewBox")
     if not vb:
         raise ValueError(f"No viewBox on {svg_path}")
-    _, _, w_s, _h_s = vb.strip().split()
+    parts = vb.strip().split()
+    if len(parts) != 4:
+        raise ValueError(f"Invalid viewBox on {svg_path}: {vb!r}")
+    _, _, w_s, _h_s = parts
     width_svg = float(w_s)
 
     polys = root.findall(".//{http://www.w3.org/2000/svg}polygon")
@@ -299,18 +414,8 @@ def load_svg_glyph(svg_path: Path, key: str) -> SvgGlyph:
         raise ValueError(f"No <polygon> elements found in {svg_path}")
 
     poly_list: List[Poly] = [parse_polygon_points(p.attrib["points"]) for p in polys]
-
-    seam_x = detect_seam_x(key, width_svg, poly_list)
-
-    if COMBINE_SHAPES and _HAVE_SHAPELY:
-        rings = _shapely_union_to_rings(poly_list)
-    else:
-        if COMBINE_SHAPES and not _HAVE_SHAPELY:
-            print(
-                "[warn] shapely not installed -> not combining shapes (you may see tiny seams). "
-                "Install with: pip install shapely"
-            )
-        rings = [Ring(p, False) for p in poly_list]
+    seam_x = detect_seam_x(key, poly_list)
+    rings = rings_from_polys(poly_list)
 
     return SvgGlyph(width_svg=width_svg, rings=rings, seam_x=seam_x, key=key)
 
@@ -342,7 +447,6 @@ def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional
         return x * s
 
     seam_off = (1.0 - s)
-
     base = x * s if x < seam_x else (x * s + seam_off)
 
     if key in ("st", "sh") and y is not None:
@@ -356,7 +460,7 @@ def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional
 
 def warp_y_pos(y: float, t: float) -> float:
     """
-    Piecewise Y warp that keeps the canonical 1-unit bands:
+    Piecewise Y warp that keeps canonical 1-unit bands:
       [0..1], [9..10], [14..15], [19..20], [29..30]
     and scales the gaps between them by factor t.
     """
@@ -408,9 +512,6 @@ def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
     return a / 2.0
 
 
-# -----------------------------
-# Transform rings for a master
-# -----------------------------
 def transform_ring(ring: Ring, *, s: float, t: float, seam_x: Optional[float], key: str) -> Ring:
     out: Poly = []
     for x, y in ring.pts:
@@ -424,8 +525,16 @@ def transform_ring(ring: Ring, *, s: float, t: float, seam_x: Optional[float], k
 def build_tt_glyph_from_rings(rings_svg_warped: List[Ring], *, base_y_warped: float) -> object:
     pen = TTGlyphPen(None)
 
+    if not rings_svg_warped:
+        return pen.glyph()
+
     for ring in rings_svg_warped:
+        if not ring.pts:
+            continue
         pts_font = [svg_to_font_xy(x, y, base_y_warped=base_y_warped) for (x, y) in ring.pts]
+        if len(pts_font) < 3:
+            continue
+
         area = signed_area_xy(pts_font)
 
         # In font coords (y up):
@@ -460,19 +569,16 @@ def make_notdef_glyph() -> object:
     return pen.glyph()
 
 
-def build_fea_liga() -> str:
-    return """
-feature liga {
-  sub s t by st;
-  sub c h by ch;
-  sub c t by ct;
-  sub f i by fi;
-  sub i j by ij;
-  sub s h by sh;
-  sub e s by es;
-  sub y p by yp;
-} liga;
-""".strip() + "\n"
+def build_fea_liga(available_glyph_names: set[str]) -> str:
+    rules: List[str] = []
+    for left, right, lig in LIGATURE_RULES:
+        if left in available_glyph_names and right in available_glyph_names and lig in available_glyph_names:
+            rules.append(f"  sub {left} {right} by {lig};")
+
+    if not rules:
+        return ""
+
+    return "feature liga {\n" + "\n".join(rules) + "\n} liga;\n"
 
 
 # -----------------------------
@@ -495,48 +601,62 @@ def compute_global_vertical_metrics() -> Tuple[int, int]:
 def build_master_ttf(
     *,
     out_path: Path,
-    glyph_svgs: Dict[str, SvgGlyph],
+    singles: List[SingleGlyph],
+    ligatures: Dict[str, SvgGlyph],
     wdth_value: float,
     hght_value: float,
 ) -> None:
     s = wdth_scale_from_value(wdth_value)
     t = hght_scale_from_value(hght_value)
-
     base_y_warped = warp_y_pos(SVG_BASELINE_Y, t)
 
-    keys: List[str] = []
-    keys.extend(LETTERS)
-    keys.extend(CAPS)
-    keys.extend(DIGITS)
-    keys.extend(LIGATURE_KEYS)
+    single_names = [g.glyph_name for g in singles]
+    have_space = "space" in single_names
+    lig_names = [key_to_glyph_name(k) for k in LIGATURE_KEYS]
 
-    glyph_order: List[str] = [".notdef", "space"] + [key_to_glyph_name(k) for k in keys]
+    glyph_order: List[str] = [".notdef"]
+    if not have_space:
+        glyph_order.append("space")  # fallback space
+    glyph_order.extend(single_names)
+    glyph_order.extend(lig_names)
 
-    # cmap: include lowercase + uppercase
-    cmap: Dict[int, str] = {}
-    for ch in LETTERS:
-        cmap[ord(ch)] = ch
-    for ch in CAPS:
-        cmap[ord(ch)] = ch
-
-    for d in DIGITS:
-        cmap[ord(d)] = DIGIT_GLYPH_NAMES[d]
-
-    cmap[0x0133] = "ij"  # optional ĳ mapping
+    cmap: Dict[int, str] = {g.codepoint: g.glyph_name for g in singles}
+    if "ij" in lig_names and "i" in single_names and "j" in single_names and 0x0133 not in cmap:
+        cmap[0x0133] = "ij"  # optional ĳ mapping
 
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
 
-    # space width
-    space_adv_svg = 12.0 + LETTER_SPACE_SVG
+    # Space metrics (from data if available, else fallback)
+    if have_space:
+        space_entry = next(g for g in singles if g.glyph_name == "space")
+        space_adv_svg = space_entry.geom.width_svg + LETTER_SPACE_SVG
+    else:
+        space_adv_svg = 12.0 + LETTER_SPACE_SVG
+
     space_adv_font = int(round((space_adv_svg * s) * SCALE))
-    glyf["space"] = TTGlyphPen(None).glyph()
-    hmtx["space"] = (space_adv_font, 0)
+    if not have_space:
+        glyf["space"] = TTGlyphPen(None).glyph()
+        hmtx["space"] = (space_adv_font, 0)
     hmtx[".notdef"] = (space_adv_font, 0)
 
-    for k in keys:
-        gname = key_to_glyph_name(k)
-        sg = glyph_svgs[k]
+    # Singles from data/glyphs.py
+    for sg in singles:
+        warped_rings = [
+            transform_ring(r, s=s, t=t, seam_x=sg.geom.seam_x, key=sg.geom.key)
+            for r in sg.geom.rings
+        ]
+        glyf[sg.glyph_name] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
+
+        adv_svg = sg.geom.width_svg + LETTER_SPACE_SVG
+        adv_warped = warp_x(adv_svg, s, sg.geom.seam_x, key=sg.geom.key, y=None)
+        adv_font = int(round(adv_warped * SCALE))
+        hmtx[sg.glyph_name] = (adv_font, 0)
+
+    # Ligatures from SVG
+    for lig_key in LIGATURE_KEYS:
+        gname = key_to_glyph_name(lig_key)
+        sg = ligatures[lig_key]
 
         warped_rings = [transform_ring(r, s=s, t=t, seam_x=sg.seam_x, key=sg.key) for r in sg.rings]
         glyf[gname] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
@@ -574,7 +694,9 @@ def build_master_ttf(
     fb.setupMaxp()
     fb.setupHead()
 
-    addOpenTypeFeaturesFromString(fb.font, build_fea_liga())
+    fea = build_fea_liga(set(glyph_order))
+    if fea.strip():
+        addOpenTypeFeaturesFromString(fb.font, fea)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fb.font.save(out_path)
@@ -584,23 +706,10 @@ def build_master_ttf(
 # Variable font build
 # -----------------------------
 def codepoint_hex(ch: str) -> str:
-    """Lowercase hex Unicode codepoint, minimum 4 digits."""
     return f"{ord(ch):04x}"
 
 
-def svg_path_for_key(src_dir: Path, key: str) -> Path:
-    """
-    Resolve the SVG filename for a given glyph key using the new scheme:
-
-    Single codepoint glyphs:
-      character-uXXXX.svg
-
-    Ligatures / multi-codepoint glyphs:
-      ligature-uXXXX-uYYYY.svg
-    """
-    if len(key) == 1:
-        return src_dir / f"character-u{codepoint_hex(key)}.svg"
-
+def ligature_svg_path(src_dir: Path, key: str) -> Path:
     cps = "-".join(f"u{codepoint_hex(ch)}" for ch in key)
     return src_dir / f"ligature-{cps}.svg"
 
@@ -608,33 +717,34 @@ def svg_path_for_key(src_dir: Path, key: str) -> Path:
 def build_variable_font() -> None:
     root = project_root()
     src_dir = root / "src"
+    data_py = root / "data" / "glyphs.py"
     out_dir = root / "dist" / "fonts"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # ✅ also copy CSS as part of the build
+    # Copy CSS
     write_unst_css(root=root, out_dir=out_dir)
 
-    # ✅ build artifacts go here (not dist/)
+    # Build artifacts
     masters_dir = root / "build" / "fonts" / "_vf_masters"
     masters_dir.mkdir(parents=True, exist_ok=True)
 
-    keys: List[str] = []
-    keys.extend(LETTERS)
-    keys.extend(CAPS)
-    keys.extend(DIGITS)
-    keys.extend(LIGATURE_KEYS)
+    # Singles now come from data/glyphs.py
+    singles = load_single_glyphs_from_data(data_py)
+    if not singles:
+        raise RuntimeError(f"No single glyphs loaded from {data_py}")
 
-    glyph_svgs: Dict[str, SvgGlyph] = {}
-    for k in keys:
-        svg_path = svg_path_for_key(src_dir, k)
+    # Ligatures still come from SVGs
+    ligatures: Dict[str, SvgGlyph] = {}
+    for k in LIGATURE_KEYS:
+        svg_path = ligature_svg_path(src_dir, k)
         if not svg_path.exists():
-            raise FileNotFoundError(f"Missing SVG for {k!r}: {svg_path}")
-        glyph_svgs[k] = load_svg_glyph(svg_path, k)
+            raise FileNotFoundError(f"Missing ligature SVG for {k!r}: {svg_path}")
+        ligatures[k] = load_ligature_svg(svg_path, k)
 
     wdths = [25.0, 100.0, 400.0]
     hghts = [25.0, 100.0, 400.0]
 
-    # Clean prior masters/designspace for this project (optional but nice)
+    # Clean prior masters/designspace
     for p in masters_dir.glob("unst-master-w*-h*.ttf"):
         try:
             p.unlink()
@@ -651,7 +761,13 @@ def build_variable_font() -> None:
     for w in wdths:
         for h in hghts:
             p = masters_dir / f"unst-master-w{int(w)}-h{int(h)}.ttf"
-            build_master_ttf(out_path=p, glyph_svgs=glyph_svgs, wdth_value=w, hght_value=h)
+            build_master_ttf(
+                out_path=p,
+                singles=singles,
+                ligatures=ligatures,
+                wdth_value=w,
+                hght_value=h,
+            )
             master_paths[(w, h)] = p
 
     ds = DesignSpaceDocument()
@@ -674,7 +790,7 @@ def build_variable_font() -> None:
 
     for (w, h), p in master_paths.items():
         src = SourceDescriptor()
-        src.path = str(p)  # absolute is fine and avoids path surprises
+        src.path = str(p)
         src.name = f"master_w{int(w)}_h{int(h)}"
         src.familyName = "unst"
         src.styleName = "Regular"
@@ -690,7 +806,6 @@ def build_variable_font() -> None:
 
     vf, _model, _masters = var_build(str(ds_path))
 
-    # ✅ end-user names: unst.{ext}
     out_ttf = out_dir / "unst.ttf"
     vf.save(out_ttf)
     print(f"Wrote: {out_ttf}")
