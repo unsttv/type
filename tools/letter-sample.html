@@ -195,9 +195,13 @@
                 <label for="input">Sample text</label>
                 <textarea id="input" spellcheck="false">unst st ch ct fi ij sh
 abcdefghijklmnopqrstuvwxyz
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
 0123456789
-stst  chch  ctct  shsh ypyp
-fi fi   ij ij es es</textarea>
+!#$+,-.:;=?[]_{|}
+¦§ ÷ ı ĳ ₿ ■
+
+all glyphs from manifest:
+ !#$+,-.0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz{|}¦§÷ıĳ₿■</textarea>
             </div>
         </div>
 
@@ -233,6 +237,8 @@ fi fi   ij ij es es</textarea>
     const out   = document.getElementById("out");
     const cssOut = document.getElementById("cssOut");
     const lhSuggest = document.getElementById("lhSuggest");
+
+    let userEditedInput = false;
 
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
@@ -276,6 +282,96 @@ fi fi   ij ij es es</textarea>
         lhSuggest.textContent = suggestedLineHeight(hght).toFixed(2);
     }
 
+    function expandUnicodeRanges(unicodeRanges){
+        const cps = [];
+        if (!Array.isArray(unicodeRanges)) return cps;
+
+        for (const pair of unicodeRanges){
+            if (!Array.isArray(pair) || pair.length < 2) continue;
+            const start = Number(pair[0]);
+            const end   = Number(pair[1]);
+            if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+
+            for (let cp = start; cp <= end; cp++){
+                cps.push(cp);
+            }
+        }
+        return cps;
+    }
+
+    function uniqSorted(nums){
+        return Array.from(new Set(nums)).sort((a,b) => a - b);
+    }
+
+    function codepointsToString(cps){
+        return cps.map(cp => {
+            try { return String.fromCodePoint(cp); }
+            catch { return ""; }
+        }).join("");
+    }
+
+    function chunkCodepoints(cps, size = 40){
+        const lines = [];
+        for (let i = 0; i < cps.length; i += size){
+            lines.push(codepointsToString(cps.slice(i, i + size)));
+        }
+        return lines;
+    }
+
+    function buildSampleFromManifest(manifest){
+        if (!manifest || !Array.isArray(manifest.unicodeRanges)) return null;
+
+        const cps = uniqSorted(expandUnicodeRanges(manifest.unicodeRanges));
+        if (!cps.length) return null;
+
+        const lower = cps.filter(cp => cp >= 97 && cp <= 122);
+        const upper = cps.filter(cp => cp >= 65 && cp <= 90);
+        const digits = cps.filter(cp => cp >= 48 && cp <= 57);
+
+        const asciiPunct = cps.filter(cp => {
+            const isAscii = cp >= 32 && cp <= 126;
+            const isDigit = cp >= 48 && cp <= 57;
+            const isUpper = cp >= 65 && cp <= 90;
+            const isLower = cp >= 97 && cp <= 122;
+            return isAscii && !isDigit && !isUpper && !isLower;
+        });
+
+        const extras = cps.filter(cp => cp > 126);
+
+        const lines = [
+            // Keep explicit shaping test line for ligatures
+            "unst st ch ct fi ij sh",
+            lower.length ? codepointsToString(lower) : null,
+            upper.length ? codepointsToString(upper) : null,
+            digits.length ? codepointsToString(digits) : null,
+            asciiPunct.length ? codepointsToString(asciiPunct) : null,
+            extras.length ? codepointsToString(extras).split("").join(" ") : null,
+            "",
+            "all glyphs from manifest:",
+            ...chunkCodepoints(cps, 40),
+        ].filter(line => line !== null);
+
+        return lines.join("\n");
+    }
+
+    async function loadManifestSample(){
+        try{
+            const res = await fetch("../data/manifest.json", { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const manifest = await res.json();
+
+            const sample = buildSampleFromManifest(manifest);
+            if (sample && !userEditedInput){
+                input.value = sample;
+                sync();
+            }
+        }catch(err){
+            // Fallback silently: textarea already contains a static sample.
+            // (This commonly happens if opened directly as file:// and fetch is blocked.)
+            console.warn("Could not load ../data/manifest.json for sample text:", err);
+        }
+    }
+
     // Lock line-height when user edits it manually
     elLh.addEventListener("input", () => {
         elLh.dataset.locked = "1";
@@ -283,7 +379,10 @@ fi fi   ij ij es es</textarea>
     });
 
     [elWdth, elHght, elSize].forEach(el => el.addEventListener("input", sync));
-    input.addEventListener("input", sync);
+    input.addEventListener("input", () => {
+        userEditedInput = true;
+        sync();
+    });
 
     document.querySelectorAll("button[data-preset]").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -298,6 +397,7 @@ fi fi   ij ij es es</textarea>
     });
 
     sync();
+    loadManifestSample();
 </script>
 </body>
 </html>
