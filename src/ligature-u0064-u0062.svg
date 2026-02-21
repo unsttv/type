@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" data-ligature-text="db">
+  <title>Ligature d b</title>
+  <desc>Source text: db</desc>
+  <metadata>{&quot;text&quot;:&quot;db&quot;,&quot;labels&quot;:[&quot;d&quot;,&quot;b&quot;],&quot;codepoints&quot;:[100,98],&quot;filename&quot;:&quot;ligature-u0064-u0062.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="8,0 12,0 12,20 8,20"/>
+    <polygon class="base" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,19 0,19"/>
+    <polygon class="base" points="0,19 8,19 8,20 0,20"/>
+    <polygon class="base" points="16,0 20,0 20,20 16,20"/>
+    <polygon class="base" points="20,9 28,9 28,10 20,10"/>
+    <polygon class="base" points="24,10 28,10 28,19 24,19"/>
+    <polygon class="base" points="20,19 28,19 28,20 20,20"/>
+    <polygon class="conn" points="12,0 16,0 16,1 12,1"/>
+  </g>
+</svg>
