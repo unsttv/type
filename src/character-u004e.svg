@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges" data-char="N" data-codepoint="U+004E">
   <g>
-    <polygon class="N" points="0,0 4,0 4,20 0,20"/>
-    <polygon class="N" points="8,0 12,0 12,20 8,20"/>
-    <polygon class="N" points="4,0 8,0 8,5 4,5"/>
-    <polygon class="N" points="5,5 9,5 9,10 5,10"/>
-    <polygon class="N" points="6,10 10,10 10,15 6,15"/>
-    <polygon class="N" points="7,15 11,15 11,20 7,20"/>
+    <polygon class="glyph glyph-u004e" points="0,0 12,0 12,1 0,1"/>
+    <polygon class="glyph glyph-u004e" points="0,1 4,1 4,20 0,20"/>
+    <polygon class="glyph glyph-u004e" points="8,1 12,1 12,20 8,20"/>
   </g>
 </svg>

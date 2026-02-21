@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges" data-char="K" data-codepoint="U+004B">
   <g>
-    <polygon class="K" points="0,0 4,0 4,20 0,20"/>
-    <polygon class="K" points="8,0 12,0 12,14 8,14"/>
-    <polygon class="K" points="8,15 12,15 12,20 8,20"/>
-    <polygon class="K" points="0,14 12,14 12,15 0,15"/>
-    <polygon class="K" points="4,14 8,14 8,15 4,15"/>
+    <polygon class="glyph glyph-u004b" points="0,0 4,0 4,9 0,9"/>
+    <polygon class="glyph glyph-u004b" points="8,0 12,0 12,9 8,9"/>
+    <polygon class="glyph glyph-u004b" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="glyph glyph-u004b" points="0,10 4,10 4,20 0,20"/>
+    <polygon class="glyph glyph-u004b" points="8,10 12,10 12,20 8,20"/>
   </g>
 </svg>

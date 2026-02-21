@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 30" width="12" height="30" shape-rendering="crispEdges" data-char="F" data-codepoint="U+0046">
   <g>
-    <polygon class="F" points="0,0 4,0 4,20 0,20"/>
-    <polygon class="F" points="0,0 12,0 12,1 0,1"/>
-    <polygon class="F" points="0,14 12,14 12,15 0,15"/>
+    <polygon class="glyph glyph-u0046" points="0,0 12,0 12,1 0,1"/>
+    <polygon class="glyph glyph-u0046" points="0,1 4,1 4,9 0,9"/>
+    <polygon class="glyph glyph-u0046" points="0,9 12,9 12,10 0,10"/>
+    <polygon class="glyph glyph-u0046" points="0,10 4,10 4,20 0,20"/>
   </g>
 </svg>
