@@ -1,0 +1,1221 @@
+<!-- tools/glyph-designer.html -->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Glyph Designer (lowercase + digits)</title>
+    <style>
+        :root {
+            --bg: #f6f7fb;
+            --panel: #ffffff;
+            --panel-2: #f0f2f7;
+            --text: #111318;
+            --muted: #626a7a;
+            --border: #d7dbe5;
+            --accent: #2f6feb;
+            --danger: #d73a49;
+            --grid-stroke: #9aa3b2;
+            --cell-off: #ffffff;
+            --cell-on: #000000;
+            --cell-oob: #e9edf5;
+            --guide-cap: rgba(47, 111, 235, 0.35);
+            --guide-xheight: rgba(147, 51, 234, 0.35);
+            --guide-mid: rgba(234, 179, 8, 0.35);
+            --guide-base: rgba(16, 185, 129, 0.45);
+            --guide-desc: rgba(239, 68, 68, 0.35);
+            --shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0d1117;
+                --panel: #161b22;
+                --panel-2: #0f141b;
+                --text: #e6edf3;
+                --muted: #9aa4b2;
+                --border: #2a3340;
+                --accent: #58a6ff;
+                --danger: #ff7b72;
+                --grid-stroke: #6b7280;
+                --cell-off: #f8fafc;
+                --cell-on: #0b0d10;
+                --cell-oob: #313844;
+                --guide-cap: rgba(88, 166, 255, 0.4);
+                --guide-xheight: rgba(216, 180, 254, 0.35);
+                --guide-mid: rgba(253, 224, 71, 0.35);
+                --guide-base: rgba(52, 211, 153, 0.45);
+                --guide-desc: rgba(252, 165, 165, 0.35);
+                --shadow: 0 10px 30px rgba(0,0,0,0.35);
+            }
+        }
+
+        html[data-theme="light"] {
+            color-scheme: light;
+        }
+        html[data-theme="dark"] {
+            color-scheme: dark;
+            --bg: #0d1117;
+            --panel: #161b22;
+            --panel-2: #0f141b;
+            --text: #e6edf3;
+            --muted: #9aa4b2;
+            --border: #2a3340;
+            --accent: #58a6ff;
+            --danger: #ff7b72;
+            --grid-stroke: #6b7280;
+            --cell-off: #f8fafc;
+            --cell-on: #0b0d10;
+            --cell-oob: #313844;
+            --guide-cap: rgba(88, 166, 255, 0.4);
+            --guide-xheight: rgba(216, 180, 254, 0.35);
+            --guide-mid: rgba(253, 224, 71, 0.35);
+            --guide-base: rgba(52, 211, 153, 0.45);
+            --guide-desc: rgba(252, 165, 165, 0.35);
+            --shadow: 0 10px 30px rgba(0,0,0,0.35);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 460px 1fr;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .left {
+            padding: 14px;
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .toolbar {
+            display: grid;
+            gap: 8px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 8px;
+            align-items: end;
+        }
+
+        .field {
+            display: grid;
+            gap: 4px;
+        }
+
+        .field label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        input[type="text"], select, button, textarea {
+            font: inherit;
+        }
+
+        input[type="text"], select {
+            height: 34px;
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 0 10px;
+            outline: none;
+        }
+
+        input[type="text"]:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+        }
+
+        .btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button {
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text);
+            height: 34px;
+            border-radius: 8px;
+            padding: 0 10px;
+            cursor: pointer;
+        }
+        button:hover { border-color: var(--accent); }
+        button.primary {
+            background: color-mix(in oklab, var(--accent) 16%, var(--panel-2));
+            border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
+        }
+        button.danger {
+            border-color: color-mix(in oklab, var(--danger) 45%, var(--border));
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .status {
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            padding: 2px 0 0;
+        }
+        .status code {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            padding: 1px 6px;
+            border-radius: 999px;
+            color: var(--text);
+        }
+
+        .grid-wrap {
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            user-select: none;
+        }
+
+        .grid-top-labels,
+        .grid-left-labels {
+            display: grid;
+            gap: 0;
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 36px 1fr;
+            grid-template-rows: 18px auto;
+            gap: 6px;
+            align-items: start;
+        }
+
+        .grid-top-labels {
+            grid-column: 2;
+            grid-row: 1;
+            grid-template-columns: repeat(5, 1fr);
+            padding: 0 4px;
+        }
+
+        .grid-top-labels span {
+            text-align: center;
+        }
+
+        .grid-left-labels {
+            grid-column: 1;
+            grid-row: 2;
+            grid-template-rows: 1fr 3fr 5fr 1fr 4fr 1fr 4fr 1fr 5fr 4fr 1fr;
+            height: 100%;
+            padding: 2px 2px 2px 0;
+        }
+
+        .grid-left-labels span {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 4px;
+        }
+
+        #editorSvg {
+            grid-column: 2;
+            grid-row: 2;
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid var(--border);
+            touch-action: none;
+        }
+
+        #editorSvg .cell {
+            fill: var(--cell-off);
+            stroke: var(--grid-stroke);
+            stroke-width: 0.15;
+            cursor: pointer;
+        }
+        #editorSvg .cell.active {
+            fill: var(--cell-on);
+        }
+        #editorSvg .cell.oob {
+            fill: var(--cell-oob);
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        #editorSvg .guide {
+            stroke-width: 0.15;
+            vector-effect: non-scaling-stroke;
+            pointer-events: none;
+            shape-rendering: crispEdges;
+        }
+        #editorSvg .guide.cap { stroke: var(--guide-cap); }
+        #editorSvg .guide.xheight { stroke: var(--guide-xheight); }
+        #editorSvg .guide.mid { stroke: var(--guide-mid); }
+        #editorSvg .guide.base { stroke: var(--guide-base); }
+        #editorSvg .guide.desc { stroke: var(--guide-desc); }
+        #editorSvg .guide-label {
+            font-size: 0.8px;
+            fill: var(--muted);
+            pointer-events: none;
+        }
+
+        .right {
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .stack {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            min-height: 0;
+        }
+
+        .stack h3 {
+            margin: 0;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.35;
+            white-space: pre;
+        }
+
+        .preview-box {
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            border-radius: 10px;
+            padding: 10px;
+            min-height: 92px;
+            display: grid;
+            align-items: center;
+        }
+        #svgPreview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 70px;
+        }
+        #svgPreview svg {
+            max-width: 100%;
+            height: auto;
+        }
+        #svgPreview svg polygon {
+            fill: #000;
+            stroke: none;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .warn {
+            color: var(--danger);
+            font-size: 12px;
+            min-height: 16px;
+        }
+
+        @media (max-width: 1040px) {
+            .wrap {
+                grid-template-columns: 1fr;
+            }
+            .right {
+                grid-template-rows: auto auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <section class="panel left">
+        <div class="toolbar">
+            <div class="row">
+                <div class="field" style="grid-column: span 2;">
+                    <label for="glyphChar">Character</label>
+                    <input id="glyphChar" type="text" maxlength="1" value="a" inputmode="text" />
+                </div>
+
+                <div class="field" style="grid-column: span 3;">
+                    <label for="widthUnits">Width</label>
+                    <select id="widthUnits">
+                        <option value="1">1 unit (4)</option>
+                        <option value="2">2 units (8)</option>
+                        <option value="3" selected>3 units (12)</option>
+                        <option value="4">4 units (16)</option>
+                        <option value="5">5 units (20)</option>
+                    </select>
+                </div>
+
+                <div class="field" style="grid-column: span 3;">
+                    <label for="themeMode">Theme</label>
+                    <select id="themeMode">
+                        <option value="auto" selected>Auto</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+
+                <div class="field" style="grid-column: span 4;">
+                    <label>&nbsp;</label>
+                    <div class="btns">
+                        <button id="loadPresetBtn" class="primary" type="button">Load preset</button>
+                        <button id="blankBtn" type="button">Blank</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btns">
+                <button id="clearBtn" type="button">Clear</button>
+                <button id="invertBtn" type="button">Invert in width</button>
+                <button id="fitWidthBtn" type="button">Fit width</button>
+                <button id="copySvgBtn" type="button">Copy SVG</button>
+                <button id="copyJsonBtn" type="button">Copy JSON</button>
+            </div>
+
+            <div class="hint">
+                Click to toggle. Drag to paint multiple areas. Grid is based on the lowercase/digit layout (x: 0/4/8/12/16/20, y bands from your script).
+            </div>
+            <div id="warn" class="warn"></div>
+            <div class="status">
+                <span>Codepoint <code id="codepointBadge">U+0061</code></span>
+                <span>Active areas <code id="activeCountBadge">0</code></span>
+                <span>Export rects <code id="rectCountBadge">0</code></span>
+                <span>ViewBox <code id="viewBoxBadge">0 0 12 30</code></span>
+            </div>
+        </div>
+
+        <div class="grid-wrap">
+            <div class="grid-layout">
+                <div class="grid-top-labels">
+                    <span>0–4</span>
+                    <span>4–8</span>
+                    <span>8–12</span>
+                    <span>12–16</span>
+                    <span>16–20</span>
+                </div>
+
+                <div class="grid-left-labels" aria-hidden="true">
+                    <span>0–1</span>
+                    <span>1–4</span>
+                    <span>4–9</span>
+                    <span>9–10</span>
+                    <span>10–14</span>
+                    <span>14–15</span>
+                    <span>15–19</span>
+                    <span>19–20</span>
+                    <span>20–25</span>
+                    <span>25–29</span>
+                    <span>29–30</span>
+                </div>
+
+                <svg id="editorSvg" viewBox="0 0 20 30" preserveAspectRatio="xMidYMid meet" aria-label="Glyph grid editor"></svg>
+            </div>
+        </div>
+    </section>
+
+    <section class="right">
+        <div class="panel stack">
+            <h3>JSON data</h3>
+            <textarea id="jsonOut" spellcheck="false"></textarea>
+            <div class="footer-actions">
+                <button id="downloadJsonBtn" type="button">Download JSON</button>
+            </div>
+        </div>
+
+        <div class="panel stack">
+            <h3>SVG markup</h3>
+            <div class="preview-box">
+                <div id="svgPreview"></div>
+            </div>
+            <textarea id="svgOut" spellcheck="false"></textarea>
+            <div class="footer-actions">
+                <button id="downloadSvgBtn" class="primary" type="button">Download SVG</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+    // -----------------------------
+    // Metrics / partition grid
+    // -----------------------------
+    const X_BREAKS = [0, 4, 8, 12, 16, 20];
+    const Y_BREAKS = [0, 1, 4, 9, 10, 14, 15, 19, 20, 25, 29, 30];
+
+    const CELL_H = 30;
+    const MAX_W = 20;
+
+    // Same named bands as your Python script
+    const Y = {
+        CAP0: 0,  CAP1: 1,
+        TOP0: 9,  TOP1: 10,
+        MID0: 14, MID1: 15,
+        BASE0: 19, BASE1: 20,
+        DESC0: 29, DESC1: 30,
+        LINK0: 0, LINK1: 1
+    };
+
+    const COLS = X_BREAKS.length - 1; // 5
+    const ROWS = Y_BREAKS.length - 1; // 11
+
+    const $ = (id) => document.getElementById(id);
+
+    const editorSvg = $("editorSvg");
+    const glyphCharInput = $("glyphChar");
+    const widthUnitsSelect = $("widthUnits");
+    const themeModeSelect = $("themeMode");
+    const jsonOut = $("jsonOut");
+    const svgOut = $("svgOut");
+    const svgPreview = $("svgPreview");
+    const warnEl = $("warn");
+
+    const codepointBadge = $("codepointBadge");
+    const activeCountBadge = $("activeCountBadge");
+    const rectCountBadge = $("rectCountBadge");
+    const viewBoxBadge = $("viewBoxBadge");
+
+    // 2D boolean grid state
+    const state = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+
+    // DOM refs per cell
+    const cellEls = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+    // Drag painting state
+    let pointerDrag = {
+        active: false,
+        value: true,
+        id: null,
+    };
+
+    // -----------------------------
+    // Helpers (rects / polys)
+    // -----------------------------
+    function R(x1, y1, x2, y2) {
+        return [x1, y1, x2, y2];
+    }
+
+    function rectToPoly(rect) {
+        const [x1, y1, x2, y2] = rect;
+        return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]];
+    }
+
+    function polyPoints(poly) {
+        return poly.map(([x, y]) => `${x},${y}`).join(" ");
+    }
+
+    function rotate180Rect(rect, w, cy2) {
+        const [x1, y1, x2, y2] = rect;
+        return [w - x2, cy2 - y2, w - x1, cy2 - y1];
+    }
+
+    function rotate180Rects(rects, w, cy2) {
+        return rects.map(r => rotate180Rect(r, w, cy2));
+    }
+
+    function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
+    }
+
+    function currentWidth() {
+        return Number(widthUnitsSelect.value) * 4;
+    }
+
+    function inBoundsCell(r, c) {
+        return X_BREAKS[c + 1] <= currentWidth();
+    }
+
+    function clearState() {
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                state[r][c] = false;
+            }
+        }
+    }
+
+    function activeCellCount() {
+        let n = 0;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (state[r][c] && inBoundsCell(r, c)) n++;
+            }
+        }
+        return n;
+    }
+
+    function cellRect(r, c) {
+        return [X_BREAKS[c], Y_BREAKS[r], X_BREAKS[c + 1], Y_BREAKS[r + 1]];
+    }
+
+    function rectCoversCell(rect, cell) {
+        const [rx1, ry1, rx2, ry2] = rect;
+        const [cx1, cy1, cx2, cy2] = cell;
+        return rx1 <= cx1 && ry1 <= cy1 && rx2 >= cx2 && ry2 >= cy2;
+    }
+
+    function applyPaint(r, c, value) {
+        if (!inBoundsCell(r, c)) return;
+        state[r][c] = value;
+        updateUI();
+    }
+
+    function invertInBounds() {
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (inBoundsCell(r, c)) state[r][c] = !state[r][c];
+            }
+        }
+        updateUI();
+    }
+
+    function fitWidthToContent() {
+        let maxUsedCol = -1;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if (state[r][c]) maxUsedCol = Math.max(maxUsedCol, c);
+            }
+        }
+        const units = clamp(maxUsedCol + 1, 1, 5);
+        widthUnitsSelect.value = String(units || 3);
+        updateUI();
+    }
+
+    function getGlyphChar() {
+        const raw = (glyphCharInput.value || "").trim();
+        if (!raw) return "";
+        return raw[0];
+    }
+
+    function isSupportedChar(ch) {
+        return /^[a-z0-9]$/.test(ch);
+    }
+
+    function codepointHex(ch) {
+        if (!ch) return "0000";
+        return ch.codePointAt(0).toString(16).padStart(4, "0");
+    }
+
+    function filenameForCurrentGlyph(ext) {
+        const ch = getGlyphChar();
+        if (isSupportedChar(ch)) return `character-u${codepointHex(ch)}.${ext}`;
+        return `character.${ext}`;
+    }
+
+    function collectMergedRects() {
+        // Step 1: horizontal runs per row
+        const runs = [];
+        for (let r = 0; r < ROWS; r++) {
+            let c = 0;
+            while (c < COLS) {
+                if (!inBoundsCell(r, c) || !state[r][c]) {
+                    c++;
+                    continue;
+                }
+                const start = c;
+                c++;
+                while (c < COLS && inBoundsCell(r, c) && state[r][c]) c++;
+                runs.push({
+                    x1: X_BREAKS[start],
+                    x2: X_BREAKS[c],
+                    y1: Y_BREAKS[r],
+                    y2: Y_BREAKS[r + 1],
+                });
+            }
+        }
+
+        // Step 2: merge vertically where x-span matches and rows touch
+        const merged = [];
+        for (const run of runs) {
+            let found = null;
+            for (const rect of merged) {
+                if (rect.x1 === run.x1 && rect.x2 === run.x2 && rect.y2 === run.y1) {
+                    found = rect;
+                    break;
+                }
+            }
+            if (found) {
+                found.y2 = run.y2;
+            } else {
+                merged.push({ ...run });
+            }
+        }
+
+        return merged.map(r => [r.x1, r.y1, r.x2, r.y2]);
+    }
+
+    function currentPolys() {
+        return collectMergedRects().map(rectToPoly);
+    }
+
+    function currentJsonObject() {
+        const ch = getGlyphChar();
+        const width = currentWidth();
+        const polys = currentPolys();
+
+        return {
+            key: ch || "",
+            codepoint: ch ? `U+${codepointHex(ch).toUpperCase()}` : "",
+            width,
+            cellHeight: CELL_H,
+            xBreaks: X_BREAKS.slice(),
+            yBreaks: Y_BREAKS.slice(),
+            polys,
+        };
+    }
+
+    function currentSvgMarkup() {
+        const ch = getGlyphChar();
+        const keyClass = isSupportedChar(ch) ? ch : "glyph";
+        const width = currentWidth();
+        const polys = currentPolys();
+        const polyMarkup = polys.map(poly => {
+            return `    <polygon class="${escapeXmlAttr(keyClass)}" points="${escapeXmlAttr(polyPoints(poly))}"/>`;
+        }).join("\n");
+
+        return [
+            `<?xml version="1.0" encoding="utf-8"?>`,
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${CELL_H}" width="${width}" height="${CELL_H}" shape-rendering="crispEdges">`,
+            `  <g>`,
+            polyMarkup || `    <!-- empty glyph -->`,
+            `  </g>`,
+            `</svg>`,
+            ``
+        ].join("\n");
+    }
+
+    function escapeXmlAttr(str) {
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    // -----------------------------
+    // Presets (lowercase + digits)
+    // Ported from your Python script
+    // -----------------------------
+    const E_RECTS = [
+        R(0, Y.TOP0, 12, Y.TOP1),
+        R(0, Y.TOP1, 4,  Y.BASE0),
+        R(8, Y.TOP1, 12, Y.MID0),
+        R(0, Y.MID0, 12, Y.MID1),
+        R(0, Y.BASE0, 12, Y.BASE1),
+    ];
+
+    const S_RECTS = [
+        R(0, Y.TOP0, 12, Y.TOP1),
+        R(0, Y.TOP1, 4,  Y.MID0),
+        R(0, Y.MID0, 12, Y.MID1),
+        R(8, Y.MID1, 12, Y.BASE0),
+        R(0, Y.BASE0, 12, Y.BASE1),
+    ];
+
+    const Z_RECTS = [
+        R(0, Y.TOP0, 12, Y.TOP1),
+        R(8, Y.TOP1, 12, Y.MID0),
+        R(0, Y.MID0, 12, Y.MID1),
+        R(0, Y.MID1, 4,  Y.BASE0),
+        R(0, Y.BASE0, 12, Y.BASE1),
+    ];
+
+    const PRESETS = {
+        "a": { width: 12, rects: rotate180Rects(E_RECTS, 12, Y.TOP0 + Y.BASE1) },
+        "b": { width: 12, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(4, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.BASE0),
+                R(4, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "c": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "d": { width: 12, rects: [
+                R(8, Y.CAP0, 12, Y.BASE1),
+                R(0, Y.TOP0, 8,  Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(0, Y.BASE0, 8,  Y.BASE1),
+            ]},
+        "e": { width: 12, rects: E_RECTS.slice() },
+        "f": { width: 8, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(0, Y.CAP0, 8,  Y.CAP1),
+                R(0, Y.TOP0, 8,  Y.TOP1),
+            ]},
+        "g": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.MID0),
+                R(8, Y.TOP1, 12, Y.MID0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(8, Y.MID1, 12, Y.BASE1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+                R(0, Y.BASE1, 4,  Y.BASE1 + 5),
+                R(8, Y.BASE1, 12, Y.BASE1 + 5),
+                R(0, Y.BASE1 + 5, 4,  Y.DESC0),
+                R(8, Y.BASE1 + 5, 12, Y.DESC0),
+                R(0, Y.DESC0, 12, Y.DESC1),
+            ]},
+        "h": { width: 12, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.BASE1),
+            ]},
+        "i": { width: 4, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(0, 0,      4,  4),
+            ]},
+        "j": { width: 8, rects: [
+                R(4, Y.TOP0, 8,  Y.DESC1),
+                R(4, 0,      8,  4),
+                R(0, Y.DESC0, 4,  Y.DESC1),
+            ]},
+        "k": { width: 12, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(8, Y.TOP0, 12, Y.MID0),
+                R(8, Y.MID1, 12, Y.BASE1),
+                R(4, Y.MID0, 8,  Y.MID1),
+            ]},
+        "l": { width: 8, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(0, Y.BASE0, 8,  Y.BASE1),
+            ]},
+        "m": { width: 20, rects: [
+                R(0, Y.TOP0, 20, Y.TOP1),
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(8, Y.TOP1, 12, Y.BASE1),
+                R(16, Y.TOP1, 20, Y.BASE1),
+            ]},
+        "n": { width: 12, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.BASE1),
+            ]},
+        "o": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(8, Y.TOP1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "p": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.DESC1),
+                R(8, Y.TOP1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "q": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(8, Y.TOP1, 12, Y.DESC1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "r": { width: 8, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(0, Y.TOP0, 8,  Y.TOP1),
+            ]},
+        "s": { width: 12, rects: S_RECTS.slice() },
+        "t": { width: 8, rects: [
+                R(0, Y.CAP0, 4,  Y.BASE1),
+                R(4, Y.TOP0, 8,  Y.TOP1),
+                R(4, Y.BASE0, 8,  Y.BASE1),
+            ]},
+        "u": { width: 12, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(8, Y.TOP0, 12, Y.BASE1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "v": { width: 12, rects: [
+                R(0, Y.TOP0, 4,  Y.MID1),
+                R(8, Y.TOP0, 12, Y.MID1),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(4, Y.MID1, 8,  Y.BASE1),
+            ]},
+        "w": { width: 20, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(8, Y.TOP0, 12, Y.BASE1),
+                R(16, Y.TOP0, 20, Y.BASE1),
+                R(0, Y.BASE0, 20, Y.BASE1),
+            ]},
+        "x": { width: 12, rects: [
+                R(0, Y.TOP0, 4,  Y.MID0),
+                R(0, Y.MID1, 4,  Y.BASE1),
+                R(8, Y.TOP0, 12, Y.MID0),
+                R(8, Y.MID1, 12, Y.BASE1),
+                R(4, Y.MID0, 8,  Y.MID1),
+            ]},
+        "y": { width: 12, rects: [
+                R(0, Y.TOP0, 4,  Y.BASE1),
+                R(8, Y.TOP0, 12, Y.DESC1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "z": { width: 12, rects: Z_RECTS.slice() },
+
+        "0": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(8, Y.TOP1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "1": { width: 8, rects: [
+                R(0, Y.TOP0, 8,  Y.TOP1),
+                R(4, Y.TOP1, 8,  Y.BASE1),
+            ]},
+        "2": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.MID0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(0, Y.MID1, 4,  Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "3": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.MID0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(8, Y.MID1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "4": { width: 12, rects: [
+                R(8, Y.TOP0, 12, Y.BASE1),
+                R(0, Y.TOP0, 4,  Y.MID1),
+                R(0, Y.MID0, 12, Y.MID1),
+            ]},
+        "5": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.MID0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(8, Y.MID1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "6": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE1),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(8, Y.MID1, 12, Y.BASE0),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "7": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.BASE1),
+            ]},
+        "8": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(0, Y.TOP1, 4,  Y.BASE0),
+                R(8, Y.TOP1, 12, Y.BASE0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+        "9": { width: 12, rects: [
+                R(0, Y.TOP0, 12, Y.TOP1),
+                R(8, Y.TOP1, 12, Y.BASE1),
+                R(0, Y.TOP1, 4,  Y.MID0),
+                R(0, Y.MID0, 12, Y.MID1),
+                R(0, Y.BASE0, 12, Y.BASE1),
+            ]},
+    };
+
+    function loadPresetForChar(ch) {
+        const preset = PRESETS[ch];
+        if (!preset) return false;
+
+        clearState();
+        widthUnitsSelect.value = String(Math.max(1, Math.min(5, preset.width / 4)));
+
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const cell = cellRect(r, c);
+                state[r][c] = preset.rects.some(rect => rectCoversCell(rect, cell));
+            }
+        }
+
+        updateUI();
+        return true;
+    }
+
+    // -----------------------------
+    // Editor SVG build
+    // -----------------------------
+    function buildEditorSvg() {
+        // Background guide lines first (under cells)
+        const guideDefs = [
+            { y: Y.CAP1, cls: "cap", label: "cap 1" },
+            { y: Y.TOP0, cls: "xheight", label: "x-top 9" },
+            { y: Y.MID0, cls: "mid", label: "mid 14" },
+            { y: Y.BASE0, cls: "base", label: "base 19" },
+            { y: Y.DESC0, cls: "desc", label: "desc 29" },
+        ];
+
+        for (const g of guideDefs) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", "0");
+            line.setAttribute("x2", "20");
+            line.setAttribute("y1", String(g.y));
+            line.setAttribute("y2", String(g.y));
+            line.setAttribute("class", `guide ${g.cls}`);
+            editorSvg.appendChild(line);
+        }
+
+        // Cells
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const [x1, y1, x2, y2] = cellRect(r, c);
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", String(x1));
+                rect.setAttribute("y", String(y1));
+                rect.setAttribute("width", String(x2 - x1));
+                rect.setAttribute("height", String(y2 - y1));
+                rect.setAttribute("class", "cell");
+                rect.dataset.r = String(r);
+                rect.dataset.c = String(c);
+
+                rect.addEventListener("pointerdown", onCellPointerDown);
+                rect.addEventListener("pointerenter", onCellPointerEnter);
+
+                editorSvg.appendChild(rect);
+                cellEls[r][c] = rect;
+            }
+        }
+
+        // Outline
+        const outline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        outline.setAttribute("x", "0");
+        outline.setAttribute("y", "0");
+        outline.setAttribute("width", "20");
+        outline.setAttribute("height", "30");
+        outline.setAttribute("fill", "none");
+        outline.setAttribute("stroke", "var(--grid-stroke)");
+        outline.setAttribute("stroke-width", "0.2");
+        outline.setAttribute("pointer-events", "none");
+        editorSvg.appendChild(outline);
+
+        editorSvg.addEventListener("pointerup", stopDragging);
+        editorSvg.addEventListener("pointercancel", stopDragging);
+        window.addEventListener("pointerup", stopDragging);
+    }
+
+    function onCellPointerDown(e) {
+        const target = e.currentTarget;
+        const r = Number(target.dataset.r);
+        const c = Number(target.dataset.c);
+        if (!inBoundsCell(r, c)) return;
+
+        pointerDrag.active = true;
+        pointerDrag.id = e.pointerId;
+        pointerDrag.value = !state[r][c];
+
+        try {
+            target.setPointerCapture(e.pointerId);
+        } catch (_) {}
+
+        applyPaint(r, c, pointerDrag.value);
+        e.preventDefault();
+    }
+
+    function onCellPointerEnter(e) {
+        if (!pointerDrag.active) return;
+        const target = e.currentTarget;
+        const r = Number(target.dataset.r);
+        const c = Number(target.dataset.c);
+        applyPaint(r, c, pointerDrag.value);
+    }
+
+    function stopDragging() {
+        pointerDrag.active = false;
+        pointerDrag.id = null;
+    }
+
+    // -----------------------------
+    // UI update / outputs
+    // -----------------------------
+    function updateWarn() {
+        const ch = getGlyphChar();
+        if (!ch) {
+            warnEl.textContent = "Enter a lowercase letter or digit.";
+            return;
+        }
+        if (!isSupportedChar(ch)) {
+            warnEl.textContent = "This editor is preset for lowercase letters and digits only (a–z, 0–9).";
+            return;
+        }
+        warnEl.textContent = "";
+    }
+
+    function updateCellsVisual() {
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const el = cellEls[r][c];
+                if (!el) continue;
+                el.classList.toggle("active", !!state[r][c] && inBoundsCell(r, c));
+                el.classList.toggle("oob", !inBoundsCell(r, c));
+            }
+        }
+    }
+
+    function updateOutputs() {
+        const ch = getGlyphChar();
+        const svg = currentSvgMarkup();
+        const jsonObj = currentJsonObject();
+        const rects = collectMergedRects();
+
+        jsonOut.value = JSON.stringify(jsonObj, null, 2);
+        svgOut.value = svg;
+
+        // Preview
+        svgPreview.innerHTML = svg;
+
+        // Status
+        codepointBadge.textContent = `U+${codepointHex(ch).toUpperCase()}`;
+        activeCountBadge.textContent = String(activeCellCount());
+        rectCountBadge.textContent = String(rects.length);
+        viewBoxBadge.textContent = `0 0 ${currentWidth()} 30`;
+    }
+
+    function updateUI() {
+        updateWarn();
+        updateCellsVisual();
+        updateOutputs();
+    }
+
+    // -----------------------------
+    // Buttons / actions
+    // -----------------------------
+    $("loadPresetBtn").addEventListener("click", () => {
+        const ch = getGlyphChar();
+        if (!isSupportedChar(ch)) {
+            updateUI();
+            return;
+        }
+        if (!loadPresetForChar(ch)) updateUI();
+    });
+
+    $("blankBtn").addEventListener("click", () => {
+        clearState();
+        updateUI();
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+        clearState();
+        updateUI();
+    });
+
+    $("invertBtn").addEventListener("click", () => {
+        invertInBounds();
+    });
+
+    $("fitWidthBtn").addEventListener("click", () => {
+        fitWidthToContent();
+    });
+
+    glyphCharInput.addEventListener("input", () => {
+        const v = glyphCharInput.value || "";
+        if (v.length > 1) glyphCharInput.value = v[0];
+        const ch = getGlyphChar();
+        if (isSupportedChar(ch) && PRESETS[ch]) {
+            loadPresetForChar(ch);
+        } else {
+            updateUI();
+        }
+    });
+
+    widthUnitsSelect.addEventListener("change", updateUI);
+
+    themeModeSelect.addEventListener("change", () => {
+        const mode = themeModeSelect.value;
+        const html = document.documentElement;
+        if (mode === "auto") {
+            html.removeAttribute("data-theme");
+        } else {
+            html.setAttribute("data-theme", mode);
+        }
+    });
+
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (_) {
+            // Fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+        }
+    }
+
+    $("copySvgBtn").addEventListener("click", () => copyText(svgOut.value));
+    $("copyJsonBtn").addEventListener("click", () => copyText(jsonOut.value));
+
+    function downloadText(filename, text, mime) {
+        const blob = new Blob([text], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    $("downloadSvgBtn").addEventListener("click", () => {
+        downloadText(filenameForCurrentGlyph("svg"), svgOut.value, "image/svg+xml;charset=utf-8");
+    });
+
+    $("downloadJsonBtn").addEventListener("click", () => {
+        const fname = filenameForCurrentGlyph("json").replace(/^character/, "glyph");
+        downloadText(fname, jsonOut.value, "application/json;charset=utf-8");
+    });
+
+    // -----------------------------
+    // Boot
+    // -----------------------------
+    buildEditorSvg();
+    loadPresetForChar("a");
+</script>
+</body>
+</html>
