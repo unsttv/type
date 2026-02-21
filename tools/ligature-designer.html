@@ -1,0 +1,1373 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>UNST Ligature Designer</title>
+    <style>
+        :root {
+            --bg: #f7f7fb;
+            --panel: #ffffff;
+            --panel-2: #f0f2f8;
+            --text: #111318;
+            --muted: #5f6470;
+            --border: #d8dde8;
+            --accent: #3b82f6;
+            --accent-2: #2563eb;
+            --danger: #dc2626;
+            --cell-stroke: rgba(17, 19, 24, 0.18);
+            --cell-hover: rgba(59, 130, 246, 0.35);
+            --base-fill: rgba(17, 19, 24, 0.18);
+            --base-stroke: rgba(17, 19, 24, 0.25);
+            --on-fill: #111111;
+            --on-stroke: #111111;
+            --guide: rgba(17, 19, 24, 0.18);
+            --baseline: #2563eb;
+            --shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        html[data-theme="dark"] {
+            --bg: #0b0d12;
+            --panel: #12161d;
+            --panel-2: #171c24;
+            --text: #eef2f7;
+            --muted: #9aa3b2;
+            --border: #2a3240;
+            --accent: #60a5fa;
+            --accent-2: #3b82f6;
+            --danger: #f87171;
+            --cell-stroke: rgba(238, 242, 247, 0.14);
+            --cell-hover: rgba(96, 165, 250, 0.35);
+            --base-fill: rgba(255, 255, 255, 0.12);
+            --base-stroke: rgba(255, 255, 255, 0.18);
+            --on-fill: #ffffff;
+            --on-stroke: #ffffff;
+            --guide: rgba(255, 255, 255, 0.16);
+            --baseline: #60a5fa;
+            --shadow: 0 10px 28px rgba(0,0,0,0.35);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            html[data-theme="auto"] {
+                --bg: #0b0d12;
+                --panel: #12161d;
+                --panel-2: #171c24;
+                --text: #eef2f7;
+                --muted: #9aa3b2;
+                --border: #2a3240;
+                --accent: #60a5fa;
+                --accent-2: #3b82f6;
+                --danger: #f87171;
+                --cell-stroke: rgba(238, 242, 247, 0.14);
+                --cell-hover: rgba(96, 165, 250, 0.35);
+                --base-fill: rgba(255, 255, 255, 0.12);
+                --base-stroke: rgba(255, 255, 255, 0.18);
+                --on-fill: #ffffff;
+                --on-stroke: #ffffff;
+                --guide: rgba(255, 255, 255, 0.16);
+                --baseline: #60a5fa;
+                --shadow: 0 10px 28px rgba(0,0,0,0.35);
+            }
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .app {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            min-height: 100vh;
+            gap: 14px;
+            padding: 14px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .left {
+            display: grid;
+            grid-template-rows: auto auto auto auto 1fr;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .section {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section:last-child { border-bottom: 0; }
+
+        .section h2 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .row + .row { margin-top: 8px; }
+
+        label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea,
+        button {
+            font: inherit;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            background: var(--panel-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 9px;
+        }
+
+        input[type="number"] { width: 78px; }
+        .grow { flex: 1; min-width: 0; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        button:hover { background: var(--accent-2); }
+        button.secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        button.secondary:hover { background: var(--panel-2); }
+        button.danger {
+            background: var(--danger);
+        }
+        button.danger:hover { filter: brightness(0.95); }
+
+        .status {
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            min-height: 36px;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .chip {
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+        .chip.bad { border-color: rgba(220,38,38,0.45); color: var(--danger); }
+
+        .gap-list {
+            max-height: 220px;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel-2);
+            padding: 8px;
+        }
+
+        .gap-row {
+            display: grid;
+            grid-template-columns: 72px 1fr 62px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .gap-row:last-child { margin-bottom: 0; }
+
+        .gap-pair {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .main {
+            display: grid;
+            grid-template-rows: auto 1fr auto auto;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .toolbar {
+            padding: 10px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .viewport-wrap {
+            min-width: 0;
+            min-height: 360px;
+            overflow: auto;
+            padding: 12px;
+        }
+
+        .svg-shell {
+            display: inline-block;
+            background:
+                    linear-gradient(45deg, rgba(127,127,127,0.06) 25%, transparent 25%, transparent 75%, rgba(127,127,127,0.06) 75%) 0 0/12px 12px,
+                    linear-gradient(45deg, rgba(127,127,127,0.06) 25%, transparent 25%, transparent 75%, rgba(127,127,127,0.06) 75%) 6px 6px/12px 12px;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        #editorSvg {
+            display: block;
+            background: transparent;
+            image-rendering: pixelated;
+            shape-rendering: crispEdges;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .guide-line {
+            stroke: var(--guide);
+            stroke-width: 0.06;
+            vector-effect: non-scaling-stroke;
+            pointer-events: none;
+        }
+
+        .baseline-line {
+            stroke: var(--baseline);
+            stroke-width: 0.08;
+            vector-effect: non-scaling-stroke;
+            pointer-events: none;
+        }
+
+        .base-rect {
+            fill: var(--base-fill);
+            stroke: var(--base-stroke);
+            stroke-width: 0.02;
+            vector-effect: non-scaling-stroke;
+            pointer-events: none;
+        }
+
+        .connector-cell {
+            fill: transparent;
+            stroke: var(--cell-stroke);
+            stroke-width: 0.03;
+            vector-effect: non-scaling-stroke;
+            cursor: crosshair;
+        }
+
+        .connector-cell:hover {
+            stroke: var(--cell-hover);
+            stroke-width: 0.08;
+        }
+
+        .connector-cell.on {
+            fill: var(--on-fill);
+            stroke: var(--on-stroke);
+            stroke-width: 0.02;
+        }
+
+        .outputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .outputs textarea {
+            width: 100%;
+            min-height: 180px;
+            resize: vertical;
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        .out-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            gap: 6px;
+        }
+
+        .small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .kbd {
+            font-family: ui-monospace, monospace;
+            border: 1px solid var(--border);
+            border-bottom-width: 2px;
+            border-radius: 6px;
+            padding: 0 5px;
+            background: var(--panel-2);
+            font-size: 12px;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 1100px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+            .outputs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="left">
+        <div class="panel section">
+            <h2>Data source</h2>
+            <div class="row">
+                <button id="btnLoadDefault" class="secondary">Load ../data/glyphs.json</button>
+                <label class="small">
+                    <input id="fileInput" type="file" accept=".json,application/json" />
+                </label>
+            </div>
+            <div class="row">
+                <div id="dataStatus" class="status grow">No glyph data loaded yet.</div>
+            </div>
+            <div class="row">
+                <span class="small">Tip: if opening this file directly from disk, <span class="kbd">fetch</span> may be blocked. Use the file picker.</span>
+            </div>
+        </div>
+
+        <div class="panel section">
+            <h2>Ligature text</h2>
+            <div class="row">
+                <input id="ligText" class="grow mono" type="text" value="st" spellcheck="false" />
+            </div>
+            <div class="row">
+                <label>Gap
+                    <input id="gapUnits" type="number" min="0" max="20" step="1" value="4" />
+                </label>
+                <label>Zoom
+                    <input id="zoomPx" type="number" min="8" max="80" step="1" value="20" />
+                </label>
+                <label>Theme
+                    <select id="themeSelect">
+                        <option value="auto">auto</option>
+                        <option value="light">light</option>
+                        <option value="dark">dark</option>
+                    </select>
+                </label>
+            </div>
+            <div class="row">
+                <button id="btnCompose">Compose</button>
+                <button id="btnSmart" class="secondary">Smart presets</button>
+                <button id="btnApplyGapModes" class="secondary">Apply gap modes</button>
+                <button id="btnClear" class="secondary">Clear connectors</button>
+            </div>
+            <div class="row">
+                <div id="composeStatus" class="status grow">Enter text and load glyph data.</div>
+            </div>
+            <div class="row">
+                <div id="charChips" class="chips"></div>
+            </div>
+        </div>
+
+        <div class="panel section">
+            <h2>Gap connectors</h2>
+            <div class="row">
+                <span class="small">Per gap: choose a preset and touch depth (how far into the right glyph the line enters).</span>
+            </div>
+            <div class="row">
+                <div id="gapList" class="gap-list grow"></div>
+            </div>
+        </div>
+
+        <div class="panel section" style="min-height:0;">
+            <h2>Controls</h2>
+            <div class="row"><span class="small">Click to toggle a connector cell. Drag to paint/erase. Base glyphs are shown in gray; connector cells are the editable layer.</span></div>
+            <div class="row"><span class="small">Blue line = baseline top (y=19). Other faint lines mark cap/x-height/mid/descender guides.</span></div>
+            <div class="row"><span class="small">Spaces are supported (shown as <span class="kbd">SPACE</span> chips) if present in your glyph data, otherwise a blank width is synthesized.</span></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="panel toolbar">
+            <span class="small">Filename:</span>
+            <input id="fileNamePreview" class="mono grow" type="text" readonly value="ligature-u0073-u0074.svg" />
+            <button id="btnDownloadSvg">Download SVG</button>
+            <button id="btnDownloadJson" class="secondary">Download JSON</button>
+        </div>
+
+        <div class="panel viewport-wrap">
+            <div class="svg-shell">
+                <svg id="editorSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30" width="800" height="600" aria-label="Ligature editor"></svg>
+            </div>
+        </div>
+
+        <div class="panel outputs">
+            <div>
+                <div class="out-head">
+                    <strong>SVG export</strong>
+                    <div class="row">
+                        <button id="btnCopySvg" class="secondary">Copy</button>
+                    </div>
+                </div>
+                <textarea id="svgOut" class="mono" spellcheck="false"></textarea>
+            </div>
+            <div>
+                <div class="out-head">
+                    <strong>JSON export</strong>
+                    <div class="row">
+                        <button id="btnCopyJson" class="secondary">Copy</button>
+                    </div>
+                </div>
+                <textarea id="jsonOut" class="mono" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <div class="panel section">
+            <span class="small">Works with <span class="kbd">data/glyphs.json</span> generated by your reverse exporter. The exported SVG uses your ligature naming convention and contains only polygons (base glyphs + connector rectangles).</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+        "use strict";
+
+        // -----------------------------
+        // Design constants (same system)
+        // -----------------------------
+        const CELL_H = 30;
+        const BASELINE_Y = 19;
+        const Y_GUIDES = [0, 1, 9, 10, 14, 15, 19, 20, 29, 30];
+
+        // -----------------------------
+        // State
+        // -----------------------------
+        const state = {
+            glyphData: null,      // parsed data/glyphs.json object
+            byChar: new Map(),    // char => record
+            text: "",
+            gap: 4,
+            zoom: 20,
+            composed: null,       // { placements, width, charsMeta }
+            gapModes: [],         // [{mode, touch}]
+            connectorGrid: null,  // Array<Uint8Array>, 30 rows x width cols
+            cellEls: [],          // flat array (y*width+x) => rect element
+            isDragging: false,
+            dragPaintValue: 1,
+            lastDragKey: null,
+        };
+
+        // -----------------------------
+        // DOM refs
+        // -----------------------------
+        const $ = (id) => document.getElementById(id);
+        const els = {
+            btnLoadDefault: $("btnLoadDefault"),
+            fileInput: $("fileInput"),
+            dataStatus: $("dataStatus"),
+
+            ligText: $("ligText"),
+            gapUnits: $("gapUnits"),
+            zoomPx: $("zoomPx"),
+            themeSelect: $("themeSelect"),
+            btnCompose: $("btnCompose"),
+            btnSmart: $("btnSmart"),
+            btnApplyGapModes: $("btnApplyGapModes"),
+            btnClear: $("btnClear"),
+            composeStatus: $("composeStatus"),
+            charChips: $("charChips"),
+            gapList: $("gapList"),
+
+            editorSvg: $("editorSvg"),
+            fileNamePreview: $("fileNamePreview"),
+
+            svgOut: $("svgOut"),
+            jsonOut: $("jsonOut"),
+
+            btnCopySvg: $("btnCopySvg"),
+            btnCopyJson: $("btnCopyJson"),
+            btnDownloadSvg: $("btnDownloadSvg"),
+            btnDownloadJson: $("btnDownloadJson"),
+        };
+
+        // -----------------------------
+        // Theme
+        // -----------------------------
+        function applyTheme(value) {
+            document.documentElement.setAttribute("data-theme", value);
+            localStorage.setItem("unst-ligature-theme", value);
+        }
+
+        function initTheme() {
+            const saved = localStorage.getItem("unst-ligature-theme") || "auto";
+            els.themeSelect.value = saved;
+            applyTheme(saved);
+            els.themeSelect.addEventListener("change", () => applyTheme(els.themeSelect.value));
+        }
+
+        // -----------------------------
+        // Utility
+        // -----------------------------
+        function escXml(s) {
+            return String(s)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;");
+        }
+
+        function codepointHex(ch) {
+            return [...ch][0].codePointAt(0).toString(16).padStart(4, "0");
+        }
+
+        function ligatureFilename(chars) {
+            const parts = chars.map(ch => `u${codepointHex(ch)}`);
+            return `ligature-${parts.join("-")}.svg`;
+        }
+
+        function labelForChar(ch) {
+            if (ch === " ") return "SPACE";
+            if (ch === "\t") return "TAB";
+            if (ch === "\n") return "LF";
+            return ch;
+        }
+
+        function setDataStatus(msg, ok = true) {
+            els.dataStatus.textContent = msg;
+            els.dataStatus.style.color = ok ? "var(--muted)" : "var(--danger)";
+        }
+
+        function setComposeStatus(msg, ok = true) {
+            els.composeStatus.textContent = msg;
+            els.composeStatus.style.color = ok ? "var(--muted)" : "var(--danger)";
+        }
+
+        async function copyText(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function downloadText(filename, text, mime = "text/plain;charset=utf-8") {
+            const blob = new Blob([text], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        // -----------------------------
+        // Glyph data loading
+        // -----------------------------
+        function normalizeGlyphData(data) {
+            if (!data || typeof data !== "object") {
+                throw new Error("Invalid glyph data object");
+            }
+            if (!data.glyphs || typeof data.glyphs !== "object") {
+                throw new Error("Missing glyphs map");
+            }
+
+            const byChar = new Map();
+
+            // Preferred: indices.byChar
+            if (data.indices && data.indices.byChar && typeof data.indices.byChar === "object") {
+                for (const [ch, uKey] of Object.entries(data.indices.byChar)) {
+                    const rec = data.glyphs[uKey];
+                    if (rec) byChar.set(ch, rec);
+                }
+            }
+
+            // Fallback: scan records
+            if (byChar.size === 0) {
+                for (const rec of Object.values(data.glyphs)) {
+                    if (rec && typeof rec === "object" && typeof rec.key === "string" && rec.key.length === 1) {
+                        byChar.set(rec.key, rec);
+                    }
+                }
+            }
+
+            if (byChar.size === 0) {
+                throw new Error("Could not build byChar index");
+            }
+
+            state.glyphData = data;
+            state.byChar = byChar;
+
+            setDataStatus(`Loaded glyph data (${byChar.size} single glyphs).`);
+        }
+
+        async function tryLoadDefaultData() {
+            const candidates = [
+                "../data/glyphs.json",
+                "./data/glyphs.json",
+                "data/glyphs.json",
+                "./glyphs.json",
+            ];
+
+            let lastErr = null;
+            for (const url of candidates) {
+                try {
+                    const res = await fetch(url, { cache: "no-store" });
+                    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+                    const data = await res.json();
+                    normalizeGlyphData(data);
+                    return;
+                } catch (err) {
+                    lastErr = err;
+                }
+            }
+
+            setDataStatus(`Could not load glyphs.json automatically. Use file picker.`, false);
+            console.warn("Default glyph data load failed:", lastErr);
+        }
+
+        function loadGlyphDataFromFile(file) {
+            const fr = new FileReader();
+            fr.onload = () => {
+                try {
+                    const data = JSON.parse(String(fr.result || ""));
+                    normalizeGlyphData(data);
+                } catch (err) {
+                    setDataStatus(`Failed to parse JSON: ${err.message}`, false);
+                }
+            };
+            fr.onerror = () => setDataStatus("Failed to read file.", false);
+            fr.readAsText(file, "utf-8");
+        }
+
+        // -----------------------------
+        // Composition
+        // -----------------------------
+        function getGlyphRecordForChar(ch) {
+            const rec = state.byChar.get(ch);
+            if (rec) return rec;
+
+            // Fallback synthesized SPACE if missing
+            if (ch === " ") {
+                return {
+                    key: " ",
+                    label: "SPACE",
+                    codepoint: "U+0020",
+                    codepointInt: 32,
+                    width: 12,
+                    height: 30,
+                    polys: [],
+                    rects: [],
+                };
+            }
+            return null;
+        }
+
+        function defaultGapModeForPair(leftCh, rightCh) {
+            const pair = leftCh + rightCh;
+            switch (pair) {
+                case "st": return { mode: "top", touch: 4 };
+                case "ct": return { mode: "top", touch: 4 };
+                case "ch": return { mode: "top", touch: 1 };
+                case "sh": return { mode: "top", touch: 1 };
+                case "es": return { mode: "baseline", touch: 1 };
+                case "yp": return { mode: "desc", touch: 1 };
+                default: return { mode: "none", touch: 1 };
+            }
+        }
+
+        function composeFromInput() {
+            if (!state.glyphData) {
+                setComposeStatus("Load glyph data first.", false);
+                return;
+            }
+
+            const text = els.ligText.value; // IMPORTANT: keep spaces; no trim
+            const gap = Math.max(0, Number(els.gapUnits.value) || 0);
+            const zoom = Math.max(8, Number(els.zoomPx.value) || 20);
+
+            state.gap = gap;
+            state.zoom = zoom;
+
+            if (text.length === 0) {
+                setComposeStatus("Input is empty. Spaces are allowed, but the field cannot be empty.", false);
+                state.composed = null;
+                renderChips([]);
+                rebuildGapUI([]);
+                rebuildEditor();
+                updateOutputs();
+                return;
+            }
+
+            const chars = Array.from(text);
+            const placements = [];
+            const missing = [];
+            let x = 0;
+
+            for (let i = 0; i < chars.length; i++) {
+                const ch = chars[i];
+                const rec = getGlyphRecordForChar(ch);
+                if (!rec) {
+                    missing.push(ch);
+                    continue;
+                }
+
+                const width = Number(rec.width ?? 12);
+                placements.push({
+                    index: placements.length,
+                    sourceIndex: i,
+                    ch,
+                    rec,
+                    x,
+                    width,
+                });
+
+                x += width;
+                if (i < chars.length - 1) x += gap;
+            }
+
+            if (placements.length === 0) {
+                setComposeStatus(`No usable glyphs found in input.`, false);
+                state.composed = null;
+                renderChips(chars.map(ch => ({ ch, ok: false })));
+                rebuildGapUI([]);
+                rebuildEditor();
+                updateOutputs();
+                return;
+            }
+
+            const width = Math.max(1, x);
+
+            state.composed = {
+                text,
+                chars,
+                placements,
+                width,
+                height: CELL_H,
+                missing,
+            };
+
+            // Reset connector layer for new composition
+            state.connectorGrid = Array.from({ length: CELL_H }, () => new Uint8Array(width));
+
+            // Default gap modes
+            state.gapModes = [];
+            for (let i = 0; i < placements.length - 1; i++) {
+                const left = placements[i].ch;
+                const right = placements[i + 1].ch;
+                state.gapModes.push(defaultGapModeForPair(left, right));
+            }
+
+            renderChips(chars.map(ch => ({ ch, ok: !!getGlyphRecordForChar(ch) })));
+            rebuildGapUI(state.gapModes);
+
+            const msg = missing.length
+                ? `Composed ${placements.length} glyph(s); skipped ${missing.length} missing char(s).`
+                : `Composed ${placements.length} glyph(s), width ${width}u.`;
+
+            setComposeStatus(msg, missing.length === 0);
+            rebuildEditor();
+            updateOutputs();
+        }
+
+        function renderChips(items) {
+            els.charChips.innerHTML = "";
+            for (const item of items) {
+                const el = document.createElement("span");
+                el.className = "chip" + (item.ok ? "" : " bad");
+                el.textContent = labelForChar(item.ch);
+                els.charChips.appendChild(el);
+            }
+        }
+
+        function rebuildGapUI(gapModes) {
+            els.gapList.innerHTML = "";
+
+            if (!state.composed || state.composed.placements.length < 2) {
+                const s = document.createElement("div");
+                s.className = "small";
+                s.textContent = "Need at least 2 glyphs.";
+                els.gapList.appendChild(s);
+                return;
+            }
+
+            gapModes.forEach((g, i) => {
+                const left = state.composed.placements[i].ch;
+                const right = state.composed.placements[i + 1].ch;
+
+                const row = document.createElement("div");
+                row.className = "gap-row";
+
+                const pair = document.createElement("div");
+                pair.className = "gap-pair";
+                pair.textContent = `${labelForChar(left)}→${labelForChar(right)}`;
+
+                const sel = document.createElement("select");
+                sel.innerHTML = `
+        <option value="none">none</option>
+        <option value="top">top link</option>
+        <option value="baseline">baseline</option>
+        <option value="desc">descender</option>
+      `;
+                sel.value = g.mode;
+                sel.addEventListener("change", () => {
+                    state.gapModes[i].mode = sel.value;
+                });
+
+                const touch = document.createElement("input");
+                touch.type = "number";
+                touch.min = "1";
+                touch.max = "12";
+                touch.step = "1";
+                touch.value = String(g.touch ?? 1);
+                touch.title = "Touch depth into right glyph (units)";
+                touch.addEventListener("input", () => {
+                    state.gapModes[i].touch = Math.max(1, Number(touch.value) || 1);
+                });
+
+                row.appendChild(pair);
+                row.appendChild(sel);
+                row.appendChild(touch);
+                els.gapList.appendChild(row);
+            });
+        }
+
+        // -----------------------------
+        // Connector grid editing
+        // -----------------------------
+        function gridWidth() {
+            return state.composed ? state.composed.width : 1;
+        }
+
+        function isCellOn(x, y) {
+            if (!state.connectorGrid) return 0;
+            if (y < 0 || y >= CELL_H) return 0;
+            if (x < 0 || x >= state.connectorGrid[y].length) return 0;
+            return state.connectorGrid[y][x];
+        }
+
+        function setCell(x, y, value) {
+            if (!state.connectorGrid) return;
+            if (y < 0 || y >= CELL_H) return;
+            if (x < 0 || x >= state.connectorGrid[y].length) return;
+            const v = value ? 1 : 0;
+            if (state.connectorGrid[y][x] === v) return;
+
+            state.connectorGrid[y][x] = v;
+            const idx = y * gridWidth() + x;
+            const el = state.cellEls[idx];
+            if (el) {
+                if (v) el.classList.add("on");
+                else el.classList.remove("on");
+            }
+        }
+
+        function fillRectCells(x, y, w, h, value = 1) {
+            const x0 = Math.floor(x);
+            const y0 = Math.floor(y);
+            const x1 = Math.floor(x + w);
+            const y1 = Math.floor(y + h);
+            for (let yy = y0; yy < y1; yy++) {
+                for (let xx = x0; xx < x1; xx++) {
+                    setCell(xx, yy, value);
+                }
+            }
+        }
+
+        function clearConnectors() {
+            if (!state.connectorGrid) return;
+            for (let y = 0; y < CELL_H; y++) {
+                state.connectorGrid[y].fill(0);
+            }
+            for (const el of state.cellEls) {
+                if (el) el.classList.remove("on");
+            }
+            updateOutputs();
+        }
+
+        function applyGapPresetAt(index, mode, touchDepth) {
+            if (!state.composed || !state.connectorGrid) return;
+            if (index < 0 || index >= state.composed.placements.length - 1) return;
+
+            const left = state.composed.placements[index];
+            const right = state.composed.placements[index + 1];
+
+            const leftEnd = left.x + left.width;     // start of gap
+            const rightStart = right.x;              // first x of right glyph
+            const x0 = Math.max(0, leftEnd - 1);     // seam starts one unit inside left glyph
+            const x1 = Math.min(gridWidth(), rightStart + Math.max(1, touchDepth));
+
+            if (x1 <= x0) return;
+
+            if (mode === "top") {
+                // Vertical seam (0..10) + top cap line (0..1), like st/ch/sh/ct family
+                fillRectCells(x0, 0, 1, 10, 1);
+                fillRectCells(x0, 0, x1 - x0, 1, 1);
+            } else if (mode === "baseline") {
+                // Baseline link (19..20), like es
+                fillRectCells(x0, 19, x1 - x0, 1, 1);
+            } else if (mode === "desc") {
+                // Descender-bottom link (29..30), like yp
+                fillRectCells(x0, 29, x1 - x0, 1, 1);
+            }
+        }
+
+        function applyGapModes() {
+            clearConnectors();
+            for (let i = 0; i < state.gapModes.length; i++) {
+                const g = state.gapModes[i];
+                applyGapPresetAt(i, g.mode, Math.max(1, Number(g.touch) || 1));
+            }
+            updateOutputs();
+        }
+
+        function applySmartPresets() {
+            if (!state.composed) return;
+            state.gapModes = [];
+            for (let i = 0; i < state.composed.placements.length - 1; i++) {
+                const left = state.composed.placements[i].ch;
+                const right = state.composed.placements[i + 1].ch;
+                state.gapModes.push(defaultGapModeForPair(left, right));
+            }
+            rebuildGapUI(state.gapModes);
+            applyGapModes();
+        }
+
+        // -----------------------------
+        // SVG editor rendering
+        // -----------------------------
+        function rebuildEditor() {
+            const svg = els.editorSvg;
+            while (svg.firstChild) svg.removeChild(svg.firstChild);
+            state.cellEls = [];
+
+            const width = state.composed ? state.composed.width : 40;
+            const height = CELL_H;
+
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.setAttribute("width", String(width * state.zoom));
+            svg.setAttribute("height", String(height * state.zoom));
+
+            // Guides
+            const gGuides = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            for (const y of Y_GUIDES) {
+                if (y < 0 || y > height) continue;
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "0");
+                line.setAttribute("y1", String(y));
+                line.setAttribute("x2", String(width));
+                line.setAttribute("y2", String(y));
+                line.setAttribute("class", y === BASELINE_Y ? "baseline-line" : "guide-line");
+                gGuides.appendChild(line);
+            }
+
+            // Optional vertical gap boundaries
+            if (state.composed) {
+                for (let i = 0; i < state.composed.placements.length; i++) {
+                    const p = state.composed.placements[i];
+                    const x = p.x;
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", String(x));
+                    line.setAttribute("y1", "0");
+                    line.setAttribute("x2", String(x));
+                    line.setAttribute("y2", String(height));
+                    line.setAttribute("class", "guide-line");
+                    gGuides.appendChild(line);
+                }
+                const last = state.composed.placements[state.composed.placements.length - 1];
+                if (last) {
+                    const x = last.x + last.width;
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", String(x));
+                    line.setAttribute("y1", "0");
+                    line.setAttribute("x2", String(x));
+                    line.setAttribute("y2", String(height));
+                    line.setAttribute("class", "guide-line");
+                    gGuides.appendChild(line);
+                }
+            }
+            svg.appendChild(gGuides);
+
+            // Base glyph layer (non-editable)
+            const gBase = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            if (state.composed) {
+                for (const p of state.composed.placements) {
+                    const rects = Array.isArray(p.rec.rects) ? p.rec.rects : [];
+                    if (rects.length) {
+                        for (const r of rects) {
+                            const [x1, y1, x2, y2] = r;
+                            const el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                            el.setAttribute("x", String(p.x + Number(x1)));
+                            el.setAttribute("y", String(Number(y1)));
+                            el.setAttribute("width", String(Number(x2) - Number(x1)));
+                            el.setAttribute("height", String(Number(y2) - Number(y1)));
+                            el.setAttribute("class", "base-rect");
+                            gBase.appendChild(el);
+                        }
+                    } else if (Array.isArray(p.rec.polys)) {
+                        // Fallback for weird data records without rects
+                        for (const poly of p.rec.polys) {
+                            const pts = poly.map(([x, y]) => `${p.x + Number(x)},${Number(y)}`).join(" ");
+                            const el = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+                            el.setAttribute("points", pts);
+                            el.setAttribute("class", "base-rect");
+                            gBase.appendChild(el);
+                        }
+                    }
+                }
+            }
+            svg.appendChild(gBase);
+
+            // Connector editable layer (1x1 cells)
+            const gCells = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const w = width;
+
+            for (let y = 0; y < CELL_H; y++) {
+                for (let x = 0; x < w; x++) {
+                    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", String(x));
+                    rect.setAttribute("y", String(y));
+                    rect.setAttribute("width", "1");
+                    rect.setAttribute("height", "1");
+                    rect.setAttribute("class", "connector-cell");
+                    rect.dataset.x = String(x);
+                    rect.dataset.y = String(y);
+                    if (isCellOn(x, y)) rect.classList.add("on");
+                    gCells.appendChild(rect);
+                    state.cellEls.push(rect);
+                }
+            }
+
+            svg.appendChild(gCells);
+
+            // Pointer handling (drag paint/erase)
+            svg.onpointerdown = onPointerDown;
+            svg.onpointermove = onPointerMove;
+            svg.onpointerup = onPointerUp;
+            svg.onpointerleave = onPointerUp;
+            svg.onpointercancel = onPointerUp;
+        }
+
+        function pointerCellFromEvent(e) {
+            const t = e.target;
+            if (!(t instanceof SVGElement)) return null;
+            if (!t.classList.contains("connector-cell")) return null;
+
+            const x = Number(t.dataset.x);
+            const y = Number(t.dataset.y);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+            return { x, y, el: t };
+        }
+
+        function onPointerDown(e) {
+            const cell = pointerCellFromEvent(e);
+            if (!cell) return;
+
+            e.preventDefault();
+            els.editorSvg.setPointerCapture?.(e.pointerId);
+
+            state.isDragging = true;
+            state.lastDragKey = null;
+            const currentlyOn = isCellOn(cell.x, cell.y) ? 1 : 0;
+            state.dragPaintValue = currentlyOn ? 0 : 1;
+
+            const key = `${cell.x},${cell.y}`;
+            state.lastDragKey = key;
+            setCell(cell.x, cell.y, state.dragPaintValue);
+            updateOutputsDeferred();
+        }
+
+        function onPointerMove(e) {
+            if (!state.isDragging) return;
+            const cell = pointerCellFromEvent(e);
+            if (!cell) return;
+
+            e.preventDefault();
+            const key = `${cell.x},${cell.y}`;
+            if (state.lastDragKey === key) return;
+            state.lastDragKey = key;
+            setCell(cell.x, cell.y, state.dragPaintValue);
+            updateOutputsDeferred();
+        }
+
+        function onPointerUp(_e) {
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            state.lastDragKey = null;
+            flushDeferredOutputs();
+        }
+
+        // -----------------------------
+        // Export generation
+        // -----------------------------
+        function connectorRectsFromGrid() {
+            if (!state.connectorGrid) return [];
+            const h = CELL_H;
+            const w = gridWidth();
+            const visited = Array.from({ length: h }, () => new Uint8Array(w));
+            const rects = [];
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    if (!state.connectorGrid[y][x] || visited[y][x]) continue;
+
+                    // Max width
+                    let rw = 1;
+                    while (x + rw < w && state.connectorGrid[y][x + rw] && !visited[y][x + rw]) rw++;
+
+                    // Max height preserving full row coverage
+                    let rh = 1;
+                    outer:
+                        while (y + rh < h) {
+                            for (let xx = x; xx < x + rw; xx++) {
+                                if (!state.connectorGrid[y + rh][xx] || visited[y + rh][xx]) break outer;
+                            }
+                            rh++;
+                        }
+
+                    for (let yy = y; yy < y + rh; yy++) {
+                        for (let xx = x; xx < x + rw; xx++) {
+                            visited[yy][xx] = 1;
+                        }
+                    }
+
+                    rects.push([x, y, x + rw, y + rh]);
+                }
+            }
+
+            return rects;
+        }
+
+        function rectToPolyPoints(x1, y1, x2, y2) {
+            return [
+                [x1, y1],
+                [x2, y1],
+                [x2, y2],
+                [x1, y2],
+            ];
+        }
+
+        function buildExportModel() {
+            if (!state.composed) {
+                return {
+                    filename: "ligature.svg",
+                    svg: "",
+                    json: "{}",
+                };
+            }
+
+            const placements = state.composed.placements;
+            const chars = placements.map(p => p.ch);
+            const width = state.composed.width;
+            const height = CELL_H;
+            const gap = state.gap;
+
+            const basePolys = [];
+            const baseRectsShifted = [];
+
+            for (const p of placements) {
+                if (Array.isArray(p.rec.polys)) {
+                    for (const poly of p.rec.polys) {
+                        basePolys.push(poly.map(([x, y]) => [p.x + Number(x), Number(y)]));
+                    }
+                } else if (Array.isArray(p.rec.rects)) {
+                    for (const r of p.rec.rects) {
+                        const [x1, y1, x2, y2] = r.map(Number);
+                        basePolys.push(rectToPolyPoints(p.x + x1, y1, p.x + x2, y2));
+                    }
+                }
+
+                if (Array.isArray(p.rec.rects)) {
+                    for (const r of p.rec.rects) {
+                        const [x1, y1, x2, y2] = r.map(Number);
+                        baseRectsShifted.push([p.x + x1, y1, p.x + x2, y2]);
+                    }
+                }
+            }
+
+            const connectorRects = connectorRectsFromGrid();
+            const connectorPolys = connectorRects.map(([x1, y1, x2, y2]) => rectToPolyPoints(x1, y1, x2, y2));
+
+            const allPolys = [...basePolys, ...connectorPolys];
+
+            const polyLines = allPolys.map((poly, i) => {
+                const cls = i < basePolys.length ? "base" : "conn";
+                const pts = poly.map(([x, y]) => `${x},${y}`).join(" ");
+                return `    <polygon class="${cls}" points="${pts}"/>`;
+            }).join("\n");
+
+            const svgText =
+                `<?xml version="1.0" encoding="utf-8"?>\n` +
+                `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" shape-rendering="crispEdges">\n` +
+                `  <g>\n` +
+                polyLines + `\n` +
+                `  </g>\n` +
+                `</svg>\n`;
+
+            const jsonObj = {
+                manifestVersion: 1,
+                text: state.composed.text,
+                chars: chars.map(ch => ({
+                    char: ch,
+                    label: labelForChar(ch),
+                    codepoint: `U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`,
+                    codepointInt: ch.codePointAt(0),
+                })),
+                width,
+                height,
+                gap,
+                baselineY: BASELINE_Y,
+                placements: placements.map(p => ({
+                    char: p.ch,
+                    label: labelForChar(p.ch),
+                    x: p.x,
+                    width: Number(p.width),
+                    sourceFile: p.rec.file || null,
+                })),
+                gapModes: state.gapModes.map((g, i) => ({
+                    index: i,
+                    pair: (placements[i]?.ch || "") + (placements[i + 1]?.ch || ""),
+                    mode: g.mode,
+                    touch: Number(g.touch) || 1,
+                })),
+                baseRects: baseRectsShifted,
+                connectorRects,
+                polygons: allPolys,
+                filename: ligatureFilename(chars),
+            };
+
+            const jsonText = JSON.stringify(jsonObj, null, 2);
+            const filename = ligatureFilename(chars);
+
+            return { filename, svg: svgText, json: jsonText };
+        }
+
+        let outputRaf = 0;
+        function updateOutputsDeferred() {
+            if (outputRaf) return;
+            outputRaf = requestAnimationFrame(() => {
+                outputRaf = 0;
+                updateOutputs();
+            });
+        }
+        function flushDeferredOutputs() {
+            if (outputRaf) {
+                cancelAnimationFrame(outputRaf);
+                outputRaf = 0;
+            }
+            updateOutputs();
+        }
+
+        function updateOutputs() {
+            const out = buildExportModel();
+            els.fileNamePreview.value = out.filename;
+            els.svgOut.value = out.svg;
+            els.jsonOut.value = out.json;
+        }
+
+        // -----------------------------
+        // Event wiring
+        // -----------------------------
+        function wireEvents() {
+            els.btnLoadDefault.addEventListener("click", tryLoadDefaultData);
+
+            els.fileInput.addEventListener("change", (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (file) loadGlyphDataFromFile(file);
+            });
+
+            els.btnCompose.addEventListener("click", composeFromInput);
+            els.ligText.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    composeFromInput();
+                }
+            });
+
+            els.zoomPx.addEventListener("change", () => {
+                state.zoom = Math.max(8, Number(els.zoomPx.value) || 20);
+                rebuildEditor();
+            });
+
+            els.btnClear.addEventListener("click", () => {
+                clearConnectors();
+                updateOutputs();
+            });
+
+            els.btnApplyGapModes.addEventListener("click", applyGapModes);
+            els.btnSmart.addEventListener("click", applySmartPresets);
+
+            els.btnCopySvg.addEventListener("click", async () => {
+                const ok = await copyText(els.svgOut.value);
+                setComposeStatus(ok ? "Copied SVG to clipboard." : "Could not copy SVG.", ok);
+            });
+
+            els.btnCopyJson.addEventListener("click", async () => {
+                const ok = await copyText(els.jsonOut.value);
+                setComposeStatus(ok ? "Copied JSON to clipboard." : "Could not copy JSON.", ok);
+            });
+
+            els.btnDownloadSvg.addEventListener("click", () => {
+                const filename = els.fileNamePreview.value || "ligature.svg";
+                downloadText(filename, els.svgOut.value, "image/svg+xml;charset=utf-8");
+            });
+
+            els.btnDownloadJson.addEventListener("click", () => {
+                const svgName = els.fileNamePreview.value || "ligature.svg";
+                const jsonName = svgName.replace(/\.svg$/i, ".json");
+                downloadText(jsonName, els.jsonOut.value, "application/json;charset=utf-8");
+            });
+        }
+
+        // -----------------------------
+        // Init
+        // -----------------------------
+        function init() {
+            initTheme();
+            wireEvents();
+            rebuildEditor();
+            updateOutputs();
+            tryLoadDefaultData().then(() => {
+                // Auto-compose default text once data is loaded
+                if (state.glyphData) composeFromInput();
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
