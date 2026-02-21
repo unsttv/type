@@ -710,19 +710,48 @@ def project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def codepoint_hex(ch: str) -> str:
+    """Lowercase hex Unicode codepoint, minimum 4 digits."""
+    return f"{ord(ch):04x}"
+
+
+def filename_for_glyph_key(key: str) -> str:
+    """
+    Single codepoint glyphs:
+      character-uXXXX.svg
+    Ligatures / multi-codepoint glyphs:
+      ligature-uXXXX-uYYYY.svg
+    """
+    if len(key) == 1:
+        return f"character-u{codepoint_hex(key)}.svg"
+
+    cps = "-".join(f"u{codepoint_hex(ch)}" for ch in key)
+    return f"ligature-{cps}.svg"
+
+
+def export_keys() -> List[str]:
+    """
+    Export all standard single-codepoint glyphs in a predictable order,
+    then any multi-character glyph keys (ligatures) that exist in GLYPHS.
+    """
+    singles = (
+        list("abcdefghijklmnopqrstuvwxyz")
+        + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        + list("0123456789")
+    )
+
+    # Automatically include all ligatures / multi-character glyphs present
+    ligatures = sorted([k for k in GLYPHS.keys() if len(k) > 1])
+
+    return singles + ligatures
+
+
 def write_all_svgs() -> None:
     root = project_root()
     out_dir = root / "src"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # NOTE: Capitals are written as character-A-cap.svg etc. to avoid overwrites on
-    # case-insensitive filesystems (character-a.svg vs character-A.svg).
-    keys = (
-        list("abcdefghijklmnopqrstuvwxyz")
-        + list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        + list("0123456789")
-        + ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
-    )
+    keys = export_keys()
 
     for key in keys:
         g = GLYPHS.get(key)
@@ -730,15 +759,12 @@ def write_all_svgs() -> None:
             raise KeyError(f"Missing glyph: {key}")
 
         svg = render_glyph_svg(key, g)
-
-        if len(key) == 1 and key.isupper():
-            fname = f"character-{key}-cap.svg"
-        else:
-            fname = f"character-{key}.svg"
-
+        fname = filename_for_glyph_key(key)
         (out_dir / fname).write_text(svg, encoding="utf-8")
 
-    print(f"Wrote {len(keys)} SVGs to: {out_dir}")
+    n_single = sum(1 for k in keys if len(k) == 1)
+    n_liga = sum(1 for k in keys if len(k) > 1)
+    print(f"Wrote {len(keys)} SVGs to: {out_dir} ({n_single} single glyphs, {n_liga} ligatures)")
 
 
 if __name__ == "__main__":
