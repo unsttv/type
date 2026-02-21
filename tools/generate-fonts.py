@@ -15,6 +15,14 @@ Key behaviors implemented:
     x' = x*s + (1-s)      for x >= seam
   plus an additional seam-region correction for st/sh so the bottom-right 's' stroke scales correctly.
 
+Ligatures:
+- Discovered from src/ by scanning files matching: ligature-u*.svg
+- Filename defines the sequence:
+    ligature-u0073-u0074.svg -> "st"
+    ligature-u0066-u0069.svg -> "fi"
+- GSUB liga rules are auto-generated from discovered ligatures, but only emitted
+  when all component glyphs exist.
+
 Optional (recommended):
 - Shapely union of polygons before master generation to prevent tiny seams:
   pip install shapely
@@ -32,6 +40,7 @@ from __future__ import annotations
 
 import importlib.util
 import math
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -93,21 +102,8 @@ Y_DESC0, Y_DESC1 = 29.0, 30.0
 
 
 # -----------------------------
-# Ligatures (still loaded from SVG)
+# Digit naming
 # -----------------------------
-LIGATURE_KEYS = ["st", "ch", "ct", "fi", "ij", "sh", "es", "yp"]
-
-LIGATURE_RULES = [
-    ("s", "t", "st"),
-    ("c", "h", "ch"),
-    ("c", "t", "ct"),
-    ("f", "i", "fi"),
-    ("i", "j", "ij"),
-    ("s", "h", "sh"),
-    ("e", "s", "es"),
-    ("y", "p", "yp"),
-]
-
 DIGIT_GLYPH_NAMES = {
     "0": "zero",
     "1": "one",
@@ -135,11 +131,6 @@ def char_to_glyph_name(ch: str) -> str:
     if cp <= 0xFFFF:
         return f"uni{cp:04X}"
     return f"u{cp:X}"
-
-
-def key_to_glyph_name(key: str) -> str:
-    """Ligature glyphs keep literal names (st, ch, fi, ...)."""
-    return key
 
 
 # -----------------------------
@@ -188,6 +179,15 @@ class SingleGlyph:
     char: str
     codepoint: int
     glyph_name: str
+    geom: SvgGlyph
+
+
+@dataclass(frozen=True)
+class LigatureDef:
+    key: str                 # e.g. "st"
+    codepoints: List[int]    # e.g. [0x73, 0x74]
+    glyph_name: str          # usually "st", fallback if unsafe
+    svg_path: Path
     geom: SvgGlyph
 
 
@@ -338,6 +338,63 @@ def load_single_glyphs_from_data(data_py_path: Path) -> List[SingleGlyph]:
 
 
 # -----------------------------
+# Ligature discovery from src/
+# -----------------------------
+LIGATURE_FILE_RE = re.compile(
+    r"^ligature-((?:u[0-9a-fA-F]{1,8})(?:-u[0-9a-fA-F]{1,8})+)\.svg$"
+)
+
+SAFE_LIGA_NAME_RE = re.compile(r"^[A-Za-z0-9._-]+$")
+
+
+def parse_ligature_filename(name: str) -> Optional[Tuple[str, List[int]]]:
+    """
+    ligature-u0073-u0074.svg -> ("st", [0x73, 0x74])
+    """
+    m = LIGATURE_FILE_RE.match(name)
+    if not m:
+        return None
+    parts = m.group(1).split("-")
+    cps: List[int] = []
+    chars: List[str] = []
+    for part in parts:
+        if not part.lower().startswith("u"):
+            return None
+        cp = int(part[1:], 16)
+        cps.append(cp)
+        try:
+            chars.append(chr(cp))
+        except ValueError:
+            return None
+    return ("".join(chars), cps)
+
+
+def ligature_key_to_glyph_name(key: str, cps: List[int]) -> str:
+    """
+    Prefer literal key (st, fi, ij, ...) when safe as a glyph name.
+    Otherwise fallback to a stable ASCII name.
+    """
+    if SAFE_LIGA_NAME_RE.fullmatch(key):
+        return key
+    # stable fallback
+    return "liga_" + "_".join(f"u{cp:04X}" if cp <= 0xFFFF else f"u{cp:X}" for cp in cps)
+
+
+def discover_ligatures(src_dir: Path) -> List[Tuple[str, List[int], Path]]:
+    """
+    Returns list of (key, cps, svg_path) for all ligature-u*.svg found.
+    """
+    found: List[Tuple[str, List[int], Path]] = []
+    for p in sorted(src_dir.glob("ligature-u*.svg"), key=lambda x: x.name.lower()):
+        parsed = parse_ligature_filename(p.name)
+        if not parsed:
+            continue
+        key, cps = parsed
+        found.append((key, cps, p))
+    return found
+
+
+# -----------------------------
 # Ligature SVG parsing
 # -----------------------------
 def parse_polygon_points(points_str: str) -> Poly:
@@ -418,6 +475,28 @@ def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
     rings = rings_from_polys(poly_list)
 
     return SvgGlyph(width_svg=width_svg, rings=rings, seam_x=seam_x, key=key)
+
+
+def load_ligatures_from_src(src_dir: Path) -> List[LigatureDef]:
+    discovered = discover_ligatures(src_dir)
+    ligs: List[LigatureDef] = []
+
+    # de-dup by key (prefer first in sorted order)
+    seen: set[str] = set()
+
+    for key, cps, path in discovered:
+        if key in seen:
+            print(f"[warn] duplicate ligature key {key!r} from {path.name}; skipping")
+            continue
+        seen.add(key)
+
+        gname = ligature_key_to_glyph_name(key, cps)
+        geom = load_ligature_svg(path, key)
+        ligs.append(LigatureDef(key=key, codepoints=cps, glyph_name=gname, svg_path=path, geom=geom))
+
+    # sort by (len, codepoints) for stability
+    ligs.sort(key=lambda l: (len(l.codepoints), tuple(l.codepoints)))
+    return ligs
 
 
 # -----------------------------
@@ -569,11 +648,29 @@ def make_notdef_glyph() -> object:
     return pen.glyph()
 
 
-def build_fea_liga(available_glyph_names: set[str]) -> str:
+def build_fea_liga(ligatures: List[LigatureDef], available_glyph_names: set[str]) -> str:
+    """
+    Auto-generate liga rules based on discovered ligatures.
+
+    For each ligature key (e.g. "st"), emit:
+      sub s t by st;
+
+    Only if:
+      - all component glyph names exist
+      - the ligature glyph name exists
+    """
     rules: List[str] = []
-    for left, right, lig in LIGATURE_RULES:
-        if left in available_glyph_names and right in available_glyph_names and lig in available_glyph_names:
-            rules.append(f"  sub {left} {right} by {lig};")
+
+    for lig in ligatures:
+        comps = [char_to_glyph_name(ch) for ch in lig.key]
+        out = lig.glyph_name
+
+        if out not in available_glyph_names:
+            continue
+        if any(cn not in available_glyph_names for cn in comps):
+            continue
+
+        rules.append(f"  sub {' '.join(comps)} by {out};")
 
     if not rules:
         return ""
@@ -598,11 +695,22 @@ def compute_global_vertical_metrics() -> Tuple[int, int]:
     return ascent, descent
 
 
+def _assert_unique_glyph_order(glyph_order: List[str]) -> None:
+    seen: set[str] = set()
+    dups: List[str] = []
+    for g in glyph_order:
+        if g in seen:
+            dups.append(g)
+        seen.add(g)
+    if dups:
+        raise RuntimeError(f"Duplicate glyph names in glyph order: {sorted(set(dups))}")
+
+
 def build_master_ttf(
     *,
     out_path: Path,
     singles: List[SingleGlyph],
-    ligatures: Dict[str, SvgGlyph],
+    ligatures: List[LigatureDef],
     wdth_value: float,
     hght_value: float,
 ) -> None:
@@ -612,7 +720,7 @@ def build_master_ttf(
 
     single_names = [g.glyph_name for g in singles]
     have_space = "space" in single_names
-    lig_names = [key_to_glyph_name(k) for k in LIGATURE_KEYS]
+    lig_names = [l.glyph_name for l in ligatures]
 
     glyph_order: List[str] = [".notdef"]
     if not have_space:
@@ -620,9 +728,14 @@ def build_master_ttf(
     glyph_order.extend(single_names)
     glyph_order.extend(lig_names)
 
+    _assert_unique_glyph_order(glyph_order)
+
     cmap: Dict[int, str] = {g.codepoint: g.glyph_name for g in singles}
-    if "ij" in lig_names and "i" in single_names and "j" in single_names and 0x0133 not in cmap:
-        cmap[0x0133] = "ij"  # optional ĳ mapping
+
+    # Optional ĳ mapping if the ligature exists
+    lig_ij = next((l for l in ligatures if l.key == "ij"), None)
+    if lig_ij and ("i" in single_names) and ("j" in single_names) and 0x0133 not in cmap:
+        cmap[0x0133] = lig_ij.glyph_name
 
     glyf: Dict[str, object] = {".notdef": make_notdef_glyph()}
     hmtx: Dict[str, Tuple[int, int]] = {}
@@ -653,10 +766,10 @@ def build_master_ttf(
         adv_font = int(round(adv_warped * SCALE))
         hmtx[sg.glyph_name] = (adv_font, 0)
 
-    # Ligatures from SVG
-    for lig_key in LIGATURE_KEYS:
-        gname = key_to_glyph_name(lig_key)
-        sg = ligatures[lig_key]
+    # Ligatures from SVG (discovered)
+    for lig in ligatures:
+        gname = lig.glyph_name
+        sg = lig.geom
 
         warped_rings = [transform_ring(r, s=s, t=t, seam_x=sg.seam_x, key=sg.key) for r in sg.rings]
         glyf[gname] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
@@ -694,7 +807,7 @@ def build_master_ttf(
     fb.setupMaxp()
     fb.setupHead()
 
-    fea = build_fea_liga(set(glyph_order))
+    fea = build_fea_liga(ligatures, set(glyph_order))
     if fea.strip():
         addOpenTypeFeaturesFromString(fb.font, fea)
 
@@ -705,15 +818,6 @@ def build_master_ttf(
 # -----------------------------
 # Variable font build
 # -----------------------------
-def codepoint_hex(ch: str) -> str:
-    return f"{ord(ch):04x}"
-
-
-def ligature_svg_path(src_dir: Path, key: str) -> Path:
-    cps = "-".join(f"u{codepoint_hex(ch)}" for ch in key)
-    return src_dir / f"ligature-{cps}.svg"
-
-
 def build_variable_font() -> None:
     root = project_root()
     src_dir = root / "src"
@@ -733,13 +837,14 @@ def build_variable_font() -> None:
     if not singles:
         raise RuntimeError(f"No single glyphs loaded from {data_py}")
 
-    # Ligatures still come from SVGs
-    ligatures: Dict[str, SvgGlyph] = {}
-    for k in LIGATURE_KEYS:
-        svg_path = ligature_svg_path(src_dir, k)
-        if not svg_path.exists():
-            raise FileNotFoundError(f"Missing ligature SVG for {k!r}: {svg_path}")
-        ligatures[k] = load_ligature_svg(svg_path, k)
+    # Ligatures discovered from src/
+    ligatures = load_ligatures_from_src(src_dir)
+    if ligatures:
+        print(f"Discovered {len(ligatures)} ligatures in {src_dir}:")
+        for l in ligatures:
+            print(f"  - {l.glyph_name}  <=  {l.svg_path.name}")
+    else:
+        print(f"[info] No ligature SVGs found in {src_dir} (ligature-u*.svg). Continuing without ligatures.")
 
     wdths = [25.0, 100.0, 400.0]
     hghts = [25.0, 100.0, 400.0]
