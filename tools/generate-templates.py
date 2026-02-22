@@ -5,6 +5,8 @@ Generate shared character templates for UNST.
 Outputs:
 1) templates/element/character.php      (CakePHP element, reads SVG from ./src at runtime)
 2) templates/_character.svg.twig        (Twig partial, reads SVG via Twig `source()` from a Twig path alias)
+3) templates/_letter-sample.md.twig     (Markdown Twig partial: concatenated ![]() images for ALL glyphs in ./src,
+                                        with NO whitespace between images)
 
 Filename schemes supported in ./src:
 - New:
@@ -25,8 +27,6 @@ from pathlib import Path
 import re
 from typing import Dict, List, Optional, Tuple
 
-
-XML_DECL_RE = re.compile(r"^\s*<\?xml\b.*?\?>\s*$", re.IGNORECASE)
 
 # New filename patterns
 RE_NEW_SINGLE = re.compile(r"^character-u([0-9a-fA-F]{1,8})\.svg$")
@@ -98,7 +98,6 @@ def collect_svg_map(src_dir: Path) -> Dict[str, str]:
         if not key:
             continue
 
-        # Prefer new filenames when both old/new exist
         existing = out.get(key)
         if existing is None:
             out[key] = p.name
@@ -276,6 +275,79 @@ echo $svg;
 """
 
 
+def _md_alt_for_key(key: str) -> str:
+    if key == " ":
+        return "SPACE"
+    if key == "\t":
+        return "TAB"
+    if key == "\n":
+        return "LF"
+    return key
+
+
+def _md_escape_alt(s: str) -> str:
+    # Escape characters that break the [] alt-text.
+    # (Keep this minimal; markdown implementations vary.)
+    return s.replace("\\", "\\\\").replace("]", "\\]")
+
+
+def build_letter_sample_md_twig(svg_map: Dict[str, str]) -> str:
+    """
+    Markdown: concatenated image links with NO whitespace between images.
+
+    Format example:
+      ![a](src/character-u0061.svg)![b](src/character-u0062.svg)...
+
+    IMPORTANT: The user asked specifically for `src/<filename>` style links.
+    """
+    # Split keys into singles and ligatures
+    singles = [(k, svg_map[k]) for k in svg_map.keys() if len(k) == 1]
+    ligas = [(k, svg_map[k]) for k in svg_map.keys() if len(k) > 1]
+
+    # Build a pleasant/stable order for singles:
+    #  - a..z
+    #  - A..Z
+    #  - 0..9
+    #  - remaining singles by codepoint
+    def _has(k: str) -> bool:
+        return any(kk == k for kk, _ in singles)
+
+    def _fname(k: str) -> str:
+        return svg_map[k]
+
+    ordered: List[Tuple[str, str]] = []
+
+    for ch in "abcdefghijklmnopqrstuvwxyz":
+        if ch in svg_map and len(ch) == 1:
+            ordered.append((ch, _fname(ch)))
+
+    for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+        if ch in svg_map and len(ch) == 1:
+            ordered.append((ch, _fname(ch)))
+
+    for ch in "0123456789":
+        if ch in svg_map and len(ch) == 1:
+            ordered.append((ch, _fname(ch)))
+
+    already = set(k for k, _ in ordered)
+    rest_singles = [(k, f) for (k, f) in singles if k not in already]
+    rest_singles.sort(key=lambda kv: ord(kv[0]))
+    ordered.extend(rest_singles)
+
+    # Ligatures: sort by (len, codepoints)
+    ligas.sort(key=lambda kv: key_sort_tuple(kv[0]))
+    ordered.extend(ligas)
+
+    # Build a single line: no spaces, no newlines.
+    parts: List[str] = []
+    for key, fname in ordered:
+        alt = _md_escape_alt(_md_alt_for_key(key))
+        parts.append(f"![{alt}](src/{fname})")
+
+    # Ensure trailing newline for file niceness (doesn't insert whitespace between images)
+    return "".join(parts) + "\n"
+
+
 def main() -> None:
     root = project_root()
 
@@ -298,15 +370,18 @@ def main() -> None:
 
     twig_path = twig_dir / "_character.svg.twig"
     php_path = php_dir / "character.php"
+    md_path = twig_dir / "_letter-sample.md.twig"
 
     twig_path.write_text(build_twig_template(svg_map), encoding="utf-8")
     php_path.write_text(build_cake_template(), encoding="utf-8")
+    md_path.write_text(build_letter_sample_md_twig(svg_map), encoding="utf-8")
 
     single_count = sum(1 for k in svg_map if len(k) == 1)
     liga_count = sum(1 for k in svg_map if len(k) > 1)
 
     print(f"Wrote Twig template: {twig_path}")
     print(f"Wrote CakePHP template: {php_path}")
+    print(f"Wrote Markdown Twig template: {md_path}")
     print(f"Indexed {len(svg_map)} glyphs from {src_dir} ({single_count} single, {liga_count} ligatures)")
 
 

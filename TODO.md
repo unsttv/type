@@ -2,6 +2,7 @@
 # TODO
 
 - [ ] Build tool that can generate SVG for characters with arbitrary width values for thing and heavy lines.
+- [ ] Fix variable thickness of s in new ligatures.
 
 ## Done
 
