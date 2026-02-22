@@ -14,9 +14,9 @@ Key behaviors implemented:
     x' = x*s              for x < seam
     x' = x*s + (1-s)      for x >= seam
   plus a generalized seam-adjacent horizontal-edge correction:
-    horizontal edges that terminate on the seam get their left side shifted too,
-    so seam-adjacent "s" arms don't widen at wdth<100 and don't distort the
-    connector at wdth>100.
+    horizontal edges that terminate on the seam get their left side shifted too
+    (but NOT the seam connector column itself), so seam-adjacent "s" arms don't
+    distort and the 1-unit connector stays 1 unit wide for wdth<100 and wdth>100.
 
 Ligatures:
 - Discovered from src/ by scanning files matching: ligature-u*.svg
@@ -175,7 +175,7 @@ class SvgGlyph:
     width_svg: float
     rings: List[Ring]
     seam_x: Optional[float]
-    seam_fix_rows: List[Tuple[float, float]]  # (x0, y_row) rows whose left side should also shift
+    seam_fix_rows: List[Tuple[float, float]]  # (x0, y_row)
     key: str  # debug / seam-logic key
 
 
@@ -471,9 +471,9 @@ def detect_seam_fix_rows(
     Detect seam-adjacent horizontal edges that end on the seam.
 
     We store rows as (x0, y_row), meaning:
-      on that exact y row, points with x in [x0, seam_x) should also receive the seam
-      offset. This keeps seam-adjacent horizontal arms from widening, while avoiding
-      broad-band shifts that skew the seam connector.
+      on that exact y row, points with x in [x0, seam_x) are candidates for the
+      extra seam offset. In warp_x we intentionally exclude the final connector unit
+      [seam_x-1, seam_x) so the seam connector remains 1 unit wide.
 
     This works for both:
     - separate rectangles
@@ -502,8 +502,7 @@ def detect_seam_fix_rows(
             xb = max(x1, x2)
             w = xb - xa
 
-            # We only care about horizontal runs that terminate on the seam on the right side.
-            # Ignore 1-unit runs (like the top/bottom of the seam connector itself).
+            # Horizontal runs terminating at seam, but not the seam connector's own 1-unit edge.
             if w <= 1.0 + EPS:
                 continue
             if abs(xb - seam_x) > EPS:
@@ -520,8 +519,7 @@ def detect_seam_fix_rows(
             dedup.append((x0, y))
 
     # Conservative fallback for merged/hand-drawn 's' forms if no explicit seam-adjacent
-    # horizontal edge is detectable. Crucially, this is row-based (not a broad band), so it
-    # won't skew the connector column.
+    # horizontal edge is detectable. Row-based (not broad-band) to avoid seam skew.
     if not dedup and ("s" in key):
         dedup.extend([
             (seam_x - 4.0, Y_MID1),
@@ -614,9 +612,9 @@ def warp_x(
       x' = x*s + (1-s)      if x >= seam
 
     Additional correction:
-      On seam-adjacent horizontal rows, points left of the seam get the same seam
-      offset too. This preserves the intended width of seam-adjacent 's' arms without
-      broad-band shifting that can skew the seam connector column.
+      On seam-adjacent horizontal rows, points LEFT of the seam connector column
+      get the seam offset too. We intentionally exclude [seam-1, seam) so the
+      seam connector itself stays exactly 1 unit wide.
     """
     if seam_x is None:
         return x * s
@@ -625,9 +623,11 @@ def warp_x(
     base = x * s if x < seam_x else (x * s + seam_off)
 
     if y is not None and seam_fix_rows:
+        connector_left = seam_x - 1.0
         for x0, y_row in seam_fix_rows:
             if abs(y - y_row) <= ROW_EPS:
-                if (x >= x0 - EPS) and (x < seam_x - EPS):
+                # Shift only the part left of the connector column.
+                if (x >= x0 - EPS) and (x < connector_left - EPS):
                     base += seam_off
                     break
 
