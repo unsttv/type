@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 30" width="24" height="30" shape-rendering="crispEdges" data-ligature-text="et">
+  <title>Ligature e t</title>
+  <desc>Source text: et</desc>
+  <metadata>{&quot;text&quot;:&quot;et&quot;,&quot;labels&quot;:[&quot;e&quot;,&quot;t&quot;],&quot;codepoints&quot;:[101,116],&quot;filename&quot;:&quot;ligature-u0065-u0074.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,9 12,9 12,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,19 0,19"/>
+    <polygon class="base" points="8,10 12,10 12,14 8,14"/>
+    <polygon class="base" points="0,14 12,14 12,15 0,15"/>
+    <polygon class="base" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="base" points="16,0 20,0 20,20 16,20"/>
+    <polygon class="base" points="20,9 24,9 24,10 20,10"/>
+    <polygon class="base" points="20,19 24,19 24,20 20,20"/>
+    <polygon class="conn" points="12,19 16,19 16,20 12,20"/>
+  </g>
+</svg>

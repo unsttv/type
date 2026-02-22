@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30" shape-rendering="crispEdges" data-ligature-text="jt">
+  <title>Ligature j t</title>
+  <desc>Source text: jt</desc>
+  <metadata>{&quot;text&quot;:&quot;jt&quot;,&quot;labels&quot;:[&quot;j&quot;,&quot;t&quot;],&quot;codepoints&quot;:[106,116],&quot;filename&quot;:&quot;ligature-u006a-u0074.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="4,9 8,9 8,30 4,30"/>
+    <polygon class="base" points="4,0 8,0 8,4 4,4"/>
+    <polygon class="base" points="0,29 4,29 4,30 0,30"/>
+    <polygon class="base" points="12,0 16,0 16,20 12,20"/>
+    <polygon class="base" points="16,9 20,9 20,10 16,10"/>
+    <polygon class="base" points="16,19 20,19 20,20 16,20"/>
+    <polygon class="conn" points="8,0 12,0 12,1 8,1"/>
+  </g>
+</svg>

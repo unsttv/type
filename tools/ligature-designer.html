@@ -602,6 +602,212 @@
             return ch;
         }
 
+        // -----------------------------
+// Load existing ligature (NEW)
+// -----------------------------
+        function isAxisAlignedRectPoly(poly) {
+            if (!Array.isArray(poly) || poly.length !== 4) return null;
+            const xs = [...new Set(poly.map(p => Number(p[0])))].sort((a,b)=>a-b);
+            const ys = [...new Set(poly.map(p => Number(p[1])))].sort((a,b)=>a-b);
+            if (xs.length !== 2 || ys.length !== 2) return null;
+            const [x1, x2] = xs;
+            const [y1, y2] = ys;
+            if (![x1,x2,y1,y2].every(Number.isFinite)) return null;
+            return [x1, y1, x2, y2];
+        }
+
+        function rectsFromRecord(rec) {
+            if (!rec || typeof rec !== "object") return [];
+            if (Array.isArray(rec.rects) && rec.rects.length) {
+                return rec.rects.map(r => r.map(Number)).filter(r => r.length === 4 && r.every(Number.isFinite));
+            }
+            // fallback: derive rects from 4-point polys
+            const out = [];
+            if (Array.isArray(rec.polys)) {
+                for (const poly of rec.polys) {
+                    const rr = isAxisAlignedRectPoly(poly);
+                    if (rr) out.push(rr);
+                }
+            }
+            return out;
+        }
+
+        function makeMask(width) {
+            const w = Math.max(1, Math.floor(width));
+            return Array.from({ length: CELL_H }, () => new Uint8Array(w));
+        }
+
+        function fillMaskRect(mask, x1, y1, x2, y2, xOffset = 0) {
+            const w = mask[0].length;
+            const h = mask.length;
+
+            const xa = Math.max(0, Math.floor(Number(x1) + xOffset));
+            const xb = Math.min(w, Math.floor(Number(x2) + xOffset));
+            const ya = Math.max(0, Math.floor(Number(y1)));
+            const yb = Math.min(h, Math.floor(Number(y2)));
+
+            if (!(xb > xa && yb > ya)) return;
+
+            for (let y = ya; y < yb; y++) {
+                const row = mask[y];
+                for (let x = xa; x < xb; x++) row[x] = 1;
+            }
+        }
+
+        function maskFromRecord(width, rec, xOffset = 0) {
+            const mask = makeMask(width);
+            const rects = rectsFromRecord(rec);
+            for (const [x1,y1,x2,y2] of rects) fillMaskRect(mask, x1,y1,x2,y2, xOffset);
+            return mask;
+        }
+
+        function maskFromPlacements(width, placements) {
+            const mask = makeMask(width);
+            for (const p of placements) {
+                const rects = rectsFromRecord(p.rec);
+                for (const [x1,y1,x2,y2] of rects) fillMaskRect(mask, x1,y1,x2,y2, p.x);
+            }
+            return mask;
+        }
+
+        function subtractMasks(a, b) {
+            // a - b (clamped to 0/1)
+            const h = Math.min(a.length, b.length);
+            const w = Math.min(a[0].length, b[0].length);
+            const out = Array.from({ length: h }, () => new Uint8Array(w));
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    out[y][x] = (a[y][x] && !b[y][x]) ? 1 : 0;
+                }
+            }
+            return out;
+        }
+
+        function inferGapFromLigatureRecord(ligRec, chars) {
+            // gap = (ligWidth - sum(charWidths)) / (nGaps)
+            if (!ligRec || typeof ligRec !== "object") return null;
+
+            const totalW = Number(ligRec.width);
+            if (!Number.isFinite(totalW) || totalW <= 0) return null;
+
+            const nGaps = Math.max(0, chars.length - 1);
+            if (nGaps === 0) return 0;
+
+            let sumW = 0;
+            for (const ch of chars) {
+                const rec = getGlyphRecordForChar(ch);
+                if (!rec) return null;
+                const w = Number(rec.width);
+                if (!Number.isFinite(w)) return null;
+                sumW += w;
+            }
+
+            const gap = (totalW - sumW) / nGaps;
+            if (!Number.isFinite(gap)) return null;
+
+            // snap to int if very close
+            const gInt = Math.round(gap);
+            const snapped = (Math.abs(gap - gInt) < 0.01) ? gInt : Math.round(gap);
+
+            return Math.max(0, Math.min(20, snapped));
+        }
+
+        function inferGapModesFromConnectorGrid(placements, grid) {
+            if (!placements || placements.length < 2 || !grid) return [];
+            const modes = [];
+
+            const w = grid[0].length;
+
+            function scanRow(y, xStart, xEnd) {
+                const row = grid[y];
+                let any = false;
+                let maxX = -1;
+                const a = Math.max(0, Math.floor(xStart));
+                const b = Math.min(w, Math.floor(xEnd));
+                for (let x = a; x < b; x++) {
+                    if (row[x]) { any = true; if (x > maxX) maxX = x; }
+                }
+                return { any, maxX };
+            }
+
+            for (let i = 0; i < placements.length - 1; i++) {
+                const left = placements[i];
+                const right = placements[i + 1];
+
+                const leftEnd = left.x + left.width;
+                const rightStart = right.x;
+
+                const x0 = Math.max(0, leftEnd - 1);
+                const x1 = Math.min(w, rightStart + 12); // scan a bit into right side
+
+                // priority: top link, then baseline, then descender
+                const top = scanRow(0, x0, x1);
+                const base = scanRow(19, x0, x1);
+                const desc = scanRow(29, x0, x1);
+
+                if (top.any) {
+                    const touch = Math.max(1, Math.min(12, (top.maxX - rightStart + 1)));
+                    modes.push({ mode: "top", touch });
+                } else if (base.any) {
+                    const touch = Math.max(1, Math.min(12, (base.maxX - rightStart + 1)));
+                    modes.push({ mode: "baseline", touch });
+                } else if (desc.any) {
+                    const touch = Math.max(1, Math.min(12, (desc.maxX - rightStart + 1)));
+                    modes.push({ mode: "desc", touch });
+                } else {
+                    modes.push({ mode: "none", touch: 1 });
+                }
+            }
+
+            return modes;
+        }
+
+        function loadExistingLigature(key) {
+            if (!state.glyphData) {
+                setComposeStatus("Load glyph data first.", false);
+                return;
+            }
+
+            const ligRec = state.ligaturesByKey.get(key) || null;
+
+            // Always set text first (so UI reflects selection)
+            els.ligText.value = key;
+
+            // If we can, set gap to match stored ligature width
+            const chars = splitChars(key);
+            const inferredGap = inferGapFromLigatureRecord(ligRec, chars);
+            if (inferredGap !== null) {
+                els.gapUnits.value = String(inferredGap);
+            }
+
+            // Compose fresh (don’t preserve existing connectors)
+            composeFromInput({ preserveConnectors: false });
+
+            if (!ligRec || !state.composed) {
+                // fallback: just composed the text
+                setComposeStatus(ligRec ? `Loaded ligature "${key}".` : `Ligature "${key}" record missing.`, !!ligRec);
+                updateDefinedLigaturesActiveHighlight();
+                return;
+            }
+
+            // Reconstruct connector grid: ligatureMask - baseMask
+            const width = state.composed.width;
+            const baseMask = maskFromPlacements(width, state.composed.placements);
+            const ligaMask = maskFromRecord(width, ligRec, 0);
+
+            state.connectorGrid = subtractMasks(ligaMask, baseMask);
+
+            // Infer gap modes from reconstructed connectors
+            state.gapModes = inferGapModesFromConnectorGrid(state.composed.placements, state.connectorGrid);
+            rebuildGapUI(state.gapModes);
+
+            rebuildEditor();
+            updateOutputs();
+            updateDefinedLigaturesActiveHighlight();
+
+            setComposeStatus(`Loaded existing ligature "${key}" (connectors restored).`, true);
+        }
+
         function setDataStatus(msg, ok = true) {
             els.dataStatus.textContent = msg;
             els.dataStatus.style.color = ok ? "var(--muted)" : "var(--danger)";
@@ -703,8 +909,7 @@
                 if (title) chip.title = title;
 
                 chip.addEventListener("click", () => {
-                    els.ligText.value = key;
-                    composeFromInput({ preserveConnectors: true });
+                    loadExistingLigature(key);
                 });
 
                 wrap.appendChild(chip);

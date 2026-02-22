@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 30" width="24" height="30" shape-rendering="crispEdges" data-ligature-text="dl">
+  <title>Ligature d l</title>
+  <desc>Source text: dl</desc>
+  <metadata>{&quot;text&quot;:&quot;dl&quot;,&quot;labels&quot;:[&quot;d&quot;,&quot;l&quot;],&quot;codepoints&quot;:[100,108],&quot;filename&quot;:&quot;ligature-u0064-u006c.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="8,0 12,0 12,20 8,20"/>
+    <polygon class="base" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,19 0,19"/>
+    <polygon class="base" points="0,19 8,19 8,20 0,20"/>
+    <polygon class="base" points="16,0 20,0 20,20 16,20"/>
+    <polygon class="base" points="16,19 24,19 24,20 16,20"/>
+    <polygon class="conn" points="12,0 16,0 16,1 12,1"/>
+  </g>
+</svg>

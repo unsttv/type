@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" data-ligature-text="ua">
+  <title>Ligature u a</title>
+  <desc>Source text: ua</desc>
+  <metadata>{&quot;text&quot;:&quot;ua&quot;,&quot;labels&quot;:[&quot;u&quot;,&quot;a&quot;],&quot;codepoints&quot;:[117,97],&quot;filename&quot;:&quot;ligature-u0075-u0061.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,9 4,9 4,20 0,20"/>
+    <polygon class="base" points="8,9 12,9 12,20 8,20"/>
+    <polygon class="base" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="base" points="28,20 16,20 16,19 28,19"/>
+    <polygon class="base" points="28,19 24,19 24,10 28,10"/>
+    <polygon class="base" points="20,19 16,19 16,15 20,15"/>
+    <polygon class="base" points="28,15 16,15 16,14 28,14"/>
+    <polygon class="base" points="28,10 16,10 16,9 28,9"/>
+    <polygon class="conn" points="12,9 16,9 16,10 12,10"/>
+  </g>
+</svg>

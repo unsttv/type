@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30" shape-rendering="crispEdges" data-ligature-text="fü">
+  <title>Ligature f ü</title>
+  <desc>Source text: fü</desc>
+  <metadata>{&quot;text&quot;:&quot;fü&quot;,&quot;labels&quot;:[&quot;f&quot;,&quot;ü&quot;],&quot;codepoints&quot;:[102,252],&quot;filename&quot;:&quot;ligature-u0066-u00fc.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,0 4,0 4,20 0,20"/>
+    <polygon class="base" points="0,0 8,0 8,1 0,1"/>
+    <polygon class="base" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="base" points="8,0 12,0 12,4 8,4"/>
+    <polygon class="base" points="16,0 20,0 20,4 16,4"/>
+    <polygon class="base" points="8,9 12,9 12,19 8,19"/>
+    <polygon class="base" points="16,9 20,9 20,19 16,19"/>
+    <polygon class="base" points="8,19 20,19 20,20 8,20"/>
+  </g>
+</svg>

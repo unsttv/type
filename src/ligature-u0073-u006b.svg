@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" data-ligature-text="sk">
+  <title>Ligature s k</title>
+  <desc>Source text: sk</desc>
+  <metadata>{&quot;text&quot;:&quot;sk&quot;,&quot;labels&quot;:[&quot;s&quot;,&quot;k&quot;],&quot;codepoints&quot;:[115,107],&quot;filename&quot;:&quot;ligature-u0073-u006b.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,9 12,9 12,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,14 0,14"/>
+    <polygon class="base" points="0,14 12,14 12,15 0,15"/>
+    <polygon class="base" points="8,15 12,15 12,19 8,19"/>
+    <polygon class="base" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="base" points="16,0 20,0 20,20 16,20"/>
+    <polygon class="base" points="24,9 28,9 28,14 24,14"/>
+    <polygon class="base" points="24,15 28,15 28,20 24,20"/>
+    <polygon class="base" points="20,14 24,14 24,15 20,15"/>
+    <polygon class="conn" points="11,0 16,0 16,1 11,1"/>
+    <polygon class="conn" points="11,1 12,1 12,9 11,9"/>
+  </g>
+</svg>

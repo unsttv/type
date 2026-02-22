@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 30" width="36" height="30" shape-rendering="crispEdges" data-ligature-text="wa">
+  <title>Ligature w a</title>
+  <desc>Source text: wa</desc>
+  <metadata>{&quot;text&quot;:&quot;wa&quot;,&quot;labels&quot;:[&quot;w&quot;,&quot;a&quot;],&quot;codepoints&quot;:[119,97],&quot;filename&quot;:&quot;ligature-u0077-u0061.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,9 4,9 4,20 0,20"/>
+    <polygon class="base" points="8,9 12,9 12,20 8,20"/>
+    <polygon class="base" points="16,9 20,9 20,20 16,20"/>
+    <polygon class="base" points="0,19 20,19 20,20 0,20"/>
+    <polygon class="base" points="36,20 24,20 24,19 36,19"/>
+    <polygon class="base" points="36,19 32,19 32,10 36,10"/>
+    <polygon class="base" points="28,19 24,19 24,15 28,15"/>
+    <polygon class="base" points="36,15 24,15 24,14 36,14"/>
+    <polygon class="base" points="36,10 24,10 24,9 36,9"/>
+    <polygon class="conn" points="20,9 24,9 24,10 20,10"/>
+  </g>
+</svg>

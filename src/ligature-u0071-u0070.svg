@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" data-ligature-text="qp">
+  <title>Ligature q p</title>
+  <desc>Source text: qp</desc>
+  <metadata>{&quot;text&quot;:&quot;qp&quot;,&quot;labels&quot;:[&quot;q&quot;,&quot;p&quot;],&quot;codepoints&quot;:[113,112],&quot;filename&quot;:&quot;ligature-u0071-u0070.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,9 12,9 12,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,19 0,19"/>
+    <polygon class="base" points="8,10 12,10 12,30 8,30"/>
+    <polygon class="base" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="base" points="16,9 28,9 28,10 16,10"/>
+    <polygon class="base" points="16,10 20,10 20,30 16,30"/>
+    <polygon class="base" points="24,10 28,10 28,19 24,19"/>
+    <polygon class="base" points="16,19 28,19 28,20 16,20"/>
+    <polygon class="conn" points="12,29 16,29 16,30 12,30"/>
+  </g>
+</svg>

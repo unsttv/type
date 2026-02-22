@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30" shape-rendering="crispEdges" data-ligature-text="fv">
+  <title>Ligature f v</title>
+  <desc>Source text: fv</desc>
+  <metadata>{&quot;text&quot;:&quot;fv&quot;,&quot;labels&quot;:[&quot;f&quot;,&quot;v&quot;],&quot;codepoints&quot;:[102,118],&quot;filename&quot;:&quot;ligature-u0066-u0076.svg&quot;}</metadata>
+  <g>
+    <polygon class="base" points="0,0 4,0 4,20 0,20"/>
+    <polygon class="base" points="0,0 8,0 8,1 0,1"/>
+    <polygon class="base" points="0,9 8,9 8,10 0,10"/>
+    <polygon class="base" points="8,9 12,9 12,15 8,15"/>
+    <polygon class="base" points="16,9 20,9 20,15 16,15"/>
+    <polygon class="base" points="8,14 20,14 20,15 8,15"/>
+    <polygon class="base" points="12,15 16,15 16,20 12,20"/>
+  </g>
+</svg>
