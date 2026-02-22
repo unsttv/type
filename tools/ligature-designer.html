@@ -95,7 +95,7 @@
 
         .left {
             display: grid;
-            grid-template-rows: auto auto auto auto 1fr;
+            grid-template-rows: auto auto auto auto auto 1fr;
             gap: 12px;
             min-width: 0;
         }
@@ -188,8 +188,24 @@
             border-radius: 999px;
             padding: 2px 8px;
             font-size: 12px;
+            user-select: none;
         }
         .chip.bad { border-color: rgba(220,38,38,0.45); color: var(--danger); }
+        .chip.clickable { cursor: pointer; }
+        .chip.clickable:hover { border-color: var(--accent); }
+        .chip.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+        }
+
+        .chip-list {
+            max-height: 220px;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--panel-2);
+            padding: 8px;
+        }
 
         .gap-list {
             max-height: 220px;
@@ -400,6 +416,17 @@
             </div>
         </div>
 
+        <!-- NEW: Defined ligatures -->
+        <div class="panel section">
+            <h2>Defined ligatures</h2>
+            <div class="row">
+                <span class="small">Loaded from <span class="kbd">glyphs.json</span>. Click a chip to load it into the editor.</span>
+            </div>
+            <div class="row">
+                <div id="definedLigatures" class="chip-list grow"></div>
+            </div>
+        </div>
+
         <div class="panel section">
             <h2>Gap connectors</h2>
             <div class="row">
@@ -475,6 +502,11 @@
         const state = {
             glyphData: null,
             byChar: new Map(),
+
+            // NEW: ligatures discovered from glyphs.json
+            ligaturesByKey: new Map(),       // "st" -> record
+            ligatureKeys: [],                // ["st","fi",...], sorted
+
             text: "",
             gap: 4,
             zoom: 20,
@@ -508,6 +540,9 @@
             composeStatus: $("composeStatus"),
             charChips: $("charChips"),
             gapList: $("gapList"),
+
+            // NEW
+            definedLigatures: $("definedLigatures"),
 
             editorSvg: $("editorSvg"),
             fileNamePreview: $("fileNamePreview"),
@@ -547,8 +582,12 @@
                 .replaceAll('"', "&quot;");
         }
 
+        function splitChars(s) {
+            return Array.from(String(s || ""));
+        }
+
         function codepointHex(ch) {
-            return [...ch][0].codePointAt(0).toString(16).padStart(4, "0");
+            return splitChars(ch)[0].codePointAt(0).toString(16).padStart(4, "0");
         }
 
         function ligatureFilename(chars) {
@@ -612,6 +651,73 @@
             return newGrid;
         }
 
+        function ligSortKey(s) {
+            const cps = splitChars(s).map(ch => ch.codePointAt(0));
+            return { len: cps.length, cps };
+        }
+
+        // -----------------------------
+        // Defined ligatures UI (NEW)
+        // -----------------------------
+        function renderDefinedLigatures() {
+            els.definedLigatures.innerHTML = "";
+
+            if (!state.glyphData) {
+                const d = document.createElement("div");
+                d.className = "small";
+                d.textContent = "Load glyph data to see defined ligatures.";
+                els.definedLigatures.appendChild(d);
+                return;
+            }
+
+            if (!state.ligatureKeys.length) {
+                const d = document.createElement("div");
+                d.className = "small";
+                d.textContent = "No ligatures found in glyphs.json.";
+                els.definedLigatures.appendChild(d);
+                return;
+            }
+
+            const wrap = document.createElement("div");
+            wrap.className = "chips";
+
+            const current = els.ligText.value || "";
+
+            for (const key of state.ligatureKeys) {
+                const rec = state.ligaturesByKey.get(key) || null;
+
+                const chip = document.createElement("span");
+                chip.className = "chip clickable" + (key === current ? " active" : "");
+                chip.textContent = key;
+
+                // Tooltip: filename + codepoints if available
+                let title = "";
+                try {
+                    const chars = splitChars(key);
+                    const u = chars.map(ch => `U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`).join(" ");
+                    title = `${key}  (${u})`;
+                    const fn = ligatureFilename(chars);
+                    title += `\n${fn}`;
+                    if (rec && rec.file) title += `\nsource: ${rec.file}`;
+                } catch {}
+                if (title) chip.title = title;
+
+                chip.addEventListener("click", () => {
+                    els.ligText.value = key;
+                    composeFromInput({ preserveConnectors: true });
+                });
+
+                wrap.appendChild(chip);
+            }
+
+            els.definedLigatures.appendChild(wrap);
+        }
+
+        function updateDefinedLigaturesActiveHighlight() {
+            // re-render is simple enough (and keeps it robust)
+            renderDefinedLigatures();
+        }
+
         // -----------------------------
         // Glyph data loading
         // -----------------------------
@@ -644,10 +750,49 @@
                 throw new Error("Could not build byChar index");
             }
 
+            // NEW: build ligaturesByKey map from glyphs.json
+            const ligaturesByKey = new Map();
+
+            // Preferred: indices.ligaturesByKey -> sequenceKey -> ligatures[sequenceKey]
+            const idx = data.indices && data.indices.ligaturesByKey;
+            const ligMap = data.ligatures;
+
+            if (idx && typeof idx === "object" && ligMap && typeof ligMap === "object") {
+                for (const [ligKey, seqKey] of Object.entries(idx)) {
+                    const rec = ligMap[seqKey];
+                    if (rec) ligaturesByKey.set(ligKey, rec);
+                    else ligaturesByKey.set(ligKey, { key: ligKey, sequenceKey: seqKey, file: null });
+                }
+            } else if (ligMap && typeof ligMap === "object") {
+                // Fallback: infer from ligatures records directly
+                for (const rec of Object.values(ligMap)) {
+                    if (rec && typeof rec === "object" && typeof rec.key === "string") {
+                        ligaturesByKey.set(rec.key, rec);
+                    }
+                }
+            }
+
+            const ligatureKeys = Array.from(ligaturesByKey.keys()).sort((a, b) => {
+                const ka = ligSortKey(a);
+                const kb = ligSortKey(b);
+                if (ka.len !== kb.len) return ka.len - kb.len;
+                const n = Math.max(ka.cps.length, kb.cps.length);
+                for (let i = 0; i < n; i++) {
+                    const aa = ka.cps[i] ?? -1;
+                    const bb = kb.cps[i] ?? -1;
+                    if (aa !== bb) return aa - bb;
+                }
+                return a.localeCompare(b);
+            });
+
             state.glyphData = data;
             state.byChar = byChar;
+            state.ligaturesByKey = ligaturesByKey;
+            state.ligatureKeys = ligatureKeys;
 
-            setDataStatus(`Loaded glyph data (${byChar.size} single glyphs).`);
+            const ligaCount = ligatureKeys.length;
+            setDataStatus(`Loaded glyph data (${byChar.size} single glyphs, ${ligaCount} ligatures).`);
+            renderDefinedLigatures();
         }
 
         async function tryLoadDefaultData() {
@@ -681,7 +826,6 @@
                 try {
                     const data = JSON.parse(String(fr.result || ""));
                     normalizeGlyphData(data);
-                    // auto-compose once data arrives
                     if (els.ligText.value.length > 0) {
                         composeFromInput({ preserveConnectors: true });
                     }
@@ -700,7 +844,6 @@
             const rec = state.byChar.get(ch);
             if (rec) return rec;
 
-            // Fallback synthesized SPACE if missing
             if (ch === " ") {
                 return {
                     key: " ",
@@ -737,7 +880,7 @@
                 return;
             }
 
-            const text = els.ligText.value; // keep spaces, don't trim
+            const text = els.ligText.value;
             const gap = Math.max(0, Number(els.gapUnits.value) || 0);
             const zoom = Math.max(8, Number(els.zoomPx.value) || 20);
 
@@ -757,6 +900,7 @@
                 rebuildGapUI([]);
                 rebuildEditor();
                 updateOutputs();
+                updateDefinedLigaturesActiveHighlight();
                 return;
             }
 
@@ -796,6 +940,7 @@
                 rebuildGapUI([]);
                 rebuildEditor();
                 updateOutputs();
+                updateDefinedLigaturesActiveHighlight();
                 return;
             }
 
@@ -810,10 +955,8 @@
                 missing,
             };
 
-            // Preserve connector drawing in absolute grid positions (clipped if width changes)
             state.connectorGrid = preserveConnectorGrid(oldGrid, width);
 
-            // Rebuild gap modes. Keep old entries by index when possible, otherwise use defaults.
             state.gapModes = [];
             for (let i = 0; i < placements.length - 1; i++) {
                 const left = placements[i].ch;
@@ -841,6 +984,7 @@
             setComposeStatus(msg, missing.length === 0);
             rebuildEditor();
             updateOutputs();
+            updateDefinedLigaturesActiveHighlight();
         }
 
         function renderChips(items) {
@@ -1020,7 +1164,6 @@
             svg.setAttribute("width", String(width * state.zoom));
             svg.setAttribute("height", String(height * state.zoom));
 
-            // Guides
             const gGuides = document.createElementNS("http://www.w3.org/2000/svg", "g");
             for (const y of Y_GUIDES) {
                 if (y < 0 || y > height) continue;
@@ -1059,7 +1202,6 @@
             }
             svg.appendChild(gGuides);
 
-            // Base glyph layer
             const gBase = document.createElementNS("http://www.w3.org/2000/svg", "g");
             if (state.composed) {
                 for (const p of state.composed.placements) {
@@ -1088,7 +1230,6 @@
             }
             svg.appendChild(gBase);
 
-            // Editable connector layer
             const gCells = document.createElementNS("http://www.w3.org/2000/svg", "g");
             const w = width;
             for (let y = 0; y < CELL_H; y++) {
@@ -1106,7 +1247,6 @@
             }
             svg.appendChild(gCells);
 
-            // Pointer handling
             svg.onpointerdown = onPointerDown;
             svg.onpointermove = onPointerMove;
             svg.onpointerup = onPointerUp;
@@ -1272,7 +1412,6 @@
                 return `    <polygon class="${cls}" points="${pts}"/>`;
             }).join("\n");
 
-            // Put ligature text in the SVG as metadata (not visible geometry)
             const displayText = chars.map(labelForChar).join(" ");
             const rawText = state.composed.text;
             const metadataObj = {
@@ -1380,7 +1519,6 @@
 
             els.btnCompose.addEventListener("click", () => composeFromInput({ preserveConnectors: true }));
 
-            // 1) Auto update while typing (including spaces)
             els.ligText.addEventListener("input", queueAutoCompose);
 
             els.ligText.addEventListener("keydown", (e) => {
@@ -1390,7 +1528,6 @@
                 }
             });
 
-            // Optional niceties: auto recompose on gap/zoom changes too
             els.gapUnits.addEventListener("input", queueAutoCompose);
 
             els.zoomPx.addEventListener("input", () => {
@@ -1437,6 +1574,7 @@
             wireEvents();
             rebuildEditor();
             updateOutputs();
+            renderDefinedLigatures();
 
             tryLoadDefaultData().then(() => {
                 if (state.glyphData && els.ligText.value.length > 0) {
