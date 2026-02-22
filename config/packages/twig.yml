@@ -1,0 +1,4 @@
+# config/packages/twig.yaml
+twig:
+  paths:
+    '%kernel.project_dir%/vendor/unsttv/type/src': unst_src
