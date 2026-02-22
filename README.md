@@ -182,7 +182,17 @@
 }
 ```
 
-## Add glyphs
+### Change Dimensions
+
+```css
+.font--unst {
+    font-variation-settings: "wdth" 400, "hght" 400;
+}
+```
+
+Both ``wdth`` and `hght` can take on a value between 25 and 400, 100 being the default.
+
+## Add Glyphs
 
 1. Design new glyph using the [glyph designer](tools/glyph-designer.html).
 2. Save SVG to ``src``.
