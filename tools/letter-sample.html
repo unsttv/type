@@ -193,15 +193,7 @@
 
             <div style="margin-top:12px">
                 <label for="input">Sample text</label>
-                <textarea id="input" spellcheck="false">unst st ch ct fi ij sh
-abcdefghijklmnopqrstuvwxyz
-ABCDEFGHIJKLMNOPQRSTUVWXYZ
-0123456789
-!#$+,-.:;=?[]_{|}
-¦§ ÷ ı ĳ ₿ ■
-
-all glyphs from manifest:
- !#$+,-.0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz{|}¦§÷ıĳ₿■</textarea>
+                <textarea id="input" spellcheck="false">Loading glyphs.json… (if this stays, open via a local server or paste a file via a picker)</textarea>
             </div>
         </div>
 
@@ -242,12 +234,7 @@ all glyphs from manifest:
 
     function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
 
-    // Keep baseline-ish feel: as height grows, you usually want more line-height.
-    // This is just a helpful starting point; user can override with the slider.
     function suggestedLineHeight(hght){
-        // hght=100 => 1.2
-        // hght=400 => ~3.6
-        // hght=25  => ~0.9
         const t = hght / 100;
         return clamp(1.2 * t, 0.85, 4.0);
     }
@@ -261,8 +248,6 @@ all glyphs from manifest:
         hghtVal.textContent = hght;
         sizeVal.textContent = size;
 
-        // If user hasn't "touched" line-height recently, gently keep it in sync with height.
-        // We'll detect this by checking a flag.
         if (!elLh.dataset.locked){
             const s = suggestedLineHeight(hght);
             elLh.value = s.toFixed(2);
@@ -282,23 +267,9 @@ all glyphs from manifest:
         lhSuggest.textContent = suggestedLineHeight(hght).toFixed(2);
     }
 
-    function expandUnicodeRanges(unicodeRanges){
-        const cps = [];
-        if (!Array.isArray(unicodeRanges)) return cps;
-
-        for (const pair of unicodeRanges){
-            if (!Array.isArray(pair) || pair.length < 2) continue;
-            const start = Number(pair[0]);
-            const end   = Number(pair[1]);
-            if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-
-            for (let cp = start; cp <= end; cp++){
-                cps.push(cp);
-            }
-        }
-        return cps;
-    }
-
+    // -----------------------------
+    // Build sample from glyphs.json
+    // -----------------------------
     function uniqSorted(nums){
         return Array.from(new Set(nums)).sort((a,b) => a - b);
     }
@@ -310,19 +281,85 @@ all glyphs from manifest:
         }).join("");
     }
 
-    function chunkCodepoints(cps, size = 40){
+    function chunkStringByCodepoints(str, chunkSize = 40){
+        const chars = Array.from(str);
         const lines = [];
-        for (let i = 0; i < cps.length; i += size){
-            lines.push(codepointsToString(cps.slice(i, i + size)));
+        for (let i = 0; i < chars.length; i += chunkSize){
+            lines.push(chars.slice(i, i + chunkSize).join(""));
         }
         return lines;
     }
 
-    function buildSampleFromManifest(manifest){
-        if (!manifest || !Array.isArray(manifest.unicodeRanges)) return null;
+    function safeCp(ch){
+        try { return ch.codePointAt(0); } catch { return null; }
+    }
 
-        const cps = uniqSorted(expandUnicodeRanges(manifest.unicodeRanges));
-        if (!cps.length) return null;
+    function getSinglesFromGlyphsJson(data){
+        const cps = [];
+        if (!data || typeof data !== "object" || !data.glyphs) return cps;
+
+        // Preferred: indices.byChar
+        if (data.indices && data.indices.byChar && typeof data.indices.byChar === "object") {
+            for (const ch of Object.keys(data.indices.byChar)) {
+                const cp = safeCp(ch);
+                if (cp !== null && cp >= 32 && !/\s/.test(ch)) cps.push(cp);
+                if (ch === " ") cps.push(32); // keep space if present
+            }
+            return uniqSorted(cps);
+        }
+
+        // Fallback: iterate glyph records
+        for (const rec of Object.values(data.glyphs)) {
+            if (!rec || typeof rec !== "object") continue;
+            const ch = rec.key;
+            if (typeof ch !== "string" || ch.length !== 1) continue;
+            const cp = safeCp(ch);
+            if (cp === null) continue;
+            if (cp < 32) continue;
+            cps.push(cp);
+        }
+        return uniqSorted(cps);
+    }
+
+    function getLigatureKeysFromGlyphsJson(data){
+        const keys = [];
+
+        if (!data || typeof data !== "object") return keys;
+
+        // Preferred: indices.ligaturesByKey
+        if (data.indices && data.indices.ligaturesByKey && typeof data.indices.ligaturesByKey === "object") {
+            keys.push(...Object.keys(data.indices.ligaturesByKey));
+        } else if (data.ligatures && typeof data.ligatures === "object") {
+            // Fallback: scan ligature records
+            for (const rec of Object.values(data.ligatures)) {
+                if (!rec || typeof rec !== "object") continue;
+                const k = rec.key;
+                if (typeof k === "string" && k.length >= 2) keys.push(k);
+            }
+        }
+
+        // stable sort: (len, codepoints)
+        const uniq = Array.from(new Set(keys));
+        uniq.sort((a, b) => {
+            const ac = Array.from(a).map(ch => ch.codePointAt(0));
+            const bc = Array.from(b).map(ch => ch.codePointAt(0));
+            if (ac.length !== bc.length) return ac.length - bc.length;
+            for (let i = 0; i < Math.max(ac.length, bc.length); i++){
+                const av = ac[i] ?? -1;
+                const bv = bc[i] ?? -1;
+                if (av !== bv) return av - bv;
+            }
+            return a.localeCompare(b);
+        });
+
+        return uniq;
+    }
+
+    function buildSampleFromGlyphsJson(data){
+        const cps = getSinglesFromGlyphsJson(data);
+        const ligs = getLigatureKeysFromGlyphsJson(data);
+
+        if (!cps.length && !ligs.length) return null;
 
         const lower = cps.filter(cp => cp >= 97 && cp <= 122);
         const upper = cps.filter(cp => cp >= 65 && cp <= 90);
@@ -339,37 +376,47 @@ all glyphs from manifest:
         const extras = cps.filter(cp => cp > 126);
 
         const lines = [
-            // Keep explicit shaping test line for ligatures
-            "unst st ch ct fi ij sh",
             lower.length ? codepointsToString(lower) : null,
             upper.length ? codepointsToString(upper) : null,
             digits.length ? codepointsToString(digits) : null,
             asciiPunct.length ? codepointsToString(asciiPunct) : null,
-            extras.length ? codepointsToString(extras).split("").join(" ") : null,
-            "",
-            "all glyphs from manifest:",
-            ...chunkCodepoints(cps, 40),
+            extras.length ? extras.map(cp => String.fromCodePoint(cp)).join(" ") : null,
+            `${ligs.join(" ")}`
         ].filter(line => line !== null);
 
         return lines.join("\n");
     }
 
-    async function loadManifestSample(){
-        try{
-            const res = await fetch("../data/manifest.json", { cache: "no-store" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const manifest = await res.json();
+    async function loadGlyphsSampleOnce(){
+        const candidates = [
+            "../data/glyphs.json",
+            "./data/glyphs.json",
+            "data/glyphs.json",
+            "./glyphs.json",
+        ];
 
-            const sample = buildSampleFromManifest(manifest);
-            if (sample && !userEditedInput){
-                input.value = sample;
-                sync();
+        let lastErr = null;
+
+        for (const url of candidates){
+            try{
+                const res = await fetch(url, { cache: "no-store" });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const sample = buildSampleFromGlyphsJson(data);
+                if (sample && !userEditedInput){
+                    input.value = sample;
+                    sync();
+                }
+                return;
+            }catch(err){
+                lastErr = err;
             }
-        }catch(err){
-            // Fallback silently: textarea already contains a static sample.
-            // (This commonly happens if opened directly as file:// and fetch is blocked.)
-            console.warn("Could not load ../data/manifest.json for sample text:", err);
         }
+
+        console.warn("Could not load glyphs.json for sample text:", lastErr);
+        // leave whatever is currently in the textarea (likely the placeholder)
+        sync();
     }
 
     // Lock line-height when user edits it manually
@@ -389,15 +436,13 @@ all glyphs from manifest:
             const [w, h] = btn.dataset.preset.split(",").map(n => parseInt(n, 10));
             elWdth.value = w;
             elHght.value = h;
-
-            // When applying a preset, unlock line-height so it follows height again
             delete elLh.dataset.locked;
             sync();
         });
     });
 
     sync();
-    loadManifestSample();
+    loadGlyphsSampleOnce();
 </script>
 </body>
 </html>
