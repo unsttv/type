@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30" shape-rendering="crispEdges" data-char="@" data-codepoint="U+0040">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 30" width="16" height="30" shape-rendering="crispEdges" data-char="@" data-codepoint="U+0040">
   <g>
     <polygon class="glyph glyph-u0040" points="8,0 12,0 12,9 8,9"/>
     <polygon class="glyph glyph-u0040" points="0,9 16,9 16,10 0,10"/>

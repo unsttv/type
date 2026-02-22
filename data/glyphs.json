@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-02-22T15:52:00.659093+00:00",
+  "generatedAt": "2026-02-22T17:47:33.127879+00:00",
   "sourceDir": "C:\\xampp\\htdocs\\unst\\type\\src",
   "grid": {
     "xBreaks": [
@@ -4660,9 +4660,9 @@
       "key": "@",
       "label": "@",
       "file": "character-u0040.svg",
-      "width": 20,
+      "width": 16,
       "height": 30,
-      "widthUnits": 5,
+      "widthUnits": 4,
       "polys": [
         [
           [
