@@ -1653,30 +1653,6 @@
             return out;
         }
 
-        function inferDefaultGapFromLigatureRecord(ligRec, keyStr) {
-            if (!ligRec || typeof ligRec !== "object") return null;
-            const totalW = Number(ligRec.width);
-            if (!Number.isFinite(totalW) || totalW <= 0) return null;
-
-            const chars = splitChars(keyStr);
-            const nGaps = Math.max(0, chars.length - 1);
-            if (nGaps === 0) return 0;
-
-            let sumW = 0;
-            for (const ch of chars) {
-                const rec = getGlyphRecordForChar(ch);
-                if (!rec) return null;
-                const w = Number(rec.width);
-                if (!Number.isFinite(w)) return null;
-                sumW += w;
-            }
-
-            const gap = (totalW - sumW) / nGaps;
-            if (!Number.isFinite(gap)) return null;
-
-            return snapGap(gap);
-        }
-
         function inferGapModesFromConnectorGrid(placements, grid) {
             if (!placements || placements.length < 2 || !grid) return [];
             const modes = [];
@@ -1725,6 +1701,191 @@
             return modes;
         }
 
+        // --- NEW: pick the most common gap for the "All gaps" dropdown
+        function mostCommonGap(gaps, fallback = 4) {
+            if (!Array.isArray(gaps) || gaps.length === 0) return fallback;
+            const counts = new Map();
+            for (const g of gaps) counts.set(g, (counts.get(g) || 0) + 1);
+            let best = fallback, bestN = -1;
+            for (const [g, n] of counts.entries()) {
+                if (n > bestN) { bestN = n; best = g; }
+            }
+            return best;
+        }
+
+// --- NEW: score how well baseMask fits within ligaMask
+        function scoreBaseAgainstLigature(baseMask, ligaMask) {
+            const h = Math.min(baseMask.length, ligaMask.length);
+            const w = Math.min(baseMask[0].length, ligaMask[0].length);
+
+            let inside = 0;
+            let outside = 0;
+
+            for (let y = 0; y < h; y++) {
+                const bRow = baseMask[y];
+                const lRow = ligaMask[y];
+                for (let x = 0; x < w; x++) {
+                    const b = bRow[x] ? 1 : 0;
+                    const l = lRow[x] ? 1 : 0;
+                    if (b && l) inside++;
+                    else if (b && !l) outside++;
+                }
+            }
+
+            // We care most about minimizing "base outside ligature".
+            // Inside helps break ties.
+            return { inside, outside };
+        }
+
+// --- NEW: build placements for a given key + gaps (no rendering side-effects)
+        function buildPlacementsForKeyWithGaps(keyStr, gaps) {
+            const chars = splitChars(keyStr);
+            const placements = [];
+            const missing = [];
+
+            for (let i = 0; i < chars.length; i++) {
+                const ch = chars[i];
+                const rec = getGlyphRecordForChar(ch);
+                if (!rec) { missing.push(ch); continue; }
+                const width = Number(rec.width ?? 12);
+                placements.push({
+                    index: placements.length,
+                    sourceIndex: i,
+                    ch,
+                    rec,
+                    x: 0,
+                    width,
+                });
+            }
+
+            if (placements.length === 0) {
+                return { placements: [], width: 0, missing };
+            }
+
+            let x = 0;
+            for (let i = 0; i < placements.length; i++) {
+                placements[i].x = x;
+                x += placements[i].width;
+                if (i < placements.length - 1) {
+                    x += (gaps[i] ?? 4);
+                }
+            }
+
+            return { placements, width: Math.max(1, x), missing };
+        }
+
+// --- NEW: infer per-gap gaps by trying [-4,0,4]^(nGaps) and picking the best alignment
+        function inferBestGapsFromLigatureRecord(ligRec, keyStr) {
+            if (!ligRec || typeof ligRec !== "object") return null;
+
+            const ligW = Math.round(Number(ligRec.width));
+            if (!Number.isFinite(ligW) || ligW <= 0) return null;
+
+            const chars = splitChars(keyStr);
+            const nGaps = Math.max(0, chars.length - 1);
+            if (nGaps === 0) return [];
+
+            // If any component glyph missing, we can't infer reliably
+            const widths = [];
+            for (const ch of chars) {
+                const rec = getGlyphRecordForChar(ch);
+                if (!rec) return null;
+                const w = Number(rec.width);
+                if (!Number.isFinite(w)) return null;
+                widths.push(Math.round(w));
+            }
+
+            const sumW = widths.reduce((a, b) => a + b, 0);
+            const targetSum = ligW - sumW;
+
+            // Generate candidate gap arrays
+            const candidates = [];
+            const minGap = Math.min(...ALLOWED_GAPS);
+            const maxGap = Math.max(...ALLOWED_GAPS);
+
+            function dfs(i, acc, sum) {
+                const remaining = nGaps - i;
+                const minPossible = sum + remaining * minGap;
+                const maxPossible = sum + remaining * maxGap;
+
+                // If we're only accepting exact-sum solutions, prune early:
+                // We'll still ALSO allow non-exact later if no exact exists.
+                if (targetSum < minPossible || targetSum > maxPossible) {
+                    // still allow exploring if we later need "best effort"? no; keep fast.
+                    return;
+                }
+
+                if (i === nGaps) {
+                    if (sum === targetSum) candidates.push(acc.slice());
+                    return;
+                }
+
+                for (const g of ALLOWED_GAPS) {
+                    acc.push(g);
+                    dfs(i + 1, acc, sum + g);
+                    acc.pop();
+                }
+            }
+
+            // First pass: exact width match only
+            dfs(0, [], 0);
+
+            // If no exact matches (rare), fall back to all combos and score with a width penalty.
+            let allowNonExact = false;
+            if (candidates.length === 0) {
+                allowNonExact = true;
+                const acc = [];
+                function dfsAll(i) {
+                    if (i === nGaps) { candidates.push(acc.slice()); return; }
+                    for (const g of ALLOWED_GAPS) {
+                        acc.push(g);
+                        dfsAll(i + 1);
+                        acc.pop();
+                    }
+                }
+                dfsAll(0);
+            }
+
+            const ligaMask = maskFromRecord(ligW, ligRec, 0);
+
+            let best = null;
+            let bestOutside = Infinity;
+            let bestInside = -1;
+            let bestWidthPenalty = Infinity;
+
+            for (const gaps of candidates) {
+                const { placements, width } = buildPlacementsForKeyWithGaps(keyStr, gaps);
+                if (!placements.length) continue;
+
+                const baseMask = maskFromPlacements(ligW, placements); // always compare in ligW frame
+                const { inside, outside } = scoreBaseAgainstLigature(baseMask, ligaMask);
+
+                const widthPenalty = Math.abs(width - ligW);
+
+                if (allowNonExact) {
+                    // prioritize width closeness first, then outside, then inside
+                    if (widthPenalty < bestWidthPenalty ||
+                        (widthPenalty === bestWidthPenalty && outside < bestOutside) ||
+                        (widthPenalty === bestWidthPenalty && outside === bestOutside && inside > bestInside)) {
+                        bestWidthPenalty = widthPenalty;
+                        bestOutside = outside;
+                        bestInside = inside;
+                        best = gaps.slice();
+                    }
+                } else {
+                    // exact match: prioritize outside then inside
+                    if (outside < bestOutside || (outside === bestOutside && inside > bestInside)) {
+                        bestOutside = outside;
+                        bestInside = inside;
+                        best = gaps.slice();
+                    }
+                }
+            }
+
+            return best;
+        }
+
+// --- REPLACE: this entire function with the new one below
         function loadExistingLigature(keyStr) {
             if (!state.glyphData) {
                 setComposeStatus("Load glyph data first.", false);
@@ -1733,38 +1894,65 @@
 
             const ligRec = state.ligaturesByKey.get(keyStr) || null;
 
-            // Set input immediately
+            // Always update input first
             els.ligText.value = keyStr;
 
-            // Infer default gap (snap -4/0/4) and apply globally
-            const inferredGap = inferDefaultGapFromLigatureRecord(ligRec, keyStr);
-            if (inferredGap !== null && ALLOWED_GAPS.includes(inferredGap)) {
-                els.gapUnits.value = String(inferredGap);
-                state.defaultGap = inferredGap;
-            }
-
-            // Compose fresh (no preserve)
-            composeFromInput({ preserveConnectors: false });
-
-            if (!ligRec || !state.composed) {
-                setComposeStatus(ligRec ? `Loaded ligature "${keyStr}".` : `Ligature "${keyStr}" record missing.`, !!ligRec);
+            if (!ligRec) {
+                // No ligature record; just compose normally
+                composeFromInput({ preserveConnectors: false });
+                setComposeStatus(`Ligature "${keyStr}" record missing in glyphs.json.`, false);
                 updateDefinedLigaturesActiveHighlight();
                 return;
             }
 
-            // Reconstruct connector grid: ligatureMask - baseMask
-            const width = state.composed.width;
+            // 1) Infer per-gap spacing so the base glyphs land where the ligature geometry expects them
+            const bestGaps = inferBestGapsFromLigatureRecord(ligRec, keyStr);
+
+            // If inference fails, fall back to current global setting
+            const gapsToUse = Array.isArray(bestGaps)
+                ? bestGaps
+                : Array.from({ length: Math.max(0, splitChars(keyStr).length - 1) }, () => state.defaultGap);
+
+            // Update the global dropdown to the most common inferred gap (purely UI convenience)
+            const common = mostCommonGap(gapsToUse, state.defaultGap);
+            els.gapUnits.value = String(common);
+            state.defaultGap = common;
+
+            // Seed gapSettings so composeFromInput preserves them
+            state.gapSettings = gapsToUse.map(g => ({ gap: g, mode: "none", touch: 1 }));
+
+            // 2) Compose (no preserve)
+            composeFromInput({ preserveConnectors: false });
+
+            if (!state.composed) {
+                setComposeStatus(`Could not compose "${keyStr}".`, false);
+                updateDefinedLigaturesActiveHighlight();
+                return;
+            }
+
+            // If widths still mismatch, warn but continue
+            const ligW = Math.round(Number(ligRec.width));
+            if (Number.isFinite(ligW) && ligW > 0 && state.composed.width !== ligW) {
+                console.warn("Ligature width mismatch after gap inference:", {
+                    key: keyStr,
+                    ligWidth: ligW,
+                    composedWidth: state.composed.width,
+                    gaps: gapsToUse
+                });
+            }
+
+            // 3) Reconstruct connector grid: ligatureMask - baseMask (in the ligature’s width frame)
+            const width = Math.round(Number(ligRec.width)) || state.composed.width;
+
             const baseMask = maskFromPlacements(width, state.composed.placements);
             const ligaMask = maskFromRecord(width, ligRec, 0);
 
             state.connectorGrid = subtractMasks(ligaMask, baseMask);
 
-            // Infer modes/touch
+            // 4) Infer modes + touch from reconstructed connectors
             const inferredModes = inferGapModesFromConnectorGrid(state.composed.placements, state.connectorGrid);
 
-            // Apply inferred gap+mode into gapSettings
             for (let i = 0; i < state.gapSettings.length; i++) {
-                if (inferredGap !== null) state.gapSettings[i].gap = inferredGap;
                 if (inferredModes[i]) {
                     state.gapSettings[i].mode = inferredModes[i].mode;
                     state.gapSettings[i].touch = inferredModes[i].touch;
@@ -1776,7 +1964,7 @@
             updateOutputs();
             updateDefinedLigaturesActiveHighlight();
 
-            setComposeStatus(`Loaded existing ligature "${keyStr}" (connectors restored).`, true);
+            setComposeStatus(`Loaded existing ligature "${keyStr}" (gaps + connectors restored).`, true);
         }
 
         // -----------------------------
