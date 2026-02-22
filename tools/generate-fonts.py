@@ -8,12 +8,15 @@ Key behaviors implemented:
 - Axes: wdth (25..400, default 100), hght (25..400, default 100)
 - Thick geometry scales with axes, BUT:
   - canonical 1-unit horizontal bands stay 1 unit tall under hght changes (piecewise Y warp)
-  - st-like seam compensation keeps the seam column 1 unit wide under wdth changes
-- For st-like ligatures (ch/sh/ct and also st):
+  - seam compensation keeps the seam connector column 1 unit wide under wdth changes
+- For seam-bearing ligatures:
   apply seam compensation in X so the seam column stays 1 unit:
     x' = x*s              for x < seam
     x' = x*s + (1-s)      for x >= seam
-  plus an additional seam-region correction for st/sh so the bottom-right 's' stroke scales correctly.
+  plus a generalized seam-adjacent horizontal-edge correction:
+    horizontal edges that terminate on the seam get their left side shifted too,
+    so seam-adjacent "s" arms don't widen at wdth<100 and don't distort the
+    connector at wdth>100.
 
 Ligatures:
 - Discovered from src/ by scanning files matching: ligature-u*.svg
@@ -70,6 +73,7 @@ except Exception:
 COMBINE_SHAPES = True
 
 EPS = 1e-9
+ROW_EPS = 1e-6  # tolerance for matching seam-fix rows
 
 # -----------------------------
 # Project paths
@@ -171,6 +175,7 @@ class SvgGlyph:
     width_svg: float
     rings: List[Ring]
     seam_x: Optional[float]
+    seam_fix_rows: List[Tuple[float, float]]  # (x0, y_row) rows whose left side should also shift
     key: str  # debug / seam-logic key
 
 
@@ -310,7 +315,13 @@ def load_single_glyphs_from_data(data_py_path: Path) -> List[SingleGlyph]:
             polys.append(_poly_from_data(p))
 
         rings = rings_from_polys(polys)
-        geom = SvgGlyph(width_svg=float(width), rings=rings, seam_x=None, key=ch)
+        geom = SvgGlyph(
+            width_svg=float(width),
+            rings=rings,
+            seam_x=None,
+            seam_fix_rows=[],
+            key=ch,
+        )
 
         singles.append(
             SingleGlyph(
@@ -426,7 +437,7 @@ def is_axis_aligned_rect(poly: Poly) -> Optional[Tuple[float, float, float, floa
 
 def detect_seam_x(key: str, polys: List[Poly]) -> Optional[float]:
     """
-    Find seam_x for st-like ligatures by detecting the 1-unit-wide vertical connector rectangle.
+    Find seam_x for seam-bearing ligatures by detecting the 1-unit-wide vertical connector rectangle.
     Seam is the RIGHT edge (x1) of that 1-unit rectangle.
 
     If not found:
@@ -451,6 +462,75 @@ def detect_seam_x(key: str, polys: List[Poly]) -> Optional[float]:
     return None
 
 
+def detect_seam_fix_rows(
+    key: str,
+    seam_x: Optional[float],
+    polys: List[Poly],
+) -> List[Tuple[float, float]]:
+    """
+    Detect seam-adjacent horizontal edges that end on the seam.
+
+    We store rows as (x0, y_row), meaning:
+      on that exact y row, points with x in [x0, seam_x) should also receive the seam
+      offset. This keeps seam-adjacent horizontal arms from widening, while avoiding
+      broad-band shifts that skew the seam connector.
+
+    This works for both:
+    - separate rectangles
+    - merged/unioned one-polygon glyph outlines
+    """
+    if seam_x is None:
+        return []
+
+    rows: List[Tuple[float, float]] = []
+
+    for poly in polys:
+        n = len(poly)
+        if n < 2:
+            continue
+
+        for i in range(n):
+            x1, y1 = poly[i]
+            x2, y2 = poly[(i + 1) % n]
+
+            # Horizontal edge
+            if abs(y1 - y2) > EPS:
+                continue
+
+            y = y1
+            xa = min(x1, x2)
+            xb = max(x1, x2)
+            w = xb - xa
+
+            # We only care about horizontal runs that terminate on the seam on the right side.
+            # Ignore 1-unit runs (like the top/bottom of the seam connector itself).
+            if w <= 1.0 + EPS:
+                continue
+            if abs(xb - seam_x) > EPS:
+                continue
+            if xa >= seam_x - EPS:
+                continue
+
+            rows.append((xa, y))
+
+    # De-dup float-safely
+    dedup: List[Tuple[float, float]] = []
+    for x0, y in rows:
+        if not any(abs(x0 - dx0) < EPS and abs(y - dy) < EPS for dx0, dy in dedup):
+            dedup.append((x0, y))
+
+    # Conservative fallback for merged/hand-drawn 's' forms if no explicit seam-adjacent
+    # horizontal edge is detectable. Crucially, this is row-based (not a broad band), so it
+    # won't skew the connector column.
+    if not dedup and ("s" in key):
+        dedup.extend([
+            (seam_x - 4.0, Y_MID1),
+            (seam_x - 4.0, Y_BASE0),
+        ])
+
+    return dedup
+
+
 def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
     tree = ET.parse(svg_path)
     root = tree.getroot()
@@ -472,9 +552,16 @@ def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
 
     poly_list: List[Poly] = [parse_polygon_points(p.attrib["points"]) for p in polys]
     seam_x = detect_seam_x(key, poly_list)
+    seam_fix_rows = detect_seam_fix_rows(key, seam_x, poly_list)
     rings = rings_from_polys(poly_list)
 
-    return SvgGlyph(width_svg=width_svg, rings=rings, seam_x=seam_x, key=key)
+    return SvgGlyph(
+        width_svg=width_svg,
+        rings=rings,
+        seam_x=seam_x,
+        seam_fix_rows=seam_fix_rows,
+        key=key,
+    )
 
 
 def load_ligatures_from_src(src_dir: Path) -> List[LigatureDef]:
@@ -510,17 +597,26 @@ def hght_scale_from_value(hght_value: float) -> float:
     return hght_value / 100.0
 
 
-def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional[float]) -> float:
+def warp_x(
+    x: float,
+    s: float,
+    seam_x: Optional[float],
+    *,
+    seam_fix_rows: Optional[List[Tuple[float, float]]],
+    key: str,
+    y: Optional[float],
+) -> float:
     """
-    X mapping with seam compensation for st-like ligatures.
+    X mapping with seam compensation for seam-bearing ligatures.
 
     Base seam behavior:
       x' = x*s              if x < seam
       x' = x*s + (1-s)      if x >= seam
 
-    Extra correction (st/sh):
-      The bottom-right 's' stroke would otherwise distort at wdth<100 because its right edge is at seam.
-      We shift the left part of that stroke by the same seam offset in the relevant y band.
+    Additional correction:
+      On seam-adjacent horizontal rows, points left of the seam get the same seam
+      offset too. This preserves the intended width of seam-adjacent 's' arms without
+      broad-band shifting that can skew the seam connector column.
     """
     if seam_x is None:
         return x * s
@@ -528,11 +624,12 @@ def warp_x(x: float, s: float, seam_x: Optional[float], *, key: str, y: Optional
     seam_off = (1.0 - s)
     base = x * s if x < seam_x else (x * s + seam_off)
 
-    if key in ("st", "sh") and y is not None:
-        if (y >= Y_MID1 - EPS) and (y <= Y_BASE0 + EPS):
-            stroke_left = seam_x - 4.0
-            if (x >= stroke_left - EPS) and (x < seam_x - EPS):
-                base += seam_off
+    if y is not None and seam_fix_rows:
+        for x0, y_row in seam_fix_rows:
+            if abs(y - y_row) <= ROW_EPS:
+                if (x >= x0 - EPS) and (x < seam_x - EPS):
+                    base += seam_off
+                    break
 
     return base
 
@@ -591,10 +688,30 @@ def signed_area_xy(pts: List[Tuple[int, int]]) -> float:
     return a / 2.0
 
 
-def transform_ring(ring: Ring, *, s: float, t: float, seam_x: Optional[float], key: str) -> Ring:
+def transform_ring(
+    ring: Ring,
+    *,
+    s: float,
+    t: float,
+    seam_x: Optional[float],
+    seam_fix_rows: Optional[List[Tuple[float, float]]],
+    key: str,
+) -> Ring:
     out: Poly = []
     for x, y in ring.pts:
-        out.append((warp_x(x, s, seam_x, key=key, y=y), warp_y_pos(y, t)))
+        out.append(
+            (
+                warp_x(
+                    x,
+                    s,
+                    seam_x,
+                    seam_fix_rows=seam_fix_rows,
+                    key=key,
+                    y=y,
+                ),
+                warp_y_pos(y, t),
+            )
+        )
     return Ring(out, ring.is_hole)
 
 
@@ -756,13 +873,27 @@ def build_master_ttf(
     # Singles from data/glyphs.py
     for sg in singles:
         warped_rings = [
-            transform_ring(r, s=s, t=t, seam_x=sg.geom.seam_x, key=sg.geom.key)
+            transform_ring(
+                r,
+                s=s,
+                t=t,
+                seam_x=sg.geom.seam_x,
+                seam_fix_rows=sg.geom.seam_fix_rows,
+                key=sg.geom.key,
+            )
             for r in sg.geom.rings
         ]
         glyf[sg.glyph_name] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
 
         adv_svg = sg.geom.width_svg + LETTER_SPACE_SVG
-        adv_warped = warp_x(adv_svg, s, sg.geom.seam_x, key=sg.geom.key, y=None)
+        adv_warped = warp_x(
+            adv_svg,
+            s,
+            sg.geom.seam_x,
+            seam_fix_rows=sg.geom.seam_fix_rows,
+            key=sg.geom.key,
+            y=None,
+        )
         adv_font = int(round(adv_warped * SCALE))
         hmtx[sg.glyph_name] = (adv_font, 0)
 
@@ -771,11 +902,28 @@ def build_master_ttf(
         gname = lig.glyph_name
         sg = lig.geom
 
-        warped_rings = [transform_ring(r, s=s, t=t, seam_x=sg.seam_x, key=sg.key) for r in sg.rings]
+        warped_rings = [
+            transform_ring(
+                r,
+                s=s,
+                t=t,
+                seam_x=sg.seam_x,
+                seam_fix_rows=sg.seam_fix_rows,
+                key=sg.key,
+            )
+            for r in sg.rings
+        ]
         glyf[gname] = build_tt_glyph_from_rings(warped_rings, base_y_warped=base_y_warped)
 
         adv_svg = sg.width_svg + LETTER_SPACE_SVG
-        adv_warped = warp_x(adv_svg, s, sg.seam_x, key=sg.key, y=None)
+        adv_warped = warp_x(
+            adv_svg,
+            s,
+            sg.seam_x,
+            seam_fix_rows=sg.seam_fix_rows,
+            key=sg.key,
+            y=None,
+        )
         adv_font = int(round(adv_warped * SCALE))
         hmtx[gname] = (adv_font, 0)
 
