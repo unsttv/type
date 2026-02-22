@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-02-21T22:09:58.825884+00:00",
+  "generatedAt": "2026-02-22T10:51:14.063201+00:00",
   "sourceDir": "C:\\xampp\\htdocs\\unst\\type\\src",
   "grid": {
     "xBreaks": [
@@ -26,16 +26,16 @@
       30
     ],
     "cellHeight": 30,
-    "baselineY": 19
+    "baselineY": 19,
+    "stepX": 4
   },
   "glyphCount": 92,
+  "ligatureCount": 15,
   "glyphs": {
     "u0020": {
+      "kind": "char",
       "key": " ",
       "label": "SPACE",
-      "codepoint": "U+0020",
-      "codepointInt": 32,
-      "unicodeName": "SPACE",
       "file": "character-u0020.svg",
       "width": 4,
       "height": 30,
@@ -121,14 +121,15 @@
           0
         ]
       ],
-      "activeCells": []
+      "activeCells": [],
+      "codepoint": "U+0020",
+      "codepointInt": 32,
+      "unicodeName": "SPACE"
     },
     "u0021": {
+      "kind": "char",
       "key": "!",
       "label": "!",
-      "codepoint": "U+0021",
-      "codepointInt": 33,
-      "unicodeName": "EXCLAMATION MARK",
       "file": "character-u0021.svg",
       "width": 4,
       "height": 30,
@@ -293,14 +294,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0021",
+      "codepointInt": 33,
+      "unicodeName": "EXCLAMATION MARK"
     },
     "u0023": {
+      "kind": "char",
       "key": "#",
       "label": "#",
-      "codepoint": "U+0023",
-      "codepointInt": 35,
-      "unicodeName": "NUMBER SIGN",
       "file": "character-u0023.svg",
       "width": 20,
       "height": 30,
@@ -653,14 +655,15 @@
           7,
           3
         ]
-      ]
+      ],
+      "codepoint": "U+0023",
+      "codepointInt": 35,
+      "unicodeName": "NUMBER SIGN"
     },
     "u0024": {
+      "kind": "char",
       "key": "$",
       "label": "$",
-      "codepoint": "U+0024",
-      "codepointInt": 36,
-      "unicodeName": "DOLLAR SIGN",
       "file": "character-u0024.svg",
       "width": 20,
       "height": 30,
@@ -969,14 +972,15 @@
           8,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0024",
+      "codepointInt": 36,
+      "unicodeName": "DOLLAR SIGN"
     },
     "u002b": {
+      "kind": "char",
       "key": "+",
       "label": "+",
-      "codepoint": "U+002B",
-      "codepointInt": 43,
-      "unicodeName": "PLUS SIGN",
       "file": "character-u002b.svg",
       "width": 12,
       "height": 30,
@@ -1165,14 +1169,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+002B",
+      "codepointInt": 43,
+      "unicodeName": "PLUS SIGN"
     },
     "u002c": {
+      "kind": "char",
       "key": ",",
       "label": ",",
-      "codepoint": "U+002C",
-      "codepointInt": 44,
-      "unicodeName": "COMMA",
       "file": "character-u002c.svg",
       "width": 4,
       "height": 30,
@@ -1293,14 +1298,15 @@
           8,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+002C",
+      "codepointInt": 44,
+      "unicodeName": "COMMA"
     },
     "u002d": {
+      "kind": "char",
       "key": "-",
       "label": "-",
-      "codepoint": "U+002D",
-      "codepointInt": 45,
-      "unicodeName": "HYPHEN-MINUS",
       "file": "character-u002d.svg",
       "width": 4,
       "height": 30,
@@ -1417,14 +1423,15 @@
           5,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+002D",
+      "codepointInt": 45,
+      "unicodeName": "HYPHEN-MINUS"
     },
     "u002e": {
+      "kind": "char",
       "key": ".",
       "label": ".",
-      "codepoint": "U+002E",
-      "codepointInt": 46,
-      "unicodeName": "FULL STOP",
       "file": "character-u002e.svg",
       "width": 4,
       "height": 30,
@@ -1541,14 +1548,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+002E",
+      "codepointInt": 46,
+      "unicodeName": "FULL STOP"
     },
     "u0030": {
+      "kind": "char",
       "key": "0",
       "label": "0",
-      "codepoint": "U+0030",
-      "codepointInt": 48,
-      "unicodeName": "DIGIT ZERO",
       "file": "character-u0030.svg",
       "width": 12,
       "height": 30,
@@ -1781,14 +1789,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0030",
+      "codepointInt": 48,
+      "unicodeName": "DIGIT ZERO"
     },
     "u0031": {
+      "kind": "char",
       "key": "1",
       "label": "1",
-      "codepoint": "U+0031",
-      "codepointInt": 49,
-      "unicodeName": "DIGIT ONE",
       "file": "character-u0031.svg",
       "width": 8,
       "height": 30,
@@ -1949,14 +1958,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0031",
+      "codepointInt": 49,
+      "unicodeName": "DIGIT ONE"
     },
     "u0032": {
+      "kind": "char",
       "key": "2",
       "label": "2",
-      "codepoint": "U+0032",
-      "codepointInt": 50,
-      "unicodeName": "DIGIT TWO",
       "file": "character-u0032.svg",
       "width": 12,
       "height": 30,
@@ -2209,14 +2219,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0032",
+      "codepointInt": 50,
+      "unicodeName": "DIGIT TWO"
     },
     "u0033": {
+      "kind": "char",
       "key": "3",
       "label": "3",
-      "codepoint": "U+0033",
-      "codepointInt": 51,
-      "unicodeName": "DIGIT THREE",
       "file": "character-u0033.svg",
       "width": 12,
       "height": 30,
@@ -2469,14 +2480,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0033",
+      "codepointInt": 51,
+      "unicodeName": "DIGIT THREE"
     },
     "u0034": {
+      "kind": "char",
       "key": "4",
       "label": "4",
-      "codepoint": "U+0034",
-      "codepointInt": 52,
-      "unicodeName": "DIGIT FOUR",
       "file": "character-u0034.svg",
       "width": 12,
       "height": 30,
@@ -2673,14 +2685,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0034",
+      "codepointInt": 52,
+      "unicodeName": "DIGIT FOUR"
     },
     "u0035": {
+      "kind": "char",
       "key": "5",
       "label": "5",
-      "codepoint": "U+0035",
-      "codepointInt": 53,
-      "unicodeName": "DIGIT FIVE",
       "file": "character-u0035.svg",
       "width": 12,
       "height": 30,
@@ -2933,14 +2946,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0035",
+      "codepointInt": 53,
+      "unicodeName": "DIGIT FIVE"
     },
     "u0036": {
+      "kind": "char",
       "key": "6",
       "label": "6",
-      "codepoint": "U+0036",
-      "codepointInt": 54,
-      "unicodeName": "DIGIT SIX",
       "file": "character-u0036.svg",
       "width": 12,
       "height": 30,
@@ -3197,14 +3211,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0036",
+      "codepointInt": 54,
+      "unicodeName": "DIGIT SIX"
     },
     "u0037": {
+      "kind": "char",
       "key": "7",
       "label": "7",
-      "codepoint": "U+0037",
-      "codepointInt": 55,
-      "unicodeName": "DIGIT SEVEN",
       "file": "character-u0037.svg",
       "width": 12,
       "height": 30,
@@ -3369,14 +3384,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0037",
+      "codepointInt": 55,
+      "unicodeName": "DIGIT SEVEN"
     },
     "u0038": {
+      "kind": "char",
       "key": "8",
       "label": "8",
-      "codepoint": "U+0038",
-      "codepointInt": 56,
-      "unicodeName": "DIGIT EIGHT",
       "file": "character-u0038.svg",
       "width": 12,
       "height": 30,
@@ -3637,14 +3653,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0038",
+      "codepointInt": 56,
+      "unicodeName": "DIGIT EIGHT"
     },
     "u0039": {
+      "kind": "char",
       "key": "9",
       "label": "9",
-      "codepoint": "U+0039",
-      "codepointInt": 57,
-      "unicodeName": "DIGIT NINE",
       "file": "character-u0039.svg",
       "width": 12,
       "height": 30,
@@ -3901,14 +3918,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0039",
+      "codepointInt": 57,
+      "unicodeName": "DIGIT NINE"
     },
     "u003a": {
+      "kind": "char",
       "key": ":",
       "label": ":",
-      "codepoint": "U+003A",
-      "codepointInt": 58,
-      "unicodeName": "COLON",
       "file": "character-u003a.svg",
       "width": 4,
       "height": 30,
@@ -4053,14 +4071,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+003A",
+      "codepointInt": 58,
+      "unicodeName": "COLON"
     },
     "u003b": {
+      "kind": "char",
       "key": ";",
       "label": ";",
-      "codepoint": "U+003B",
-      "codepointInt": 59,
-      "unicodeName": "SEMICOLON",
       "file": "character-u003b.svg",
       "width": 4,
       "height": 30,
@@ -4209,14 +4228,15 @@
           8,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+003B",
+      "codepointInt": 59,
+      "unicodeName": "SEMICOLON"
     },
     "u003d": {
+      "kind": "char",
       "key": "=",
       "label": "=",
-      "codepoint": "U+003D",
-      "codepointInt": 61,
-      "unicodeName": "EQUALS SIGN",
       "file": "character-u003d.svg",
       "width": 12,
       "height": 30,
@@ -4377,14 +4397,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+003D",
+      "codepointInt": 61,
+      "unicodeName": "EQUALS SIGN"
     },
     "u003f": {
+      "kind": "char",
       "key": "?",
       "label": "?",
-      "codepoint": "U+003F",
-      "codepointInt": 63,
-      "unicodeName": "QUESTION MARK",
       "file": "character-u003f.svg",
       "width": 8,
       "height": 30,
@@ -4629,14 +4650,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+003F",
+      "codepointInt": 63,
+      "unicodeName": "QUESTION MARK"
     },
     "u0041": {
+      "kind": "char",
       "key": "A",
       "label": "A",
-      "codepoint": "U+0041",
-      "codepointInt": 65,
-      "unicodeName": "LATIN CAPITAL LETTER A",
       "file": "character-u0041.svg",
       "width": 12,
       "height": 30,
@@ -4941,14 +4963,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0041",
+      "codepointInt": 65,
+      "unicodeName": "LATIN CAPITAL LETTER A"
     },
     "u0042": {
+      "kind": "char",
       "key": "B",
       "label": "B",
-      "codepoint": "U+0042",
-      "codepointInt": 66,
-      "unicodeName": "LATIN CAPITAL LETTER B",
       "file": "character-u0042.svg",
       "width": 12,
       "height": 30,
@@ -5277,14 +5300,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0042",
+      "codepointInt": 66,
+      "unicodeName": "LATIN CAPITAL LETTER B"
     },
     "u0043": {
+      "kind": "char",
       "key": "C",
       "label": "C",
-      "codepoint": "U+0043",
-      "codepointInt": 67,
-      "unicodeName": "LATIN CAPITAL LETTER C",
       "file": "character-u0043.svg",
       "width": 12,
       "height": 30,
@@ -5493,14 +5517,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0043",
+      "codepointInt": 67,
+      "unicodeName": "LATIN CAPITAL LETTER C"
     },
     "u0044": {
+      "kind": "char",
       "key": "D",
       "label": "D",
-      "codepoint": "U+0044",
-      "codepointInt": 68,
-      "unicodeName": "LATIN CAPITAL LETTER D",
       "file": "character-u0044.svg",
       "width": 12,
       "height": 30,
@@ -5749,14 +5774,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0044",
+      "codepointInt": 68,
+      "unicodeName": "LATIN CAPITAL LETTER D"
     },
     "u0045": {
+      "kind": "char",
       "key": "E",
       "label": "E",
-      "codepoint": "U+0045",
-      "codepointInt": 69,
-      "unicodeName": "LATIN CAPITAL LETTER E",
       "file": "character-u0045.svg",
       "width": 12,
       "height": 30,
@@ -6021,14 +6047,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0045",
+      "codepointInt": 69,
+      "unicodeName": "LATIN CAPITAL LETTER E"
     },
     "u0046": {
+      "kind": "char",
       "key": "F",
       "label": "F",
-      "codepoint": "U+0046",
-      "codepointInt": 70,
-      "unicodeName": "LATIN CAPITAL LETTER F",
       "file": "character-u0046.svg",
       "width": 12,
       "height": 30,
@@ -6261,14 +6288,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0046",
+      "codepointInt": 70,
+      "unicodeName": "LATIN CAPITAL LETTER F"
     },
     "u0047": {
+      "kind": "char",
       "key": "G",
       "label": "G",
-      "codepoint": "U+0047",
-      "codepointInt": 71,
-      "unicodeName": "LATIN CAPITAL LETTER G",
       "file": "character-u0047.svg",
       "width": 12,
       "height": 30,
@@ -6517,14 +6545,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0047",
+      "codepointInt": 71,
+      "unicodeName": "LATIN CAPITAL LETTER G"
     },
     "u0048": {
+      "kind": "char",
       "key": "H",
       "label": "H",
-      "codepoint": "U+0048",
-      "codepointInt": 72,
-      "unicodeName": "LATIN CAPITAL LETTER H",
       "file": "character-u0048.svg",
       "width": 12,
       "height": 30,
@@ -6801,14 +6830,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0048",
+      "codepointInt": 72,
+      "unicodeName": "LATIN CAPITAL LETTER H"
     },
     "u0049": {
+      "kind": "char",
       "key": "I",
       "label": "I",
-      "codepoint": "U+0049",
-      "codepointInt": 73,
-      "unicodeName": "LATIN CAPITAL LETTER I",
       "file": "character-u0049.svg",
       "width": 12,
       "height": 30,
@@ -7017,14 +7047,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0049",
+      "codepointInt": 73,
+      "unicodeName": "LATIN CAPITAL LETTER I"
     },
     "u004a": {
+      "kind": "char",
       "key": "J",
       "label": "J",
-      "codepoint": "U+004A",
-      "codepointInt": 74,
-      "unicodeName": "LATIN CAPITAL LETTER J",
       "file": "character-u004a.svg",
       "width": 12,
       "height": 30,
@@ -7229,14 +7260,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+004A",
+      "codepointInt": 74,
+      "unicodeName": "LATIN CAPITAL LETTER J"
     },
     "u004b": {
+      "kind": "char",
       "key": "K",
       "label": "K",
-      "codepoint": "U+004B",
-      "codepointInt": 75,
-      "unicodeName": "LATIN CAPITAL LETTER K",
       "file": "character-u004b.svg",
       "width": 12,
       "height": 30,
@@ -7509,14 +7541,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+004B",
+      "codepointInt": 75,
+      "unicodeName": "LATIN CAPITAL LETTER K"
     },
     "u004c": {
+      "kind": "char",
       "key": "L",
       "label": "L",
-      "codepoint": "U+004C",
-      "codepointInt": 76,
-      "unicodeName": "LATIN CAPITAL LETTER L",
       "file": "character-u004c.svg",
       "width": 12,
       "height": 30,
@@ -7693,14 +7726,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+004C",
+      "codepointInt": 76,
+      "unicodeName": "LATIN CAPITAL LETTER L"
     },
     "u004d": {
+      "kind": "char",
       "key": "M",
       "label": "M",
-      "codepoint": "U+004D",
-      "codepointInt": 77,
-      "unicodeName": "LATIN CAPITAL LETTER M",
       "file": "character-u004d.svg",
       "width": 20,
       "height": 30,
@@ -7989,14 +8023,15 @@
           7,
           4
         ]
-      ]
+      ],
+      "codepoint": "U+004D",
+      "codepointInt": 77,
+      "unicodeName": "LATIN CAPITAL LETTER M"
     },
     "u004e": {
+      "kind": "char",
       "key": "N",
       "label": "N",
-      "codepoint": "U+004E",
-      "codepointInt": 78,
-      "unicodeName": "LATIN CAPITAL LETTER N",
       "file": "character-u004e.svg",
       "width": 12,
       "height": 30,
@@ -8225,14 +8260,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+004E",
+      "codepointInt": 78,
+      "unicodeName": "LATIN CAPITAL LETTER N"
     },
     "u004f": {
+      "kind": "char",
       "key": "O",
       "label": "O",
-      "codepoint": "U+004F",
-      "codepointInt": 79,
-      "unicodeName": "LATIN CAPITAL LETTER O",
       "file": "character-u004f.svg",
       "width": 12,
       "height": 30,
@@ -8489,14 +8525,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+004F",
+      "codepointInt": 79,
+      "unicodeName": "LATIN CAPITAL LETTER O"
     },
     "u0050": {
+      "kind": "char",
       "key": "P",
       "label": "P",
-      "codepoint": "U+0050",
-      "codepointInt": 80,
-      "unicodeName": "LATIN CAPITAL LETTER P",
       "file": "character-u0050.svg",
       "width": 12,
       "height": 30,
@@ -8761,14 +8798,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0050",
+      "codepointInt": 80,
+      "unicodeName": "LATIN CAPITAL LETTER P"
     },
     "u0051": {
+      "kind": "char",
       "key": "Q",
       "label": "Q",
-      "codepoint": "U+0051",
-      "codepointInt": 81,
-      "unicodeName": "LATIN CAPITAL LETTER Q",
       "file": "character-u0051.svg",
       "width": 12,
       "height": 30,
@@ -9033,14 +9071,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0051",
+      "codepointInt": 81,
+      "unicodeName": "LATIN CAPITAL LETTER Q"
     },
     "u0052": {
+      "kind": "char",
       "key": "R",
       "label": "R",
-      "codepoint": "U+0052",
-      "codepointInt": 82,
-      "unicodeName": "LATIN CAPITAL LETTER R",
       "file": "character-u0052.svg",
       "width": 12,
       "height": 30,
@@ -9341,14 +9380,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0052",
+      "codepointInt": 82,
+      "unicodeName": "LATIN CAPITAL LETTER R"
     },
     "u0053": {
+      "kind": "char",
       "key": "S",
       "label": "S",
-      "codepoint": "U+0053",
-      "codepointInt": 83,
-      "unicodeName": "LATIN CAPITAL LETTER S",
       "file": "character-u0053.svg",
       "width": 12,
       "height": 30,
@@ -9613,14 +9653,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0053",
+      "codepointInt": 83,
+      "unicodeName": "LATIN CAPITAL LETTER S"
     },
     "u0054": {
+      "kind": "char",
       "key": "T",
       "label": "T",
-      "codepoint": "U+0054",
-      "codepointInt": 84,
-      "unicodeName": "LATIN CAPITAL LETTER T",
       "file": "character-u0054.svg",
       "width": 12,
       "height": 30,
@@ -9797,14 +9838,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0054",
+      "codepointInt": 84,
+      "unicodeName": "LATIN CAPITAL LETTER T"
     },
     "u0055": {
+      "kind": "char",
       "key": "U",
       "label": "U",
-      "codepoint": "U+0055",
-      "codepointInt": 85,
-      "unicodeName": "LATIN CAPITAL LETTER U",
       "file": "character-u0055.svg",
       "width": 12,
       "height": 30,
@@ -10033,14 +10075,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0055",
+      "codepointInt": 85,
+      "unicodeName": "LATIN CAPITAL LETTER U"
     },
     "u0056": {
+      "kind": "char",
       "key": "V",
       "label": "V",
-      "codepoint": "U+0056",
-      "codepointInt": 86,
-      "unicodeName": "LATIN CAPITAL LETTER V",
       "file": "character-u0056.svg",
       "width": 12,
       "height": 30,
@@ -10261,14 +10304,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0056",
+      "codepointInt": 86,
+      "unicodeName": "LATIN CAPITAL LETTER V"
     },
     "u0057": {
+      "kind": "char",
       "key": "W",
       "label": "W",
-      "codepoint": "U+0057",
-      "codepointInt": 87,
-      "unicodeName": "LATIN CAPITAL LETTER W",
       "file": "character-u0057.svg",
       "width": 20,
       "height": 30,
@@ -10557,14 +10601,15 @@
           7,
           4
         ]
-      ]
+      ],
+      "codepoint": "U+0057",
+      "codepointInt": 87,
+      "unicodeName": "LATIN CAPITAL LETTER W"
     },
     "u0058": {
+      "kind": "char",
       "key": "X",
       "label": "X",
-      "codepoint": "U+0058",
-      "codepointInt": 88,
-      "unicodeName": "LATIN CAPITAL LETTER X",
       "file": "character-u0058.svg",
       "width": 12,
       "height": 30,
@@ -10833,14 +10878,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0058",
+      "codepointInt": 88,
+      "unicodeName": "LATIN CAPITAL LETTER X"
     },
     "u0059": {
+      "kind": "char",
       "key": "Y",
       "label": "Y",
-      "codepoint": "U+0059",
-      "codepointInt": 89,
-      "unicodeName": "LATIN CAPITAL LETTER Y",
       "file": "character-u0059.svg",
       "width": 12,
       "height": 30,
@@ -11077,14 +11123,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0059",
+      "codepointInt": 89,
+      "unicodeName": "LATIN CAPITAL LETTER Y"
     },
     "u005a": {
+      "kind": "char",
       "key": "Z",
       "label": "Z",
-      "codepoint": "U+005A",
-      "codepointInt": 90,
-      "unicodeName": "LATIN CAPITAL LETTER Z",
       "file": "character-u005a.svg",
       "width": 12,
       "height": 30,
@@ -11349,14 +11396,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+005A",
+      "codepointInt": 90,
+      "unicodeName": "LATIN CAPITAL LETTER Z"
     },
     "u005b": {
+      "kind": "char",
       "key": "[",
       "label": "[",
-      "codepoint": "U+005B",
-      "codepointInt": 91,
-      "unicodeName": "LEFT SQUARE BRACKET",
       "file": "character-u005b.svg",
       "width": 8,
       "height": 30,
@@ -11569,14 +11617,15 @@
           10,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+005B",
+      "codepointInt": 91,
+      "unicodeName": "LEFT SQUARE BRACKET"
     },
     "u005d": {
+      "kind": "char",
       "key": "]",
       "label": "]",
-      "codepoint": "U+005D",
-      "codepointInt": 93,
-      "unicodeName": "RIGHT SQUARE BRACKET",
       "file": "character-u005d.svg",
       "width": 8,
       "height": 30,
@@ -11789,14 +11838,15 @@
           10,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+005D",
+      "codepointInt": 93,
+      "unicodeName": "RIGHT SQUARE BRACKET"
     },
     "u005f": {
+      "kind": "char",
       "key": "_",
       "label": "_",
-      "codepoint": "U+005F",
-      "codepointInt": 95,
-      "unicodeName": "LOW LINE",
       "file": "character-u005f.svg",
       "width": 12,
       "height": 30,
@@ -11921,14 +11971,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+005F",
+      "codepointInt": 95,
+      "unicodeName": "LOW LINE"
     },
     "u0061": {
+      "kind": "char",
       "key": "a",
       "label": "a",
-      "codepoint": "U+0061",
-      "codepointInt": 97,
-      "unicodeName": "LATIN SMALL LETTER A",
       "file": "character-u0061.svg",
       "width": 12,
       "height": 30,
@@ -12185,14 +12236,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0061",
+      "codepointInt": 97,
+      "unicodeName": "LATIN SMALL LETTER A"
     },
     "u0062": {
+      "kind": "char",
       "key": "b",
       "label": "b",
-      "codepoint": "U+0062",
-      "codepointInt": 98,
-      "unicodeName": "LATIN SMALL LETTER B",
       "file": "character-u0062.svg",
       "width": 12,
       "height": 30,
@@ -12437,14 +12489,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0062",
+      "codepointInt": 98,
+      "unicodeName": "LATIN SMALL LETTER B"
     },
     "u0063": {
+      "kind": "char",
       "key": "c",
       "label": "c",
-      "codepoint": "U+0063",
-      "codepointInt": 99,
-      "unicodeName": "LATIN SMALL LETTER C",
       "file": "character-u0063.svg",
       "width": 12,
       "height": 30,
@@ -12641,14 +12694,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0063",
+      "codepointInt": 99,
+      "unicodeName": "LATIN SMALL LETTER C"
     },
     "u0064": {
+      "kind": "char",
       "key": "d",
       "label": "d",
-      "codepoint": "U+0064",
-      "codepointInt": 100,
-      "unicodeName": "LATIN SMALL LETTER D",
       "file": "character-u0064.svg",
       "width": 12,
       "height": 30,
@@ -12893,14 +12947,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0064",
+      "codepointInt": 100,
+      "unicodeName": "LATIN SMALL LETTER D"
     },
     "u0065": {
+      "kind": "char",
       "key": "e",
       "label": "e",
-      "codepoint": "U+0065",
-      "codepointInt": 101,
-      "unicodeName": "LATIN SMALL LETTER E",
       "file": "character-u0065.svg",
       "width": 12,
       "height": 30,
@@ -13157,14 +13212,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0065",
+      "codepointInt": 101,
+      "unicodeName": "LATIN SMALL LETTER E"
     },
     "u0066": {
+      "kind": "char",
       "key": "f",
       "label": "f",
-      "codepoint": "U+0066",
-      "codepointInt": 102,
-      "unicodeName": "LATIN SMALL LETTER F",
       "file": "character-u0066.svg",
       "width": 8,
       "height": 30,
@@ -13365,14 +13421,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0066",
+      "codepointInt": 102,
+      "unicodeName": "LATIN SMALL LETTER F"
     },
     "u0067": {
+      "kind": "char",
       "key": "g",
       "label": "g",
-      "codepoint": "U+0067",
-      "codepointInt": 103,
-      "unicodeName": "LATIN SMALL LETTER G",
       "file": "character-u0067.svg",
       "width": 12,
       "height": 30,
@@ -13801,14 +13858,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0067",
+      "codepointInt": 103,
+      "unicodeName": "LATIN SMALL LETTER G"
     },
     "u0068": {
+      "kind": "char",
       "key": "h",
       "label": "h",
-      "codepoint": "U+0068",
-      "codepointInt": 104,
-      "unicodeName": "LATIN SMALL LETTER H",
       "file": "character-u0068.svg",
       "width": 12,
       "height": 30,
@@ -14025,14 +14083,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0068",
+      "codepointInt": 104,
+      "unicodeName": "LATIN SMALL LETTER H"
     },
     "u0069": {
+      "kind": "char",
       "key": "i",
       "label": "i",
-      "codepoint": "U+0069",
-      "codepointInt": 105,
-      "unicodeName": "LATIN SMALL LETTER I",
       "file": "character-u0069.svg",
       "width": 4,
       "height": 30,
@@ -14197,14 +14256,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0069",
+      "codepointInt": 105,
+      "unicodeName": "LATIN SMALL LETTER I"
     },
     "u006a": {
+      "kind": "char",
       "key": "j",
       "label": "j",
-      "codepoint": "U+006A",
-      "codepointInt": 106,
-      "unicodeName": "LATIN SMALL LETTER J",
       "file": "character-u006a.svg",
       "width": 8,
       "height": 30,
@@ -14409,14 +14469,15 @@
           10,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+006A",
+      "codepointInt": 106,
+      "unicodeName": "LATIN SMALL LETTER J"
     },
     "u006b": {
+      "kind": "char",
       "key": "k",
       "label": "k",
-      "codepoint": "U+006B",
-      "codepointInt": 107,
-      "unicodeName": "LATIN SMALL LETTER K",
       "file": "character-u006b.svg",
       "width": 12,
       "height": 30,
@@ -14653,14 +14714,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+006B",
+      "codepointInt": 107,
+      "unicodeName": "LATIN SMALL LETTER K"
     },
     "u006c": {
+      "kind": "char",
       "key": "l",
       "label": "l",
-      "codepoint": "U+006C",
-      "codepointInt": 108,
-      "unicodeName": "LATIN SMALL LETTER L",
       "file": "character-u006c.svg",
       "width": 8,
       "height": 30,
@@ -14833,14 +14895,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+006C",
+      "codepointInt": 108,
+      "unicodeName": "LATIN SMALL LETTER L"
     },
     "u006d": {
+      "kind": "char",
       "key": "m",
       "label": "m",
-      "codepoint": "U+006D",
-      "codepointInt": 109,
-      "unicodeName": "LATIN SMALL LETTER M",
       "file": "character-u006d.svg",
       "width": 20,
       "height": 30,
@@ -15093,14 +15156,15 @@
           7,
           4
         ]
-      ]
+      ],
+      "codepoint": "U+006D",
+      "codepointInt": 109,
+      "unicodeName": "LATIN SMALL LETTER M"
     },
     "u006e": {
+      "kind": "char",
       "key": "n",
       "label": "n",
-      "codepoint": "U+006E",
-      "codepointInt": 110,
-      "unicodeName": "LATIN SMALL LETTER N",
       "file": "character-u006e.svg",
       "width": 12,
       "height": 30,
@@ -15305,14 +15369,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+006E",
+      "codepointInt": 110,
+      "unicodeName": "LATIN SMALL LETTER N"
     },
     "u006f": {
+      "kind": "char",
       "key": "o",
       "label": "o",
-      "codepoint": "U+006F",
-      "codepointInt": 111,
-      "unicodeName": "LATIN SMALL LETTER O",
       "file": "character-u006f.svg",
       "width": 12,
       "height": 30,
@@ -15545,14 +15610,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+006F",
+      "codepointInt": 111,
+      "unicodeName": "LATIN SMALL LETTER O"
     },
     "u0070": {
+      "kind": "char",
       "key": "p",
       "label": "p",
-      "codepoint": "U+0070",
-      "codepointInt": 112,
-      "unicodeName": "LATIN SMALL LETTER P",
       "file": "character-u0070.svg",
       "width": 12,
       "height": 30,
@@ -15797,14 +15863,15 @@
           10,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0070",
+      "codepointInt": 112,
+      "unicodeName": "LATIN SMALL LETTER P"
     },
     "u0071": {
+      "kind": "char",
       "key": "q",
       "label": "q",
-      "codepoint": "U+0071",
-      "codepointInt": 113,
-      "unicodeName": "LATIN SMALL LETTER Q",
       "file": "character-u0071.svg",
       "width": 12,
       "height": 30,
@@ -16049,14 +16116,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0071",
+      "codepointInt": 113,
+      "unicodeName": "LATIN SMALL LETTER Q"
     },
     "u0072": {
+      "kind": "char",
       "key": "r",
       "label": "r",
-      "codepoint": "U+0072",
-      "codepointInt": 114,
-      "unicodeName": "LATIN SMALL LETTER R",
       "file": "character-u0072.svg",
       "width": 8,
       "height": 30,
@@ -16217,14 +16285,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0072",
+      "codepointInt": 114,
+      "unicodeName": "LATIN SMALL LETTER R"
     },
     "u0073": {
+      "kind": "char",
       "key": "s",
       "label": "s",
-      "codepoint": "U+0073",
-      "codepointInt": 115,
-      "unicodeName": "LATIN SMALL LETTER S",
       "file": "character-u0073.svg",
       "width": 12,
       "height": 30,
@@ -16477,14 +16546,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0073",
+      "codepointInt": 115,
+      "unicodeName": "LATIN SMALL LETTER S"
     },
     "u0074": {
+      "kind": "char",
       "key": "t",
       "label": "t",
-      "codepoint": "U+0074",
-      "codepointInt": 116,
-      "unicodeName": "LATIN SMALL LETTER T",
       "file": "character-u0074.svg",
       "width": 8,
       "height": 30,
@@ -16685,14 +16755,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0074",
+      "codepointInt": 116,
+      "unicodeName": "LATIN SMALL LETTER T"
     },
     "u0075": {
+      "kind": "char",
       "key": "u",
       "label": "u",
-      "codepoint": "U+0075",
-      "codepointInt": 117,
-      "unicodeName": "LATIN SMALL LETTER U",
       "file": "character-u0075.svg",
       "width": 12,
       "height": 30,
@@ -16897,14 +16968,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0075",
+      "codepointInt": 117,
+      "unicodeName": "LATIN SMALL LETTER U"
     },
     "u0076": {
+      "kind": "char",
       "key": "v",
       "label": "v",
-      "codepoint": "U+0076",
-      "codepointInt": 118,
-      "unicodeName": "LATIN SMALL LETTER V",
       "file": "character-u0076.svg",
       "width": 12,
       "height": 30,
@@ -17125,14 +17197,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+0076",
+      "codepointInt": 118,
+      "unicodeName": "LATIN SMALL LETTER V"
     },
     "u0077": {
+      "kind": "char",
       "key": "w",
       "label": "w",
-      "codepoint": "U+0077",
-      "codepointInt": 119,
-      "unicodeName": "LATIN SMALL LETTER W",
       "file": "character-u0077.svg",
       "width": 20,
       "height": 30,
@@ -17385,14 +17458,15 @@
           7,
           4
         ]
-      ]
+      ],
+      "codepoint": "U+0077",
+      "codepointInt": 119,
+      "unicodeName": "LATIN SMALL LETTER W"
     },
     "u0078": {
+      "kind": "char",
       "key": "x",
       "label": "x",
-      "codepoint": "U+0078",
-      "codepointInt": 120,
-      "unicodeName": "LATIN SMALL LETTER X",
       "file": "character-u0078.svg",
       "width": 12,
       "height": 30,
@@ -17637,14 +17711,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0078",
+      "codepointInt": 120,
+      "unicodeName": "LATIN SMALL LETTER X"
     },
     "u0079": {
+      "kind": "char",
       "key": "y",
       "label": "y",
-      "codepoint": "U+0079",
-      "codepointInt": 121,
-      "unicodeName": "LATIN SMALL LETTER Y",
       "file": "character-u0079.svg",
       "width": 12,
       "height": 30,
@@ -17861,14 +17936,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0079",
+      "codepointInt": 121,
+      "unicodeName": "LATIN SMALL LETTER Y"
     },
     "u007a": {
+      "kind": "char",
       "key": "z",
       "label": "z",
-      "codepoint": "U+007A",
-      "codepointInt": 122,
-      "unicodeName": "LATIN SMALL LETTER Z",
       "file": "character-u007a.svg",
       "width": 12,
       "height": 30,
@@ -18121,14 +18197,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+007A",
+      "codepointInt": 122,
+      "unicodeName": "LATIN SMALL LETTER Z"
     },
     "u007b": {
+      "kind": "char",
       "key": "{",
       "label": "{",
-      "codepoint": "U+007B",
-      "codepointInt": 123,
-      "unicodeName": "LEFT CURLY BRACKET",
       "file": "character-u007b.svg",
       "width": 12,
       "height": 30,
@@ -18389,14 +18466,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+007B",
+      "codepointInt": 123,
+      "unicodeName": "LEFT CURLY BRACKET"
     },
     "u007c": {
+      "kind": "char",
       "key": "|",
       "label": "|",
-      "codepoint": "U+007C",
-      "codepointInt": 124,
-      "unicodeName": "VERTICAL LINE",
       "file": "character-u007c.svg",
       "width": 4,
       "height": 30,
@@ -18553,14 +18631,15 @@
           10,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+007C",
+      "codepointInt": 124,
+      "unicodeName": "VERTICAL LINE"
     },
     "u007d": {
+      "kind": "char",
       "key": "}",
       "label": "}",
-      "codepoint": "U+007D",
-      "codepointInt": 125,
-      "unicodeName": "RIGHT CURLY BRACKET",
       "file": "character-u007d.svg",
       "width": 12,
       "height": 30,
@@ -18821,14 +18900,15 @@
           10,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+007D",
+      "codepointInt": 125,
+      "unicodeName": "RIGHT CURLY BRACKET"
     },
     "u00a6": {
+      "kind": "char",
       "key": "¦",
       "label": "¦",
-      "codepoint": "U+00A6",
-      "codepointInt": 166,
-      "unicodeName": "BROKEN BAR",
       "file": "character-u00a6.svg",
       "width": 4,
       "height": 30,
@@ -18997,14 +19077,15 @@
           10,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+00A6",
+      "codepointInt": 166,
+      "unicodeName": "BROKEN BAR"
     },
     "u00a7": {
+      "kind": "char",
       "key": "§",
       "label": "§",
-      "codepoint": "U+00A7",
-      "codepointInt": 167,
-      "unicodeName": "SECTION SIGN",
       "file": "character-u00a7.svg",
       "width": 12,
       "height": 30,
@@ -19373,14 +19454,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+00A7",
+      "codepointInt": 167,
+      "unicodeName": "SECTION SIGN"
     },
     "u00e4": {
+      "kind": "char",
       "key": "ä",
       "label": "ä",
-      "codepoint": "U+00E4",
-      "codepointInt": 228,
-      "unicodeName": "LATIN SMALL LETTER A WITH DIAERESIS",
       "file": "character-u00e4.svg",
       "width": 12,
       "height": 30,
@@ -19725,14 +19807,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+00E4",
+      "codepointInt": 228,
+      "unicodeName": "LATIN SMALL LETTER A WITH DIAERESIS"
     },
     "u00eb": {
+      "kind": "char",
       "key": "ë",
       "label": "ë",
-      "codepoint": "U+00EB",
-      "codepointInt": 235,
-      "unicodeName": "LATIN SMALL LETTER E WITH DIAERESIS",
       "file": "character-u00eb.svg",
       "width": 12,
       "height": 30,
@@ -20077,14 +20160,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+00EB",
+      "codepointInt": 235,
+      "unicodeName": "LATIN SMALL LETTER E WITH DIAERESIS"
     },
     "u00ef": {
+      "kind": "char",
       "key": "ï",
       "label": "ï",
-      "codepoint": "U+00EF",
-      "codepointInt": 239,
-      "unicodeName": "LATIN SMALL LETTER I WITH DIAERESIS",
       "file": "character-u00ef.svg",
       "width": 12,
       "height": 30,
@@ -20281,14 +20365,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+00EF",
+      "codepointInt": 239,
+      "unicodeName": "LATIN SMALL LETTER I WITH DIAERESIS"
     },
     "u00f6": {
+      "kind": "char",
       "key": "ö",
       "label": "ö",
-      "codepoint": "U+00F6",
-      "codepointInt": 246,
-      "unicodeName": "LATIN SMALL LETTER O WITH DIAERESIS",
       "file": "character-u00f6.svg",
       "width": 12,
       "height": 30,
@@ -20585,14 +20670,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+00F6",
+      "codepointInt": 246,
+      "unicodeName": "LATIN SMALL LETTER O WITH DIAERESIS"
     },
     "u00f7": {
+      "kind": "char",
       "key": "÷",
       "label": "÷",
-      "codepoint": "U+00F7",
-      "codepointInt": 247,
-      "unicodeName": "DIVISION SIGN",
       "file": "character-u00f7.svg",
       "width": 12,
       "height": 30,
@@ -20773,14 +20859,15 @@
           7,
           1
         ]
-      ]
+      ],
+      "codepoint": "U+00F7",
+      "codepointInt": 247,
+      "unicodeName": "DIVISION SIGN"
     },
     "u00fc": {
+      "kind": "char",
       "key": "ü",
       "label": "ü",
-      "codepoint": "U+00FC",
-      "codepointInt": 252,
-      "unicodeName": "LATIN SMALL LETTER U WITH DIAERESIS",
       "file": "character-u00fc.svg",
       "width": 12,
       "height": 30,
@@ -21049,14 +21136,15 @@
           7,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+00FC",
+      "codepointInt": 252,
+      "unicodeName": "LATIN SMALL LETTER U WITH DIAERESIS"
     },
     "u0131": {
+      "kind": "char",
       "key": "ı",
       "label": "ı",
-      "codepoint": "U+0131",
-      "codepointInt": 305,
-      "unicodeName": "LATIN SMALL LETTER DOTLESS I",
       "file": "character-u0131.svg",
       "width": 4,
       "height": 30,
@@ -21189,14 +21277,15 @@
           7,
           0
         ]
-      ]
+      ],
+      "codepoint": "U+0131",
+      "codepointInt": 305,
+      "unicodeName": "LATIN SMALL LETTER DOTLESS I"
     },
     "u0133": {
+      "kind": "char",
       "key": "ĳ",
       "label": "ĳ",
-      "codepoint": "U+0133",
-      "codepointInt": 307,
-      "unicodeName": "LATIN SMALL LIGATURE IJ",
       "file": "character-u0133.svg",
       "width": 12,
       "height": 30,
@@ -21477,14 +21566,15 @@
           10,
           2
         ]
-      ]
+      ],
+      "codepoint": "U+0133",
+      "codepointInt": 307,
+      "unicodeName": "LATIN SMALL LIGATURE IJ"
     },
     "u20bf": {
+      "kind": "char",
       "key": "₿",
       "label": "₿",
-      "codepoint": "U+20BF",
-      "codepointInt": 8383,
-      "unicodeName": "BITCOIN SIGN",
       "file": "character-u20bf.svg",
       "width": 16,
       "height": 30,
@@ -21909,14 +21999,15 @@
           8,
           3
         ]
-      ]
+      ],
+      "codepoint": "U+20BF",
+      "codepointInt": 8383,
+      "unicodeName": "BITCOIN SIGN"
     },
     "u25a0": {
+      "kind": "char",
       "key": "■",
       "label": "■",
-      "codepoint": "U+25A0",
-      "codepointInt": 9632,
-      "unicodeName": "BLACK SQUARE",
       "file": "character-u25a0.svg",
       "width": 20,
       "height": 30,
@@ -22169,6 +22260,6342 @@
           8,
           4
         ]
+      ],
+      "codepoint": "U+25A0",
+      "codepointInt": 9632,
+      "unicodeName": "BLACK SQUARE"
+    }
+  },
+  "ligatures": {
+    "u0063-u0062": {
+      "kind": "liga",
+      "key": "cb",
+      "label": "cb",
+      "file": "ligature-u0063-u0062.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            20,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            20,
+            10
+          ]
+        ],
+        [
+          [
+            24,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            24,
+            19
+          ]
+        ],
+        [
+          [
+            20,
+            19
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            20,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ],
+        [
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            11,
+            9
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          20,
+          9,
+          28,
+          10
+        ],
+        [
+          24,
+          10,
+          28,
+          19
+        ],
+        [
+          20,
+          19,
+          28,
+          20
+        ],
+        [
+          11,
+          0,
+          16,
+          1
+        ],
+        [
+          11,
+          1,
+          12,
+          9
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        99,
+        98
+      ],
+      "sequenceKey": "u0063-u0062",
+      "unicodeName": "LATIN SMALL LETTER C + LATIN SMALL LETTER B",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 16, 1)",
+        "Rect x-edge off grid: 11 in rect (11, 1, 12, 9)"
+      ]
+    },
+    "u0063-u0068": {
+      "kind": "liga",
+      "key": "ch",
+      "label": "ch",
+      "file": "ligature-u0063-u0068.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ],
+        [
+          [
+            24,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            24,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            11,
+            10
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            17,
+            0
+          ],
+          [
+            17,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          16,
+          9,
+          28,
+          10
+        ],
+        [
+          24,
+          10,
+          28,
+          20
+        ],
+        [
+          11,
+          0,
+          12,
+          10
+        ],
+        [
+          11,
+          0,
+          17,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        99,
+        104
+      ],
+      "sequenceKey": "u0063-u0068",
+      "unicodeName": "LATIN SMALL LETTER C + LATIN SMALL LETTER H",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 12, 10)",
+        "Rect x-edge off grid: 11 in rect (11, 0, 17, 1)"
+      ]
+    },
+    "u0063-u006b": {
+      "kind": "liga",
+      "key": "ck",
+      "label": "ck",
+      "file": "ligature-u0063-u006b.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            24,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            24,
+            14
+          ]
+        ],
+        [
+          [
+            24,
+            15
+          ],
+          [
+            28,
+            15
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            24,
+            20
+          ]
+        ],
+        [
+          [
+            20,
+            14
+          ],
+          [
+            24,
+            14
+          ],
+          [
+            24,
+            15
+          ],
+          [
+            20,
+            15
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ],
+        [
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            11,
+            9
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          24,
+          9,
+          28,
+          14
+        ],
+        [
+          24,
+          15,
+          28,
+          20
+        ],
+        [
+          20,
+          14,
+          24,
+          15
+        ],
+        [
+          11,
+          0,
+          16,
+          1
+        ],
+        [
+          11,
+          1,
+          12,
+          9
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        99,
+        107
+      ],
+      "sequenceKey": "u0063-u006b",
+      "unicodeName": "LATIN SMALL LETTER C + LATIN SMALL LETTER K",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 16, 1)",
+        "Rect x-edge off grid: 11 in rect (11, 1, 12, 9)"
+      ]
+    },
+    "u0063-u0074": {
+      "kind": "liga",
+      "key": "ct",
+      "label": "ct",
+      "file": "ligature-u0063-u0074.svg",
+      "width": 24,
+      "height": 30,
+      "widthUnits": 6,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            20,
+            9
+          ],
+          [
+            24,
+            9
+          ],
+          [
+            24,
+            10
+          ],
+          [
+            20,
+            10
+          ]
+        ],
+        [
+          [
+            20,
+            19
+          ],
+          [
+            24,
+            19
+          ],
+          [
+            24,
+            20
+          ],
+          [
+            20,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            11,
+            10
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          20,
+          9,
+          24,
+          10
+        ],
+        [
+          20,
+          19,
+          24,
+          20
+        ],
+        [
+          11,
+          0,
+          12,
+          10
+        ],
+        [
+          11,
+          0,
+          20,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "sequence": [
+        99,
+        116
+      ],
+      "sequenceKey": "u0063-u0074",
+      "unicodeName": "LATIN SMALL LETTER C + LATIN SMALL LETTER T",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 12, 10)",
+        "Rect x-edge off grid: 11 in rect (11, 0, 20, 1)"
+      ]
+    },
+    "u0064-u0062": {
+      "kind": "liga",
+      "key": "db",
+      "label": "db",
+      "file": "ligature-u0064-u0062.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            8,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            9
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            8,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            8,
+            19
+          ],
+          [
+            8,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            20,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            20,
+            10
+          ]
+        ],
+        [
+          [
+            24,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            24,
+            19
+          ]
+        ],
+        [
+          [
+            20,
+            19
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            20,
+            20
+          ]
+        ],
+        [
+          [
+            12,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            16,
+            1
+          ],
+          [
+            12,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          8,
+          0,
+          12,
+          20
+        ],
+        [
+          0,
+          9,
+          8,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          0,
+          19,
+          8,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          20,
+          9,
+          28,
+          10
+        ],
+        [
+          24,
+          10,
+          28,
+          19
+        ],
+        [
+          20,
+          19,
+          28,
+          20
+        ],
+        [
+          12,
+          0,
+          16,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        100,
+        98
+      ],
+      "sequenceKey": "u0064-u0062",
+      "unicodeName": "LATIN SMALL LETTER D + LATIN SMALL LETTER B",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ]
+    },
+    "u0065-u0073": {
+      "kind": "liga",
+      "key": "es",
+      "label": "es",
+      "file": "ligature-u0065-u0073.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            19
+          ],
+          [
+            0,
+            19
+          ]
+        ],
+        [
+          [
+            8,
+            10
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            8,
+            14
+          ]
+        ],
+        [
+          [
+            0,
+            14
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ],
+        [
+          [
+            16,
+            10
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            14
+          ],
+          [
+            16,
+            14
+          ]
+        ],
+        [
+          [
+            16,
+            14
+          ],
+          [
+            28,
+            14
+          ],
+          [
+            28,
+            15
+          ],
+          [
+            16,
+            15
+          ]
+        ],
+        [
+          [
+            24,
+            15
+          ],
+          [
+            28,
+            15
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            24,
+            19
+          ]
+        ],
+        [
+          [
+            16,
+            19
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            19
+          ],
+          [
+            17,
+            19
+          ],
+          [
+            17,
+            20
+          ],
+          [
+            11,
+            20
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          19
+        ],
+        [
+          8,
+          10,
+          12,
+          14
+        ],
+        [
+          0,
+          14,
+          12,
+          15
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          9,
+          28,
+          10
+        ],
+        [
+          16,
+          10,
+          20,
+          14
+        ],
+        [
+          16,
+          14,
+          28,
+          15
+        ],
+        [
+          24,
+          15,
+          28,
+          19
+        ],
+        [
+          16,
+          19,
+          28,
+          20
+        ],
+        [
+          11,
+          19,
+          17,
+          20
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        101,
+        115
+      ],
+      "sequenceKey": "u0065-u0073",
+      "unicodeName": "LATIN SMALL LETTER E + LATIN SMALL LETTER S",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 19, 17, 20)"
+      ]
+    },
+    "u0066-u0069": {
+      "kind": "liga",
+      "key": "fi",
+      "label": "fi",
+      "file": "ligature-u0066-u0069.svg",
+      "width": 12,
+      "height": 30,
+      "widthUnits": 3,
+      "polys": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            9
+          ],
+          [
+            8,
+            9
+          ],
+          [
+            8,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            8,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            8,
+            20
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            4
+          ],
+          [
+            8,
+            4
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          0,
+          4,
+          20
+        ],
+        [
+          0,
+          0,
+          8,
+          1
+        ],
+        [
+          0,
+          9,
+          8,
+          10
+        ],
+        [
+          8,
+          9,
+          12,
+          20
+        ],
+        [
+          8,
+          0,
+          12,
+          4
+        ]
+      ],
+      "grid": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ]
+      ],
+      "sequence": [
+        102,
+        105
+      ],
+      "sequenceKey": "u0066-u0069",
+      "unicodeName": "LATIN SMALL LETTER F + LATIN SMALL LETTER I",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12
+      ]
+    },
+    "u0069-u0062": {
+      "kind": "liga",
+      "key": "ib",
+      "label": "ib",
+      "file": "ligature-u0069-u0062.svg",
+      "width": 20,
+      "height": 30,
+      "widthUnits": 5,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            4,
+            9
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            8,
+            20
+          ]
+        ],
+        [
+          [
+            12,
+            9
+          ],
+          [
+            20,
+            9
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            12,
+            10
+          ]
+        ],
+        [
+          [
+            16,
+            10
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            19
+          ],
+          [
+            16,
+            19
+          ]
+        ],
+        [
+          [
+            12,
+            19
+          ],
+          [
+            20,
+            19
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            12,
+            20
+          ]
+        ],
+        [
+          [
+            4,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          4,
+          20
+        ],
+        [
+          0,
+          0,
+          4,
+          4
+        ],
+        [
+          8,
+          0,
+          12,
+          20
+        ],
+        [
+          12,
+          9,
+          20,
+          10
+        ],
+        [
+          16,
+          10,
+          20,
+          19
+        ],
+        [
+          12,
+          19,
+          20,
+          20
+        ],
+        [
+          4,
+          0,
+          8,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "sequence": [
+        105,
+        98
+      ],
+      "sequenceKey": "u0069-u0062",
+      "unicodeName": "LATIN SMALL LETTER I + LATIN SMALL LETTER B",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20
+      ]
+    },
+    "u0069-u0068": {
+      "kind": "liga",
+      "key": "ih",
+      "label": "ih",
+      "file": "ligature-u0069-u0068.svg",
+      "width": 20,
+      "height": 30,
+      "widthUnits": 5,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            4,
+            9
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            8,
+            20
+          ]
+        ],
+        [
+          [
+            8,
+            9
+          ],
+          [
+            20,
+            9
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            8,
+            10
+          ]
+        ],
+        [
+          [
+            16,
+            10
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            4,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          4,
+          20
+        ],
+        [
+          0,
+          0,
+          4,
+          4
+        ],
+        [
+          8,
+          0,
+          12,
+          20
+        ],
+        [
+          8,
+          9,
+          20,
+          10
+        ],
+        [
+          16,
+          10,
+          20,
+          20
+        ],
+        [
+          4,
+          0,
+          8,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "sequence": [
+        105,
+        104
+      ],
+      "sequenceKey": "u0069-u0068",
+      "unicodeName": "LATIN SMALL LETTER I + LATIN SMALL LETTER H",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20
+      ]
+    },
+    "u0069-u006a": {
+      "kind": "liga",
+      "key": "ij",
+      "label": "ij",
+      "file": "ligature-u0069-u006a.svg",
+      "width": 12,
+      "height": 30,
+      "widthUnits": 3,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            4,
+            9
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        [
+          [
+            8,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            30
+          ],
+          [
+            8,
+            30
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            4
+          ],
+          [
+            8,
+            4
+          ]
+        ],
+        [
+          [
+            4,
+            29
+          ],
+          [
+            8,
+            29
+          ],
+          [
+            8,
+            30
+          ],
+          [
+            4,
+            30
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          4,
+          20
+        ],
+        [
+          0,
+          0,
+          4,
+          4
+        ],
+        [
+          8,
+          9,
+          12,
+          30
+        ],
+        [
+          8,
+          0,
+          12,
+          4
+        ],
+        [
+          4,
+          29,
+          8,
+          30
+        ]
+      ],
+      "grid": [
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          10,
+          1
+        ],
+        [
+          10,
+          2
+        ]
+      ],
+      "sequence": [
+        105,
+        106
+      ],
+      "sequenceKey": "u0069-u006a",
+      "unicodeName": "LATIN SMALL LETTER I + LATIN SMALL LETTER J",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12
+      ]
+    },
+    "u0069-u006b": {
+      "kind": "liga",
+      "key": "ik",
+      "label": "ik",
+      "file": "ligature-u0069-u006b.svg",
+      "width": 20,
+      "height": 30,
+      "widthUnits": 5,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            4,
+            9
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        [
+          [
+            8,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            8,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            20,
+            9
+          ],
+          [
+            20,
+            14
+          ],
+          [
+            16,
+            14
+          ]
+        ],
+        [
+          [
+            16,
+            15
+          ],
+          [
+            20,
+            15
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            12,
+            14
+          ],
+          [
+            16,
+            14
+          ],
+          [
+            16,
+            15
+          ],
+          [
+            12,
+            15
+          ]
+        ],
+        [
+          [
+            4,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            4,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          4,
+          20
+        ],
+        [
+          0,
+          0,
+          4,
+          4
+        ],
+        [
+          8,
+          0,
+          12,
+          20
+        ],
+        [
+          16,
+          9,
+          20,
+          14
+        ],
+        [
+          16,
+          15,
+          20,
+          20
+        ],
+        [
+          12,
+          14,
+          16,
+          15
+        ],
+        [
+          4,
+          0,
+          8,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "sequence": [
+        105,
+        107
+      ],
+      "sequenceKey": "u0069-u006b",
+      "unicodeName": "LATIN SMALL LETTER I + LATIN SMALL LETTER K",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20
+      ]
+    },
+    "u0073-u0068": {
+      "kind": "liga",
+      "key": "sh",
+      "label": "sh",
+      "file": "ligature-u0073-u0068.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        [
+          [
+            0,
+            14
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        [
+          [
+            8,
+            15
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            8,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ],
+        [
+          [
+            24,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            24,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            11,
+            10
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            17,
+            0
+          ],
+          [
+            17,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          14
+        ],
+        [
+          0,
+          14,
+          12,
+          15
+        ],
+        [
+          8,
+          15,
+          12,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          16,
+          9,
+          28,
+          10
+        ],
+        [
+          24,
+          10,
+          28,
+          20
+        ],
+        [
+          11,
+          0,
+          12,
+          10
+        ],
+        [
+          11,
+          0,
+          17,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "sequence": [
+        115,
+        104
+      ],
+      "sequenceKey": "u0073-u0068",
+      "unicodeName": "LATIN SMALL LETTER S + LATIN SMALL LETTER H",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 12, 10)",
+        "Rect x-edge off grid: 11 in rect (11, 0, 17, 1)"
+      ]
+    },
+    "u0073-u0074": {
+      "kind": "liga",
+      "key": "st",
+      "label": "st",
+      "file": "ligature-u0073-u0074.svg",
+      "width": 24,
+      "height": 30,
+      "widthUnits": 6,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        [
+          [
+            0,
+            14
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        [
+          [
+            8,
+            15
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            8,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            20,
+            9
+          ],
+          [
+            24,
+            9
+          ],
+          [
+            24,
+            10
+          ],
+          [
+            20,
+            10
+          ]
+        ],
+        [
+          [
+            20,
+            19
+          ],
+          [
+            24,
+            19
+          ],
+          [
+            24,
+            20
+          ],
+          [
+            20,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            11,
+            10
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            20,
+            0
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          14
+        ],
+        [
+          0,
+          14,
+          12,
+          15
+        ],
+        [
+          8,
+          15,
+          12,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          0,
+          20,
+          20
+        ],
+        [
+          20,
+          9,
+          24,
+          10
+        ],
+        [
+          20,
+          19,
+          24,
+          20
+        ],
+        [
+          11,
+          0,
+          12,
+          10
+        ],
+        [
+          11,
+          0,
+          20,
+          1
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "sequence": [
+        115,
+        116
+      ],
+      "sequenceKey": "u0073-u0074",
+      "unicodeName": "LATIN SMALL LETTER S + LATIN SMALL LETTER T",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 12, 10)",
+        "Rect x-edge off grid: 11 in rect (11, 0, 20, 1)"
+      ]
+    },
+    "u0079-u0070": {
+      "kind": "liga",
+      "key": "yp",
+      "label": "yp",
+      "file": "ligature-u0079-u0070.svg",
+      "width": 28,
+      "height": 30,
+      "widthUnits": 7,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            4,
+            9
+          ],
+          [
+            4,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            8,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            30
+          ],
+          [
+            8,
+            30
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ],
+        [
+          [
+            16,
+            10
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            30
+          ],
+          [
+            16,
+            30
+          ]
+        ],
+        [
+          [
+            24,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            24,
+            19
+          ]
+        ],
+        [
+          [
+            16,
+            19
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            29
+          ],
+          [
+            17,
+            29
+          ],
+          [
+            17,
+            30
+          ],
+          [
+            11,
+            30
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          4,
+          20
+        ],
+        [
+          8,
+          9,
+          12,
+          30
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          9,
+          28,
+          10
+        ],
+        [
+          16,
+          10,
+          20,
+          30
+        ],
+        [
+          24,
+          10,
+          28,
+          19
+        ],
+        [
+          16,
+          19,
+          28,
+          20
+        ],
+        [
+          11,
+          29,
+          17,
+          30
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ]
+      ],
+      "sequence": [
+        121,
+        112
+      ],
+      "sequenceKey": "u0079-u0070",
+      "unicodeName": "LATIN SMALL LETTER Y + LATIN SMALL LETTER P",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 29, 17, 30)"
+      ]
+    },
+    "u0073-u0063-u0068": {
+      "kind": "liga",
+      "key": "sch",
+      "label": "sch",
+      "file": "ligature-u0073-u0063-u0068.svg",
+      "width": 44,
+      "height": 30,
+      "widthUnits": 11,
+      "polys": [
+        [
+          [
+            0,
+            9
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            0,
+            10
+          ]
+        ],
+        [
+          [
+            0,
+            10
+          ],
+          [
+            4,
+            10
+          ],
+          [
+            4,
+            14
+          ],
+          [
+            0,
+            14
+          ]
+        ],
+        [
+          [
+            0,
+            14
+          ],
+          [
+            12,
+            14
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            0,
+            15
+          ]
+        ],
+        [
+          [
+            8,
+            15
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            8,
+            19
+          ]
+        ],
+        [
+          [
+            0,
+            19
+          ],
+          [
+            12,
+            19
+          ],
+          [
+            12,
+            20
+          ],
+          [
+            0,
+            20
+          ]
+        ],
+        [
+          [
+            16,
+            9
+          ],
+          [
+            28,
+            9
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            16,
+            10
+          ]
+        ],
+        [
+          [
+            16,
+            10
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            19
+          ],
+          [
+            16,
+            19
+          ]
+        ],
+        [
+          [
+            16,
+            19
+          ],
+          [
+            28,
+            19
+          ],
+          [
+            28,
+            20
+          ],
+          [
+            16,
+            20
+          ]
+        ],
+        [
+          [
+            32,
+            0
+          ],
+          [
+            36,
+            0
+          ],
+          [
+            36,
+            20
+          ],
+          [
+            32,
+            20
+          ]
+        ],
+        [
+          [
+            32,
+            9
+          ],
+          [
+            44,
+            9
+          ],
+          [
+            44,
+            10
+          ],
+          [
+            32,
+            10
+          ]
+        ],
+        [
+          [
+            40,
+            10
+          ],
+          [
+            44,
+            10
+          ],
+          [
+            44,
+            20
+          ],
+          [
+            40,
+            20
+          ]
+        ],
+        [
+          [
+            11,
+            0
+          ],
+          [
+            32,
+            0
+          ],
+          [
+            32,
+            1
+          ],
+          [
+            11,
+            1
+          ]
+        ],
+        [
+          [
+            11,
+            1
+          ],
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            11,
+            9
+          ]
+        ]
+      ],
+      "rects": [
+        [
+          0,
+          9,
+          12,
+          10
+        ],
+        [
+          0,
+          10,
+          4,
+          14
+        ],
+        [
+          0,
+          14,
+          12,
+          15
+        ],
+        [
+          8,
+          15,
+          12,
+          19
+        ],
+        [
+          0,
+          19,
+          12,
+          20
+        ],
+        [
+          16,
+          9,
+          28,
+          10
+        ],
+        [
+          16,
+          10,
+          20,
+          19
+        ],
+        [
+          16,
+          19,
+          28,
+          20
+        ],
+        [
+          32,
+          0,
+          36,
+          20
+        ],
+        [
+          32,
+          9,
+          44,
+          10
+        ],
+        [
+          40,
+          10,
+          44,
+          20
+        ],
+        [
+          11,
+          0,
+          32,
+          1
+        ],
+        [
+          11,
+          1,
+          12,
+          9
+        ]
+      ],
+      "grid": [
+        [
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "activeCells": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          10
+        ]
+      ],
+      "sequence": [
+        115,
+        99,
+        104
+      ],
+      "sequenceKey": "u0073-u0063-u0068",
+      "unicodeName": "LATIN SMALL LETTER S + LATIN SMALL LETTER C + LATIN SMALL LETTER H",
+      "xBreaks": [
+        0,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        28,
+        32,
+        36,
+        40,
+        44
+      ],
+      "warnings": [
+        "Rect x-edge off grid: 11 in rect (11, 0, 32, 1)",
+        "Rect x-edge off grid: 11 in rect (11, 1, 12, 9)"
       ]
     }
   },
@@ -22266,6 +28693,40 @@
       "ĳ": "u0133",
       "₿": "u20bf",
       "■": "u25a0"
+    },
+    "ligaturesByKey": {
+      "cb": "u0063-u0062",
+      "ch": "u0063-u0068",
+      "ck": "u0063-u006b",
+      "ct": "u0063-u0074",
+      "db": "u0064-u0062",
+      "es": "u0065-u0073",
+      "fi": "u0066-u0069",
+      "ib": "u0069-u0062",
+      "ih": "u0069-u0068",
+      "ij": "u0069-u006a",
+      "ik": "u0069-u006b",
+      "sh": "u0073-u0068",
+      "st": "u0073-u0074",
+      "yp": "u0079-u0070",
+      "sch": "u0073-u0063-u0068"
+    },
+    "ligaturesBySequence": {
+      "u0063-u0062": "u0063-u0062",
+      "u0063-u0068": "u0063-u0068",
+      "u0063-u006b": "u0063-u006b",
+      "u0063-u0074": "u0063-u0074",
+      "u0064-u0062": "u0064-u0062",
+      "u0065-u0073": "u0065-u0073",
+      "u0066-u0069": "u0066-u0069",
+      "u0069-u0062": "u0069-u0062",
+      "u0069-u0068": "u0069-u0068",
+      "u0069-u006a": "u0069-u006a",
+      "u0069-u006b": "u0069-u006b",
+      "u0073-u0068": "u0073-u0068",
+      "u0073-u0074": "u0073-u0074",
+      "u0079-u0070": "u0079-u0070",
+      "u0073-u0063-u0068": "u0073-u0063-u0068"
     }
   }
 }
