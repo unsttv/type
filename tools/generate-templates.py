@@ -6,6 +6,7 @@ Outputs:
 1) templates/element/character.php      (CakePHP element, reads SVG from ./src at runtime)
 2) templates/_character.svg.twig        (Twig partial, reads SVG via Twig `source()` from a Twig path alias)
 3) templates/_letter-sample.md.twig     (Markdown Twig partial: one image per line for ALL glyphs in ./src)
+4) config/unst.php                      (runtime-friendly CakePHP config export)
 
 Filename schemes supported in ./src:
 - New:
@@ -24,7 +25,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 # New filename patterns
@@ -114,6 +115,198 @@ def key_sort_tuple(key: str) -> Tuple[int, Tuple[int, ...]]:
 
 def twig_escape_single_quoted(s: str) -> str:
     return s.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def _is_printable_char(ch: str) -> bool:
+    return ch.isprintable() and ch not in {"\n", "\r", "\t", "\x0b", "\x0c"}
+
+
+def _group_runtime_chars(svg_map: Dict[str, str]) -> Dict[str, Any]:
+    singles = sorted((k for k in svg_map.keys() if len(k) == 1 and _is_printable_char(k)), key=lambda ch: ord(ch))
+
+    upper: List[str] = []
+    lower: List[str] = []
+    digits: List[str] = []
+    punct: List[str] = []
+    other: List[str] = []
+
+    codepoints: List[int] = []
+    char_to_filename: Dict[str, str] = {}
+    char_to_unicode: Dict[str, str] = {}
+
+    for ch in singles:
+        cp = ord(ch)
+        codepoints.append(cp)
+        char_to_filename[ch] = svg_map[ch]
+        char_to_unicode[ch] = f"U+{cp:04X}"
+
+        if "A" <= ch <= "Z":
+            upper.append(ch)
+        elif "a" <= ch <= "z":
+            lower.append(ch)
+        elif "0" <= ch <= "9":
+            digits.append(ch)
+        elif ch.isprintable() and not ch.isalnum() and not ch.isspace():
+            punct.append(ch)
+        else:
+            other.append(ch)
+
+    all_chars = upper + lower + digits + punct + other
+
+    return {
+        "all": "".join(all_chars),
+        "uppercase": "".join(upper),
+        "lowercase": "".join(lower),
+        "digits": "".join(digits),
+        "punct": "".join(punct),
+        "other": "".join(other),
+        "codepoints": codepoints,
+        "charToFilename": char_to_filename,
+        "charToUnicode": char_to_unicode,
+    }
+
+
+def _codepoints_to_ranges(codepoints: List[int]) -> List[List[int]]:
+    if not codepoints:
+        return []
+
+    cps = sorted(set(codepoints))
+    ranges: List[List[int]] = []
+
+    start = prev = cps[0]
+    for cp in cps[1:]:
+        if cp == prev + 1:
+            prev = cp
+            continue
+        ranges.append([start, prev])
+        start = prev = cp
+
+    ranges.append([start, prev])
+    return ranges
+
+
+def _php_scalar(value: Any, indent: int = 0) -> str:
+    pad = " " * indent
+    next_pad = " " * (indent + 4)
+
+    if value is None:
+        return "null"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return repr(value)
+    if isinstance(value, str):
+        escaped = (
+            value.replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+        )
+        return f"'{escaped}'"
+
+    if isinstance(value, list):
+        if not value:
+            return "[]"
+        lines = ["["]
+        for item in value:
+            lines.append(f"{next_pad}{_php_scalar(item, indent + 4)},")
+        lines.append(f"{pad}]")
+        return "\n".join(lines)
+
+    if isinstance(value, dict):
+        if not value:
+            return "[]"
+        lines = ["["]
+        for k, v in value.items():
+            lines.append(f"{next_pad}{_php_scalar(str(k))} => {_php_scalar(v, indent + 4)},")
+        lines.append(f"{pad}]")
+        return "\n".join(lines)
+
+    raise TypeError(f"Unsupported value for PHP export: {type(value)!r}")
+
+
+def build_cake_config_payload(svg_map: Dict[str, str]) -> Dict[str, Any]:
+    runtime = _group_runtime_chars(svg_map)
+    codepoints = runtime["codepoints"]
+    unicode_ranges = _codepoints_to_ranges(codepoints)
+
+    ligature_keys = sorted([k for k in svg_map.keys() if len(k) > 1], key=key_sort_tuple)
+
+    ligatures: Dict[str, Dict[str, Any]] = {}
+    for key in ligature_keys:
+        ligatures[key] = {
+            "sequence": key,
+            "chars": list(key),
+            "codepoints": [ord(ch) for ch in key],
+            "unicode": [f"U+{ord(ch):04X}" for ch in key],
+            "filename": svg_map[key],
+        }
+
+    glyphs: Dict[str, Dict[str, Any]] = {}
+    for key in sorted(svg_map.keys(), key=key_sort_tuple):
+        glyphs[key] = {
+            "key": key,
+            "filename": svg_map[key],
+            "isLigature": len(key) > 1,
+            "length": len(key),
+            "chars": list(key),
+            "codepoints": [ord(ch) for ch in key],
+            "unicode": [f"U+{ord(ch):04X}" for ch in key],
+        }
+
+    return {
+        "Unst": {
+            "glyphCount": len(svg_map),
+            "singleGlyphCount": sum(1 for k in svg_map if len(k) == 1),
+            "ligatureCount": sum(1 for k in svg_map if len(k) > 1),
+
+            "chars": runtime["all"],
+            "uppercase": runtime["uppercase"],
+            "lowercase": runtime["lowercase"],
+            "digits": runtime["digits"],
+            "punct": runtime["punct"],
+            "other": runtime["other"],
+
+            "codepoints": codepoints,
+            "unicodeRanges": unicode_ranges,
+
+            "charToFilename": runtime["charToFilename"],
+            "charToUnicode": runtime["charToUnicode"],
+
+            "ligatureKeys": ligature_keys,
+            "ligatures": ligatures,
+
+            "svgMap": dict(sorted(svg_map.items(), key=lambda kv: key_sort_tuple(kv[0]))),
+            "glyphs": glyphs,
+
+            "hasUppercase": bool(runtime["uppercase"]),
+            "hasLowercase": bool(runtime["lowercase"]),
+            "hasDigits": bool(runtime["digits"]),
+            "hasPunct": bool(runtime["punct"]),
+        }
+    }
+
+
+def write_cake_config(svg_map: Dict[str, str], out_path: Path) -> None:
+    payload = build_cake_config_payload(svg_map)
+
+    lines: List[str] = []
+    lines.append("<?php")
+    lines.append("declare(strict_types=1);")
+    lines.append("")
+    lines.append("// Auto-generated by tools/generate-templates.py")
+    lines.append("// Runtime-friendly config for CakePHP/plugin usage.")
+    lines.append("")
+    lines.append("return " + _php_scalar(payload, 0) + ";")
+    lines.append("")
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def build_twig_template(svg_map: Dict[str, str]) -> str:
@@ -318,12 +511,14 @@ def main() -> None:
     src_dir = root / "src"
     php_dir = root / "templates" / "element"
     twig_dir = root / "templates"
+    config_path = root / "config" / "unst.php"
 
     if not src_dir.exists():
         raise SystemExit(f"Source directory not found: {src_dir}")
 
     php_dir.mkdir(parents=True, exist_ok=True)
     twig_dir.mkdir(parents=True, exist_ok=True)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
 
     svg_map = collect_svg_map(src_dir)
     if not svg_map:
@@ -339,6 +534,7 @@ def main() -> None:
     twig_path.write_text(build_twig_template(svg_map), encoding="utf-8")
     php_path.write_text(build_cake_template(), encoding="utf-8")
     md_path.write_text(build_letter_sample_md_twig(svg_map), encoding="utf-8")
+    write_cake_config(svg_map, config_path)
 
     single_count = sum(1 for k in svg_map if len(k) == 1)
     liga_count = sum(1 for k in svg_map if len(k) > 1)
@@ -346,6 +542,7 @@ def main() -> None:
     print(f"Wrote Twig template: {twig_path}")
     print(f"Wrote CakePHP template: {php_path}")
     print(f"Wrote Markdown Twig template: {md_path}")
+    print(f"Wrote CakePHP config: {config_path}")
     print(f"Indexed {len(svg_map)} glyphs from {src_dir} ({single_count} single, {liga_count} ligatures)")
 
 
