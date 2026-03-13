@@ -11,6 +11,64 @@
             --hght: 100;
             --size: 72;
             --lh: 1.2;
+
+            --bg: #f6f7fb;
+            --panel: #ffffff;
+            --panel-2: #f3f5f9;
+            --text: #111318;
+            --muted: #5f6775;
+            --border: #d8dde6;
+            --accent: #2f6feb;
+            --shadow: 0 8px 24px rgba(0,0,0,.06);
+
+            --sample-grid: rgba(0,0,0,0.06);
+            --sample-border: #d7d7d7;
+            --pill-bg: #111;
+            --pill-fg: #fff;
+        }
+
+        @media (prefers-color-scheme: dark){
+            :root{
+                --bg: #0d1117;
+                --panel: #161b22;
+                --panel-2: #0f141b;
+                --text: #e6edf3;
+                --muted: #9aa4b2;
+                --border: #2a3340;
+                --accent: #58a6ff;
+                --shadow: 0 10px 30px rgba(0,0,0,.35);
+
+                --sample-grid: rgba(255,255,255,0.08);
+                --sample-border: #2a3340;
+                --pill-bg: #e6edf3;
+                --pill-fg: #0d1117;
+            }
+        }
+
+        html[data-theme="light"]{
+            color-scheme: light;
+        }
+
+        html[data-theme="dark"]{
+            color-scheme: dark;
+
+            --bg: #0d1117;
+            --panel: #161b22;
+            --panel-2: #0f141b;
+            --text: #e6edf3;
+            --muted: #9aa4b2;
+            --border: #2a3340;
+            --accent: #58a6ff;
+            --shadow: 0 10px 30px rgba(0,0,0,.35);
+
+            --sample-grid: rgba(255,255,255,0.08);
+            --sample-border: #2a3340;
+            --pill-bg: #e6edf3;
+            --pill-fg: #0d1117;
+        }
+
+        *{
+            box-sizing: border-box;
         }
 
         @font-face{
@@ -24,42 +82,68 @@
             font-display: swap;
         }
 
+        html, body{
+            min-height: 100%;
+        }
+
         body{
             margin:0;
+            min-height: 100vh;
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-            background:#f6f6f6;
-            color:#111;
+            background: var(--bg);
+            color: var(--text);
         }
 
         .wrap{
-            max-width: 1100px;
-            margin: 24px auto;
-            padding: 0 16px 40px;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 16px 16px 40px;
         }
 
-        .card{
-            background:#fff;
-            border:1px solid #ddd;
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        .page-title{
+            margin: 0 0 14px;
+            font-size: 18px;
         }
 
         .grid{
             display:grid;
             grid-template-columns: 1fr;
-            gap: 14px;
+            gap: 16px;
+            align-items: start;
         }
 
-        @media (min-width: 860px){
-            .grid{ grid-template-columns: 340px 1fr; }
+        @media (min-width: 980px){
+            .grid{
+                grid-template-columns: 360px minmax(0, 1fr);
+            }
+        }
+
+        .card{
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: var(--shadow);
+            min-width: 0;
+        }
+
+        .controls{
+            align-self: start;
+        }
+
+        @media (min-width: 980px){
+            .controls{
+                position: sticky;
+                top: 16px;
+            }
         }
 
         .controls label{
             display:block;
             font-size: 13px;
             margin: 10px 0 6px;
-            color:#333;
+            color: var(--muted);
         }
 
         .row{
@@ -72,10 +156,17 @@
             width: 100%;
         }
 
+        input[type="range"],
+        textarea,
+        select,
+        button{
+            accent-color: var(--accent);
+        }
+
         .pill{
             font-variant-numeric: tabular-nums;
-            background:#111;
-            color:#fff;
+            background: var(--pill-bg);
+            color: var(--pill-fg);
             padding: 2px 8px;
             border-radius: 999px;
             font-size: 12px;
@@ -90,28 +181,43 @@
             margin-top: 12px;
         }
 
-        button{
-            border:1px solid #ccc;
-            background:#fafafa;
+        button,
+        select{
+            border: 1px solid var(--border);
+            background: var(--panel-2);
+            color: var(--text);
             border-radius: 10px;
             padding: 8px 10px;
+            font: inherit;
+        }
+
+        button{
             cursor:pointer;
             font-size: 13px;
         }
-        button:hover{ background:#f0f0f0; }
+
+        button:hover{
+            border-color: var(--accent);
+        }
+
+        select{
+            width: 100%;
+            height: 38px;
+        }
 
         .sample{
             background: repeating-linear-gradient(
                     0deg,
-                    rgba(0,0,0,0.06),
-                    rgba(0,0,0,0.06) 1px,
+                    var(--sample-grid),
+                    var(--sample-grid) 1px,
                     transparent 1px,
                     transparent 20px
             );
             border-radius: 14px;
             padding: 18px;
-            border: 1px dashed #d7d7d7;
-            overflow:auto;
+            border: 1px dashed var(--sample-border);
+            overflow: auto;
+            min-height: 360px;
         }
 
         .text{
@@ -120,11 +226,23 @@
             line-height: var(--lh);
             white-space: pre-wrap;
             word-break: break-word;
+            outline: none;
+            min-height: 280px;
 
-            /* Variable font axes */
             font-variation-settings:
                     "wdth" var(--wdth),
                     "hght" var(--hght);
+        }
+
+        .text:focus{
+            box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--accent) 55%, transparent);
+            border-radius: 8px;
+        }
+
+        .helper{
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--muted);
         }
 
         .meta{
@@ -133,32 +251,57 @@
             flex-wrap: wrap;
             margin-top: 10px;
             font-size: 12px;
-            color:#444;
+            color: var(--muted);
         }
+
         .meta code{
-            background:#eee;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            color: var(--text);
             padding: 2px 6px;
             border-radius: 6px;
         }
 
         textarea{
             width:100%;
-            height: 160px;
+            height: 180px;
             resize: vertical;
-            border:1px solid #ddd;
+            border:1px solid var(--border);
             border-radius: 12px;
             padding: 10px 12px;
             font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
             box-sizing: border-box;
+            background: var(--panel-2);
+            color: var(--text);
+        }
+
+        textarea:focus,
+        select:focus{
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+        }
+
+        .field{
+            margin-top: 12px;
         }
     </style>
 </head>
 <body>
 <div class="wrap">
-    <h1 style="margin:0 0 14px;font-size:18px;">UNST variable font tester</h1>
+    <h1 class="page-title">UNST variable font tester</h1>
 
     <div class="grid">
         <div class="card controls">
+            <label for="themeMode">Theme</label>
+            <div class="field">
+                <select id="themeMode">
+                    <option value="device" selected>Device</option>
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+
             <label for="wdth">Width axis <code>"wdth"</code> (25–400)</label>
             <div class="row">
                 <input id="wdth" type="range" min="25" max="400" value="100" />
@@ -191,7 +334,7 @@
                 <button type="button" data-preset="400,400">Max</button>
             </div>
 
-            <div style="margin-top:12px">
+            <div class="field">
                 <label for="input">Sample text</label>
                 <textarea id="input" spellcheck="false">Loading glyphs.json… (if this stays, open via a local server or paste a file via a picker)</textarea>
             </div>
@@ -199,7 +342,19 @@
 
         <div class="card">
             <div class="sample">
-                <div class="text" id="out"></div>
+                <div
+                        class="text"
+                        id="out"
+                        contenteditable="true"
+                        spellcheck="false"
+                        role="textbox"
+                        aria-multiline="true"
+                        aria-label="Editable font sample"
+                ></div>
+            </div>
+
+            <div class="helper">
+                You can edit the sample here directly, or in the text field on the left.
             </div>
 
             <div class="meta" id="meta">
@@ -213,8 +368,10 @@
 </div>
 
 <script>
+    const THEME_STORAGE_KEY = "unst-letter-sample-theme";
     const root = document.documentElement;
 
+    const elTheme = document.getElementById("themeMode");
     const elWdth = document.getElementById("wdth");
     const elHght = document.getElementById("hght");
     const elSize = document.getElementById("size");
@@ -231,15 +388,57 @@
     const lhSuggest = document.getElementById("lhSuggest");
 
     let userEditedInput = false;
+    let syncingFromTextarea = false;
+    let syncingFromSample = false;
 
-    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function clamp(n, a, b){
+        return Math.max(a, Math.min(b, n));
+    }
 
     function suggestedLineHeight(hght){
         const t = hght / 100;
         return clamp(1.2 * t, 0.85, 4.0);
     }
 
-    function sync(){
+    function applyTheme(mode, persist = true){
+        if (mode === "device") {
+            document.documentElement.removeAttribute("data-theme");
+        } else {
+            document.documentElement.setAttribute("data-theme", mode);
+        }
+
+        elTheme.value = mode;
+
+        if (persist) {
+            try {
+                localStorage.setItem(THEME_STORAGE_KEY, mode);
+            } catch (_) {}
+        }
+    }
+
+    function loadTheme(){
+        try {
+            const saved = localStorage.getItem(THEME_STORAGE_KEY);
+            if (saved === "light" || saved === "dark" || saved === "device") {
+                applyTheme(saved, false);
+                return;
+            }
+        } catch (_) {}
+        applyTheme("device", false);
+    }
+
+    function getSampleText(){
+        return out.textContent ?? "";
+    }
+
+    function setSampleText(text){
+        const normalized = String(text ?? "");
+        if (getSampleText() !== normalized) {
+            out.textContent = normalized;
+        }
+    }
+
+    function syncStyleOnly(){
         const wdth = parseInt(elWdth.value, 10);
         const hght = parseInt(elHght.value, 10);
         const size = parseInt(elSize.value, 10);
@@ -261,15 +460,29 @@
         root.style.setProperty("--size", size);
         root.style.setProperty("--lh", lh);
 
-        out.textContent = input.value;
-
         cssOut.textContent = `font-variation-settings: "wdth" ${wdth}, "hght" ${hght};`;
         lhSuggest.textContent = suggestedLineHeight(hght).toFixed(2);
     }
 
-    // -----------------------------
-    // Build sample from glyphs.json
-    // -----------------------------
+    function syncFromTextarea(){
+        syncingFromTextarea = true;
+        setSampleText(input.value);
+        syncStyleOnly();
+        syncingFromTextarea = false;
+    }
+
+    function syncFromSample(){
+        syncingFromSample = true;
+        input.value = getSampleText();
+        syncStyleOnly();
+        syncingFromSample = false;
+    }
+
+    function syncAll(){
+        setSampleText(input.value);
+        syncStyleOnly();
+    }
+
     function uniqSorted(nums){
         return Array.from(new Set(nums)).sort((a,b) => a - b);
     }
@@ -281,15 +494,6 @@
         }).join("");
     }
 
-    function chunkStringByCodepoints(str, chunkSize = 40){
-        const chars = Array.from(str);
-        const lines = [];
-        for (let i = 0; i < chars.length; i += chunkSize){
-            lines.push(chars.slice(i, i + chunkSize).join(""));
-        }
-        return lines;
-    }
-
     function safeCp(ch){
         try { return ch.codePointAt(0); } catch { return null; }
     }
@@ -298,21 +502,19 @@
         const cps = [];
         if (!data || typeof data !== "object" || !data.glyphs) return cps;
 
-        // Preferred: indices.byChar
         if (data.indices && data.indices.byChar && typeof data.indices.byChar === "object") {
             for (const ch of Object.keys(data.indices.byChar)) {
                 const cp = safeCp(ch);
                 if (cp !== null && cp >= 32 && !/\s/.test(ch)) cps.push(cp);
-                if (ch === " ") cps.push(32); // keep space if present
+                if (ch === " ") cps.push(32);
             }
             return uniqSorted(cps);
         }
 
-        // Fallback: iterate glyph records
         for (const rec of Object.values(data.glyphs)) {
             if (!rec || typeof rec !== "object") continue;
             const ch = rec.key;
-            if (typeof ch !== "string" || ch.length !== 1) continue;
+            if (typeof ch !== "string" || Array.from(ch).length !== 1) continue;
             const cp = safeCp(ch);
             if (cp === null) continue;
             if (cp < 32) continue;
@@ -326,19 +528,22 @@
 
         if (!data || typeof data !== "object") return keys;
 
-        // Preferred: indices.ligaturesByKey
         if (data.indices && data.indices.ligaturesByKey && typeof data.indices.ligaturesByKey === "object") {
             keys.push(...Object.keys(data.indices.ligaturesByKey));
         } else if (data.ligatures && typeof data.ligatures === "object") {
-            // Fallback: scan ligature records
             for (const rec of Object.values(data.ligatures)) {
                 if (!rec || typeof rec !== "object") continue;
                 const k = rec.key;
-                if (typeof k === "string" && k.length >= 2) keys.push(k);
+                if (typeof k === "string" && Array.from(k).length >= 2) keys.push(k);
+            }
+        } else if (data.glyphs && typeof data.glyphs === "object") {
+            for (const rec of Object.values(data.glyphs)) {
+                if (!rec || typeof rec !== "object") continue;
+                const k = rec.key;
+                if (typeof k === "string" && Array.from(k).length >= 2) keys.push(k);
             }
         }
 
-        // stable sort: (len, codepoints)
         const uniq = Array.from(new Set(keys));
         uniq.sort((a, b) => {
             const ac = Array.from(a).map(ch => ch.codePointAt(0));
@@ -381,7 +586,7 @@
             digits.length ? codepointsToString(digits) : null,
             asciiPunct.length ? codepointsToString(asciiPunct) : null,
             extras.length ? extras.map(cp => String.fromCodePoint(cp)).join(" ") : null,
-            `${ligs.join(" ")}`
+            ligs.length ? ligs.join(" ") : null
         ].filter(line => line !== null);
 
         return lines.join("\n");
@@ -406,7 +611,7 @@
                 const sample = buildSampleFromGlyphsJson(data);
                 if (sample && !userEditedInput){
                     input.value = sample;
-                    sync();
+                    syncAll();
                 }
                 return;
             }catch(err){
@@ -415,20 +620,56 @@
         }
 
         console.warn("Could not load glyphs.json for sample text:", lastErr);
-        // leave whatever is currently in the textarea (likely the placeholder)
-        sync();
+        syncAll();
     }
 
-    // Lock line-height when user edits it manually
-    elLh.addEventListener("input", () => {
-        elLh.dataset.locked = "1";
-        sync();
+    function insertPlainTextAtCursor(text){
+        const selection = window.getSelection();
+        if (!selection || !selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+
+        const node = document.createTextNode(text);
+        range.insertNode(node);
+
+        range.setStartAfter(node);
+        range.setEndAfter(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    elTheme.addEventListener("change", () => {
+        applyTheme(elTheme.value);
     });
 
-    [elWdth, elHght, elSize].forEach(el => el.addEventListener("input", sync));
+    elLh.addEventListener("input", () => {
+        elLh.dataset.locked = "1";
+        syncStyleOnly();
+    });
+
+    [elWdth, elHght, elSize].forEach(el => {
+        el.addEventListener("input", syncStyleOnly);
+    });
+
     input.addEventListener("input", () => {
+        if (syncingFromSample) return;
         userEditedInput = true;
-        sync();
+        syncFromTextarea();
+    });
+
+    out.addEventListener("input", () => {
+        if (syncingFromTextarea) return;
+        userEditedInput = true;
+        syncFromSample();
+    });
+
+    out.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+        insertPlainTextAtCursor(text);
+        userEditedInput = true;
+        syncFromSample();
     });
 
     document.querySelectorAll("button[data-preset]").forEach(btn => {
@@ -437,11 +678,12 @@
             elWdth.value = w;
             elHght.value = h;
             delete elLh.dataset.locked;
-            sync();
+            syncStyleOnly();
         });
     });
 
-    sync();
+    loadTheme();
+    syncAll();
     loadGlyphsSampleOnce();
 </script>
 </body>

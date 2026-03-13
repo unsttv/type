@@ -440,7 +440,9 @@
             <div class="hint">
                 Click to toggle. Drag to paint. Glyphs are loaded from <code>../data/glyphs.json</code> when available.
             </div>
+
             <div id="warn" class="warn"></div>
+
             <div class="status">
                 <span>Codepoint <code id="codepointBadge">U+0041</code></span>
                 <span>Stored glyphs <code id="glyphStoreBadge">loading…</code></span>
@@ -555,8 +557,6 @@
     // -----------------------------
     // Helpers
     // -----------------------------
-    function R(x1, y1, x2, y2) { return [x1, y1, x2, y2]; }
-
     function rectToPoly(rect) {
         const [x1, y1, x2, y2] = rect;
         return [[x1, y1], [x2, y1], [x2, y2], [x1, y2]];
@@ -918,7 +918,8 @@
             width: Number.isFinite(width) && width > 0 ? width : 12,
             rects,
             xBreaks: Array.isArray(raw.xBreaks) ? raw.xBreaks.map(Number) : null,
-            yBreaks: Array.isArray(raw.yBreaks) ? raw.yBreaks.map(Number) : null
+            yBreaks: Array.isArray(raw.yBreaks) ? raw.yBreaks.map(Number) : null,
+            raw
         };
     }
 
@@ -927,7 +928,9 @@
 
         const pushEntry = (key, value) => {
             const glyph = normalizeGlyphEntry(value, key);
-            if (glyph) glyphStore.set(glyph.key, glyph);
+            if (glyph) {
+                glyphStore.set(glyph.key, glyph);
+            }
         };
 
         if (Array.isArray(data)) {
@@ -935,15 +938,22 @@
             return;
         }
 
-        if (data && typeof data === "object") {
-            if (Array.isArray(data.glyphs)) {
-                for (const item of data.glyphs) pushEntry("", item);
-                return;
-            }
+        if (!data || typeof data !== "object") return;
 
-            for (const [key, value] of Object.entries(data)) {
+        if (Array.isArray(data.glyphs)) {
+            for (const item of data.glyphs) pushEntry("", item);
+            return;
+        }
+
+        if (data.glyphs && typeof data.glyphs === "object" && !Array.isArray(data.glyphs)) {
+            for (const [key, value] of Object.entries(data.glyphs)) {
                 pushEntry(key, value);
             }
+            return;
+        }
+
+        for (const [key, value] of Object.entries(data)) {
+            pushEntry(key, value);
         }
     }
 
