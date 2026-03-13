@@ -74,20 +74,29 @@
         }
 
         * { box-sizing: border-box; }
+
+        html, body {
+            min-height: 100%;
+        }
+
         body {
             margin: 0;
+            min-height: 100vh;
             font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
 
         .wrap {
-            max-width: 1400px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: none;
+            margin: 0;
             padding: 16px;
+            min-height: 100vh;
             display: grid;
             gap: 16px;
-            grid-template-columns: 460px 1fr;
+            grid-template-columns: minmax(380px, 460px) minmax(0, 1fr);
+            align-items: start;
         }
 
         .panel {
@@ -95,6 +104,7 @@
             border: 1px solid var(--border);
             border-radius: 14px;
             box-shadow: var(--shadow);
+            min-width: 0;
         }
 
         .left {
@@ -102,6 +112,8 @@
             display: grid;
             gap: 12px;
             align-content: start;
+            position: sticky;
+            top: 16px;
         }
 
         .toolbar { display: grid; gap: 8px; }
@@ -152,7 +164,9 @@
             padding: 0 10px;
             cursor: pointer;
         }
+
         button:hover { border-color: var(--accent); }
+
         button.primary {
             background: color-mix(in oklab, var(--accent) 16%, var(--panel-2));
             border-color: color-mix(in oklab, var(--accent) 50%, var(--border));
@@ -171,6 +185,7 @@
             gap: 8px 12px;
             padding: 2px 0 0;
         }
+
         .status code {
             background: var(--panel-2);
             border: 1px solid var(--border);
@@ -210,6 +225,7 @@
             grid-template-columns: repeat(5, 1fr);
             padding: 0 4px;
         }
+
         .grid-top-labels span { text-align: center; }
 
         .grid-left-labels {
@@ -219,6 +235,7 @@
             height: 100%;
             padding: 2px 2px 2px 0;
         }
+
         .grid-left-labels span {
             display: flex;
             align-items: center;
@@ -244,7 +261,9 @@
             stroke-width: 0.15;
             cursor: pointer;
         }
+
         #editorSvg .cell.active { fill: var(--cell-on); }
+
         #editorSvg .cell.oob {
             fill: var(--cell-oob);
             cursor: not-allowed;
@@ -257,13 +276,13 @@
             pointer-events: none;
             shape-rendering: crispEdges;
         }
+
         #editorSvg .guide.cap { stroke: var(--guide-cap); }
         #editorSvg .guide.xheight { stroke: var(--guide-xheight); }
         #editorSvg .guide.mid { stroke: var(--guide-mid); }
         #editorSvg .guide.base { stroke: var(--guide-base); }
         #editorSvg .guide.desc { stroke: var(--guide-desc); }
 
-        /* Dedicated visible baseline line (drawn above cells) */
         #editorSvg .guide.baseline {
             stroke: #3b82f6;
             stroke-width: 0.2;
@@ -276,6 +295,8 @@
             display: grid;
             grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
             gap: 16px;
+            min-width: 0;
+            min-height: calc(100vh - 32px);
         }
 
         .stack {
@@ -296,7 +317,7 @@
 
         textarea {
             width: 100%;
-            min-height: 160px;
+            min-height: 260px;
             resize: vertical;
             border: 1px solid var(--border);
             background: var(--panel-2);
@@ -318,16 +339,20 @@
             display: grid;
             align-items: center;
         }
+
         #svgPreview {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 70px;
+            overflow: auto;
         }
+
         #svgPreview svg {
             max-width: 100%;
             height: auto;
         }
+
         #svgPreview svg polygon {
             fill: #000;
             stroke: none;
@@ -347,8 +372,20 @@
         }
 
         @media (max-width: 1040px) {
-            .wrap { grid-template-columns: 1fr; }
-            .right { grid-template-rows: auto auto; }
+            .wrap {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .left {
+                position: static;
+                top: auto;
+            }
+
+            .right {
+                grid-template-rows: auto auto;
+                min-height: auto;
+            }
         }
     </style>
 </head>
@@ -376,7 +413,7 @@
                 <div class="field" style="grid-column: span 3;">
                     <label for="themeMode">Theme</label>
                     <select id="themeMode">
-                        <option value="auto" selected>Auto</option>
+                        <option value="device" selected>Device</option>
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
                     </select>
@@ -385,7 +422,7 @@
                 <div class="field" style="grid-column: span 4;">
                     <label>&nbsp;</label>
                     <div class="btns">
-                        <button id="loadPresetBtn" class="primary" type="button">Load preset</button>
+                        <button id="loadPresetBtn" class="primary" type="button">Load stored glyph</button>
                         <button id="blankBtn" type="button">Blank</button>
                     </div>
                 </div>
@@ -401,11 +438,12 @@
             </div>
 
             <div class="hint">
-                Click to toggle. Drag to paint. The grid follows your lowercase/digit band system, but you can design any character (including capitals and space).
+                Click to toggle. Drag to paint. Glyphs are loaded from <code>../data/glyphs.json</code> when available.
             </div>
             <div id="warn" class="warn"></div>
             <div class="status">
                 <span>Codepoint <code id="codepointBadge">U+0041</code></span>
+                <span>Stored glyphs <code id="glyphStoreBadge">loading…</code></span>
                 <span>Active areas <code id="activeCountBadge">0</code></span>
                 <span>Export rects <code id="rectCountBadge">0</code></span>
                 <span>ViewBox <code id="viewBoxBadge">0 0 12 30</code></span>
@@ -464,6 +502,9 @@
 </div>
 
 <script>
+    const GLYPH_DATA_URL = "../data/glyphs.json";
+    const THEME_STORAGE_KEY = "unst-glyph-designer-theme";
+
     // -----------------------------
     // Metrics / partition grid
     // -----------------------------
@@ -479,8 +520,8 @@
         DESC0: 29, DESC1: 30
     };
 
-    const COLS = X_BREAKS.length - 1; // 5
-    const ROWS = Y_BREAKS.length - 1; // 11
+    const COLS = X_BREAKS.length - 1;
+    const ROWS = Y_BREAKS.length - 1;
     const $ = (id) => document.getElementById(id);
 
     const editorSvg = $("editorSvg");
@@ -493,12 +534,21 @@
     const warnEl = $("warn");
 
     const codepointBadge = $("codepointBadge");
+    const glyphStoreBadge = $("glyphStoreBadge");
     const activeCountBadge = $("activeCountBadge");
     const rectCountBadge = $("rectCountBadge");
     const viewBoxBadge = $("viewBoxBadge");
 
     const state = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
     const cellEls = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+    const glyphStore = new Map();
+    const glyphDataState = {
+        loading: false,
+        loaded: false,
+        error: "",
+        count: 0
+    };
 
     let pointerDrag = { active: false, value: true, id: null };
 
@@ -516,25 +566,24 @@
         return poly.map(([x, y]) => `${x},${y}`).join(" ");
     }
 
-    function rotate180Rect(rect, w, cy2) {
-        const [x1, y1, x2, y2] = rect;
-        return [w - x2, cy2 - y2, w - x1, cy2 - y1];
-    }
-    function rotate180Rects(rects, w, cy2) {
-        return rects.map(r => rotate180Rect(r, w, cy2));
+    function clamp(n, min, max) {
+        return Math.max(min, Math.min(max, n));
     }
 
-    function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
-    function currentWidth() { return Number(widthUnitsSelect.value) * 4; }
-    function inBoundsCell(r, c) { return X_BREAKS[c + 1] <= currentWidth(); }
+    function currentWidth() {
+        return Number(widthUnitsSelect.value) * 4;
+    }
+
+    function inBoundsCell(r, c) {
+        return X_BREAKS[c + 1] <= currentWidth();
+    }
 
     function getRawInput() {
-        // Don't trim: space (U+0020) must remain valid
         return glyphCharInput.value ?? "";
     }
 
     function getGlyphChar() {
-        const chars = Array.from(getRawInput()); // codepoint-safe
+        const chars = Array.from(getRawInput());
         return chars[0] || "";
     }
 
@@ -561,7 +610,9 @@
 
     function clearState() {
         for (let r = 0; r < ROWS; r++) {
-            for (let c = 0; c < COLS; c++) state[r][c] = false;
+            for (let c = 0; c < COLS; c++) {
+                state[r][c] = false;
+            }
         }
     }
 
@@ -583,6 +634,22 @@
         const [rx1, ry1, rx2, ry2] = rect;
         const [cx1, cy1, cx2, cy2] = cell;
         return rx1 <= cx1 && ry1 <= cy1 && rx2 >= cx2 && ry2 >= cy2;
+    }
+
+    function escapeXmlAttr(str) {
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    function arraysEqualNumberwise(a, b) {
+        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (Number(a[i]) !== Number(b[i])) return false;
+        }
+        return true;
     }
 
     function applyPaint(r, c, value) {
@@ -613,25 +680,29 @@
     }
 
     function collectMergedRects() {
-        // 1) horizontal runs
         const runs = [];
+
         for (let r = 0; r < ROWS; r++) {
             let c = 0;
             while (c < COLS) {
-                if (!inBoundsCell(r, c) || !state[r][c]) { c++; continue; }
+                if (!inBoundsCell(r, c) || !state[r][c]) {
+                    c++;
+                    continue;
+                }
+
                 const start = c;
                 c++;
                 while (c < COLS && inBoundsCell(r, c) && state[r][c]) c++;
+
                 runs.push({
                     x1: X_BREAKS[start],
                     x2: X_BREAKS[c],
                     y1: Y_BREAKS[r],
-                    y2: Y_BREAKS[r + 1],
+                    y2: Y_BREAKS[r + 1]
                 });
             }
         }
 
-        // 2) vertical merge if same x span and touching
         const merged = [];
         for (const run of runs) {
             let found = null;
@@ -641,8 +712,11 @@
                     break;
                 }
             }
-            if (found) found.y2 = run.y2;
-            else merged.push({ ...run });
+            if (found) {
+                found.y2 = run.y2;
+            } else {
+                merged.push({ ...run });
+            }
         }
 
         return merged.map(r => [r.x1, r.y1, r.x2, r.y2]);
@@ -655,6 +729,7 @@
     function currentJsonObject() {
         const ch = getGlyphChar();
         const width = currentWidth();
+
         return {
             key: ch,
             label: printableName(ch),
@@ -665,7 +740,7 @@
             yBreaks: Y_BREAKS.slice(),
             baselineY: Y.BASE0,
             polys: currentPolys(),
-            presetAvailable: hasPreset(ch)
+            storedGlyphAvailable: hasStoredGlyph(ch)
         };
     }
 
@@ -693,106 +768,248 @@
         ].join("\n");
     }
 
-    function escapeXmlAttr(str) {
-        return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/"/g, "&quot;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
+    // -----------------------------
+    // Glyph data loader
+    // -----------------------------
+    function keyCandidateToString(value) {
+        if (typeof value === "number" && Number.isFinite(value)) {
+            try {
+                return String.fromCodePoint(value);
+            } catch (_) {
+                return "";
+            }
+        }
+
+        if (typeof value !== "string") return "";
+
+        const trimmed = value.trim();
+
+        const uPlus = trimmed.match(/^U\+([0-9A-F]{1,6})$/i);
+        if (uPlus) {
+            try {
+                return String.fromCodePoint(parseInt(uPlus[1], 16));
+            } catch (_) {
+                return "";
+            }
+        }
+
+        const hex = trimmed.match(/^0x([0-9A-F]{1,6})$/i);
+        if (hex) {
+            try {
+                return String.fromCodePoint(parseInt(hex[1], 16));
+            } catch (_) {
+                return "";
+            }
+        }
+
+        if (/^\d+$/.test(trimmed)) {
+            const n = Number(trimmed);
+            if (Number.isFinite(n) && n >= 0) {
+                try {
+                    return String.fromCodePoint(n);
+                } catch (_) {}
+            }
+        }
+
+        return value;
     }
 
-    // -----------------------------
-    // Presets (lowercase + digits only)
-    // Manual editing works for any character.
-    // -----------------------------
-    const E_RECTS = [
-        R(0, Y.TOP0, 12, Y.TOP1),
-        R(0, Y.TOP1, 4,  Y.BASE0),
-        R(8, Y.TOP1, 12, Y.MID0),
-        R(0, Y.MID0, 12, Y.MID1),
-        R(0, Y.BASE0, 12, Y.BASE1),
-    ];
-    const S_RECTS = [
-        R(0, Y.TOP0, 12, Y.TOP1),
-        R(0, Y.TOP1, 4,  Y.MID0),
-        R(0, Y.MID0, 12, Y.MID1),
-        R(8, Y.MID1, 12, Y.BASE0),
-        R(0, Y.BASE0, 12, Y.BASE1),
-    ];
-    const Z_RECTS = [
-        R(0, Y.TOP0, 12, Y.TOP1),
-        R(8, Y.TOP1, 12, Y.MID0),
-        R(0, Y.MID0, 12, Y.MID1),
-        R(0, Y.MID1, 4,  Y.BASE0),
-        R(0, Y.BASE0, 12, Y.BASE1),
-    ];
+    function normalizeRectLike(item) {
+        if (Array.isArray(item) && item.length >= 4) {
+            const x1 = Number(item[0]);
+            const y1 = Number(item[1]);
+            const x2 = Number(item[2]);
+            const y2 = Number(item[3]);
+            if ([x1, y1, x2, y2].every(Number.isFinite)) return [x1, y1, x2, y2];
+        }
 
-    const PRESETS = {
-        "a": { width: 12, rects: rotate180Rects(E_RECTS, 12, Y.TOP0 + Y.BASE1) },
-        "b": { width: 12, rects: [R(0,Y.CAP0,4,Y.BASE1), R(4,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.BASE0), R(4,Y.BASE0,12,Y.BASE1)] },
-        "c": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "d": { width: 12, rects: [R(8,Y.CAP0,12,Y.BASE1), R(0,Y.TOP0,8,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(0,Y.BASE0,8,Y.BASE1)] },
-        "e": { width: 12, rects: E_RECTS.slice() },
-        "f": { width: 8,  rects: [R(0,Y.CAP0,4,Y.BASE1), R(0,Y.CAP0,8,Y.CAP1), R(0,Y.TOP0,8,Y.TOP1)] },
-        "g": { width: 12, rects: [
-                R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.MID0), R(8,Y.TOP1,12,Y.MID0), R(0,Y.MID0,12,Y.MID1),
-                R(8,Y.MID1,12,Y.BASE1), R(0,Y.BASE0,12,Y.BASE1),
-                R(0,Y.BASE1,4,Y.BASE1+5), R(8,Y.BASE1,12,Y.BASE1+5),
-                R(0,Y.BASE1+5,4,Y.DESC0), R(8,Y.BASE1+5,12,Y.DESC0),
-                R(0,Y.DESC0,12,Y.DESC1)
-            ]},
-        "h": { width: 12, rects: [R(0,Y.CAP0,4,Y.BASE1), R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.BASE1)] },
-        "i": { width: 4,  rects: [R(0,Y.TOP0,4,Y.BASE1), R(0,0,4,4)] },
-        "j": { width: 8,  rects: [R(4,Y.TOP0,8,Y.DESC1), R(4,0,8,4), R(0,Y.DESC0,4,Y.DESC1)] },
-        "k": { width: 12, rects: [R(0,Y.CAP0,4,Y.BASE1), R(8,Y.TOP0,12,Y.MID0), R(8,Y.MID1,12,Y.BASE1), R(4,Y.MID0,8,Y.MID1)] },
-        "l": { width: 8,  rects: [R(0,Y.CAP0,4,Y.BASE1), R(0,Y.BASE0,8,Y.BASE1)] },
-        "m": { width: 20, rects: [R(0,Y.TOP0,20,Y.TOP1), R(0,Y.TOP0,4,Y.BASE1), R(8,Y.TOP1,12,Y.BASE1), R(16,Y.TOP1,20,Y.BASE1)] },
-        "n": { width: 12, rects: [R(0,Y.TOP0,4,Y.BASE1), R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.BASE1)] },
-        "o": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(8,Y.TOP1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "p": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.DESC1), R(8,Y.TOP1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "q": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(8,Y.TOP1,12,Y.DESC1), R(0,Y.BASE0,12,Y.BASE1)] },
-        "r": { width: 8,  rects: [R(0,Y.TOP0,4,Y.BASE1), R(0,Y.TOP0,8,Y.TOP1)] },
-        "s": { width: 12, rects: S_RECTS.slice() },
-        "t": { width: 8,  rects: [R(0,Y.CAP0,4,Y.BASE1), R(4,Y.TOP0,8,Y.TOP1), R(4,Y.BASE0,8,Y.BASE1)] },
-        "u": { width: 12, rects: [R(0,Y.TOP0,4,Y.BASE1), R(8,Y.TOP0,12,Y.BASE1), R(0,Y.BASE0,12,Y.BASE1)] },
-        "v": { width: 12, rects: [R(0,Y.TOP0,4,Y.MID1), R(8,Y.TOP0,12,Y.MID1), R(0,Y.MID0,12,Y.MID1), R(4,Y.MID1,8,Y.BASE1)] },
-        "w": { width: 20, rects: [R(0,Y.TOP0,4,Y.BASE1), R(8,Y.TOP0,12,Y.BASE1), R(16,Y.TOP0,20,Y.BASE1), R(0,Y.BASE0,20,Y.BASE1)] },
-        "x": { width: 12, rects: [R(0,Y.TOP0,4,Y.MID0), R(0,Y.MID1,4,Y.BASE1), R(8,Y.TOP0,12,Y.MID0), R(8,Y.MID1,12,Y.BASE1), R(4,Y.MID0,8,Y.MID1)] },
-        "y": { width: 12, rects: [R(0,Y.TOP0,4,Y.BASE1), R(8,Y.TOP0,12,Y.DESC1), R(0,Y.BASE0,12,Y.BASE1)] },
-        "z": { width: 12, rects: Z_RECTS.slice() },
+        if (item && typeof item === "object") {
+            if (["x1", "y1", "x2", "y2"].every(k => k in item)) {
+                const x1 = Number(item.x1);
+                const y1 = Number(item.y1);
+                const x2 = Number(item.x2);
+                const y2 = Number(item.y2);
+                if ([x1, y1, x2, y2].every(Number.isFinite)) return [x1, y1, x2, y2];
+            }
 
-        "0": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(8,Y.TOP1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "1": { width: 8,  rects: [R(0,Y.TOP0,8,Y.TOP1), R(4,Y.TOP1,8,Y.BASE1)] },
-        "2": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.MID0), R(0,Y.MID0,12,Y.MID1), R(0,Y.MID1,4,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "3": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.MID0), R(0,Y.MID0,12,Y.MID1), R(8,Y.MID1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "4": { width: 12, rects: [R(8,Y.TOP0,12,Y.BASE1), R(0,Y.TOP0,4,Y.MID1), R(0,Y.MID0,12,Y.MID1)] },
-        "5": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.MID0), R(0,Y.MID0,12,Y.MID1), R(8,Y.MID1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "6": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE1), R(0,Y.MID0,12,Y.MID1), R(8,Y.MID1,12,Y.BASE0), R(0,Y.BASE0,12,Y.BASE1)] },
-        "7": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.BASE1)] },
-        "8": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(0,Y.TOP1,4,Y.BASE0), R(8,Y.TOP1,12,Y.BASE0), R(0,Y.MID0,12,Y.MID1), R(0,Y.BASE0,12,Y.BASE1)] },
-        "9": { width: 12, rects: [R(0,Y.TOP0,12,Y.TOP1), R(8,Y.TOP1,12,Y.BASE1), R(0,Y.TOP1,4,Y.MID0), R(0,Y.MID0,12,Y.MID1), R(0,Y.BASE0,12,Y.BASE1)] }
-    };
+            if (["x", "y", "width", "height"].every(k => k in item)) {
+                const x = Number(item.x);
+                const y = Number(item.y);
+                const w = Number(item.width);
+                const h = Number(item.height);
+                if ([x, y, w, h].every(Number.isFinite)) return [x, y, x + w, y + h];
+            }
+        }
 
-    function hasPreset(ch) {
-        return !!PRESETS[ch];
+        return null;
     }
 
-    function loadPresetForChar(ch) {
-        const preset = PRESETS[ch];
-        if (!preset) return false;
+    function normalizePoint(item) {
+        if (Array.isArray(item) && item.length >= 2) {
+            const x = Number(item[0]);
+            const y = Number(item[1]);
+            if ([x, y].every(Number.isFinite)) return [x, y];
+        }
+
+        if (item && typeof item === "object" && "x" in item && "y" in item) {
+            const x = Number(item.x);
+            const y = Number(item.y);
+            if ([x, y].every(Number.isFinite)) return [x, y];
+        }
+
+        return null;
+    }
+
+    function polyToRect(poly) {
+        if (!Array.isArray(poly) || poly.length < 2) return null;
+        const pts = poly.map(normalizePoint).filter(Boolean);
+        if (!pts.length) return null;
+
+        const xs = pts.map(p => p[0]);
+        const ys = pts.map(p => p[1]);
+        return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+    }
+
+    function extractRectsFromGlyph(raw) {
+        if (!raw || typeof raw !== "object") return [];
+
+        const directRects =
+            raw.rects ??
+            raw.rectangles ??
+            raw.boxes ??
+            null;
+
+        if (Array.isArray(directRects)) {
+            return directRects.map(normalizeRectLike).filter(Boolean);
+        }
+
+        const polys =
+            raw.polys ??
+            raw.polygons ??
+            raw.points ??
+            null;
+
+        if (Array.isArray(polys)) {
+            return polys.map(polyToRect).filter(Boolean);
+        }
+
+        return [];
+    }
+
+    function normalizeGlyphEntry(raw, fallbackKey = "") {
+        if (!raw || typeof raw !== "object") return null;
+
+        const rawKey =
+            raw.key ??
+            raw.char ??
+            raw.character ??
+            raw.glyph ??
+            raw.name ??
+            fallbackKey;
+
+        const key = keyCandidateToString(rawKey);
+        if (typeof key !== "string" || !key.length) return null;
+
+        const width = Number(raw.width ?? raw.advanceWidth ?? raw.w ?? 0);
+        const rects = extractRectsFromGlyph(raw);
+
+        return {
+            key,
+            width: Number.isFinite(width) && width > 0 ? width : 12,
+            rects,
+            xBreaks: Array.isArray(raw.xBreaks) ? raw.xBreaks.map(Number) : null,
+            yBreaks: Array.isArray(raw.yBreaks) ? raw.yBreaks.map(Number) : null
+        };
+    }
+
+    function buildGlyphStoreFromJson(data) {
+        glyphStore.clear();
+
+        const pushEntry = (key, value) => {
+            const glyph = normalizeGlyphEntry(value, key);
+            if (glyph) glyphStore.set(glyph.key, glyph);
+        };
+
+        if (Array.isArray(data)) {
+            for (const item of data) pushEntry("", item);
+            return;
+        }
+
+        if (data && typeof data === "object") {
+            if (Array.isArray(data.glyphs)) {
+                for (const item of data.glyphs) pushEntry("", item);
+                return;
+            }
+
+            for (const [key, value] of Object.entries(data)) {
+                pushEntry(key, value);
+            }
+        }
+    }
+
+    async function loadGlyphStore() {
+        glyphDataState.loading = true;
+        glyphDataState.loaded = false;
+        glyphDataState.error = "";
+        glyphDataState.count = 0;
+        updateUI();
+
+        try {
+            const response = await fetch(GLYPH_DATA_URL, { cache: "no-store" });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            buildGlyphStoreFromJson(data);
+
+            glyphDataState.loading = false;
+            glyphDataState.loaded = true;
+            glyphDataState.error = "";
+            glyphDataState.count = glyphStore.size;
+        } catch (err) {
+            glyphDataState.loading = false;
+            glyphDataState.loaded = false;
+            glyphDataState.error = err && err.message ? err.message : String(err);
+            glyphDataState.count = 0;
+        }
+
+        updateUI();
+    }
+
+    function hasStoredGlyph(ch) {
+        return !!ch && glyphStore.has(ch);
+    }
+
+    function loadStoredGlyphForChar(ch) {
+        if (!ch) return false;
+
+        const glyph = glyphStore.get(ch);
+        if (!glyph) return false;
 
         clearState();
-        widthUnitsSelect.value = String(Math.max(1, Math.min(5, preset.width / 4)));
+
+        const units = clamp(Math.round(Number(glyph.width || 12) / 4), 1, 5);
+        widthUnitsSelect.value = String(units);
 
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const cell = cellRect(r, c);
-                state[r][c] = preset.rects.some(rect => rectCoversCell(rect, cell));
+                state[r][c] = glyph.rects.some(rect => rectCoversCell(rect, cell));
             }
         }
 
         updateUI();
         return true;
+    }
+
+    function maybeAutoLoadStoredGlyph() {
+        const ch = getGlyphChar();
+        if (hasStoredGlyph(ch)) {
+            loadStoredGlyphForChar(ch);
+        } else {
+            updateUI();
+        }
     }
 
     // -----------------------------
@@ -809,20 +1026,18 @@
     }
 
     function buildEditorSvg() {
-        // Subtle guides under cells
         const guideDefs = [
             { y: Y.CAP1, cls: "cap" },
             { y: Y.TOP0, cls: "xheight" },
             { y: Y.MID0, cls: "mid" },
             { y: Y.BASE0, cls: "base" },
-            { y: Y.DESC0, cls: "desc" },
+            { y: Y.DESC0, cls: "desc" }
         ];
 
         for (const g of guideDefs) {
             editorSvg.appendChild(makeLine(0, g.y, 20, g.y, `guide ${g.cls}`));
         }
 
-        // Cells
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const [x1, y1, x2, y2] = cellRect(r, c);
@@ -843,7 +1058,6 @@
             }
         }
 
-        // Outline
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         outline.setAttribute("x", "0");
         outline.setAttribute("y", "0");
@@ -855,7 +1069,6 @@
         outline.setAttribute("pointer-events", "none");
         editorSvg.appendChild(outline);
 
-        // Visible baseline overlay (drawn ABOVE cells so it never disappears)
         editorSvg.appendChild(makeLine(0, Y.BASE0, 20, Y.BASE0, "guide baseline"));
 
         editorSvg.addEventListener("pointerup", stopDragging);
@@ -892,22 +1105,75 @@
     }
 
     // -----------------------------
+    // Theme
+    // -----------------------------
+    function getSavedThemeMode() {
+        try {
+            const value = localStorage.getItem(THEME_STORAGE_KEY);
+            if (value === "device" || value === "light" || value === "dark") return value;
+        } catch (_) {}
+        return "device";
+    }
+
+    function applyThemeMode(mode, persist = true) {
+        const html = document.documentElement;
+        if (mode === "device") {
+            html.removeAttribute("data-theme");
+        } else {
+            html.setAttribute("data-theme", mode);
+        }
+
+        themeModeSelect.value = mode;
+
+        if (persist) {
+            try { localStorage.setItem(THEME_STORAGE_KEY, mode); } catch (_) {}
+        }
+    }
+
+    // -----------------------------
     // UI update / outputs
     // -----------------------------
     function updateWarn() {
         const ch = getGlyphChar();
+
+        if (glyphDataState.loading) {
+            warnEl.textContent = `Loading glyph data from ${GLYPH_DATA_URL}…`;
+            return;
+        }
+
+        if (glyphDataState.error) {
+            warnEl.textContent =
+                `Could not load ${GLYPH_DATA_URL}: ${glyphDataState.error}\n` +
+                `If you opened this file directly from disk, serve it over HTTP(S) instead of file://.`;
+            return;
+        }
+
         if (!ch) {
             warnEl.textContent = "Enter a character to label/export this glyph.";
             return;
         }
+
         if (inputHasMultipleChars()) {
             warnEl.textContent = "Multiple characters entered — only the first one is used.";
             return;
         }
-        if (!hasPreset(ch)) {
-            warnEl.textContent = `No built-in preset for "${printableName(ch)}". Manual editing is enabled.`;
+
+        const glyph = glyphStore.get(ch);
+        if (!glyph) {
+            warnEl.textContent = `No stored glyph found for "${printableName(ch)}". Manual editing is enabled.`;
             return;
         }
+
+        if (glyph.xBreaks && !arraysEqualNumberwise(glyph.xBreaks, X_BREAKS)) {
+            warnEl.textContent = `Stored glyph found for "${printableName(ch)}", but its xBreaks differ from the current editor grid.`;
+            return;
+        }
+
+        if (glyph.yBreaks && !arraysEqualNumberwise(glyph.yBreaks, Y_BREAKS)) {
+            warnEl.textContent = `Stored glyph found for "${printableName(ch)}", but its yBreaks differ from the current editor grid.`;
+            return;
+        }
+
         warnEl.textContent = "";
     }
 
@@ -932,6 +1198,11 @@
         svgPreview.innerHTML = svg.replace(/^<\?xml[^>]*\?>\s*/i, "");
 
         codepointBadge.textContent = `U+${codepointHex(ch).toUpperCase()}`;
+        glyphStoreBadge.textContent = glyphDataState.loading
+            ? "loading…"
+            : glyphDataState.error
+                ? "error"
+                : String(glyphDataState.count);
         activeCountBadge.textContent = String(activeCellCount());
         rectCountBadge.textContent = String(rects.length);
         viewBoxBadge.textContent = `0 0 ${currentWidth()} 30`;
@@ -948,7 +1219,7 @@
     // -----------------------------
     $("loadPresetBtn").addEventListener("click", () => {
         const ch = getGlyphChar();
-        if (!loadPresetForChar(ch)) updateUI();
+        if (!loadStoredGlyphForChar(ch)) updateUI();
     });
 
     $("blankBtn").addEventListener("click", () => {
@@ -958,7 +1229,7 @@
 
     $("spaceBtn").addEventListener("click", () => {
         glyphCharInput.value = " ";
-        updateUI();
+        maybeAutoLoadStoredGlyph();
     });
 
     $("clearBtn").addEventListener("click", () => {
@@ -970,22 +1241,13 @@
     $("fitWidthBtn").addEventListener("click", fitWidthToContent);
 
     glyphCharInput.addEventListener("input", () => {
-        const ch = getGlyphChar();
-        if (hasPreset(ch)) {
-            loadPresetForChar(ch);
-        } else {
-            updateUI();
-        }
+        maybeAutoLoadStoredGlyph();
     });
 
     widthUnitsSelect.addEventListener("change", updateUI);
 
-    // Dark / light / auto mode
     themeModeSelect.addEventListener("change", () => {
-        const mode = themeModeSelect.value;
-        const html = document.documentElement;
-        if (mode === "auto") html.removeAttribute("data-theme");
-        else html.setAttribute("data-theme", mode);
+        applyThemeMode(themeModeSelect.value);
     });
 
     async function copyText(text) {
@@ -1028,8 +1290,15 @@
     // -----------------------------
     // Boot
     // -----------------------------
-    buildEditorSvg();
-    updateUI(); // start blank "A"
+    async function init() {
+        applyThemeMode(getSavedThemeMode(), false);
+        buildEditorSvg();
+        updateUI();
+        await loadGlyphStore();
+        maybeAutoLoadStoredGlyph();
+    }
+
+    init();
 </script>
 </body>
 </html>
