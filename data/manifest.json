@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-03-13T11:28:16.211251+00:00",
+  "generatedAt": "2026-03-13T11:50:48.576402+00:00",
   "name": "unst",
   "metadata": {
     "family": "unst",
@@ -8,29 +8,29 @@
     "fullName": "unst Regular",
     "postScriptName": "unst-Regular",
     "unitsPerEm": 1000,
-    "glyphCount": 152
+    "glyphCount": 165
   },
   "files": [
     {
       "ext": "woff2",
       "file": "unst.woff2",
       "recommendedFile": "unst.woff2",
-      "bytes": 10068,
-      "sha256": "112d5b6fe4d3f86d7e83a5866a19a8e7cac51382d783bd8840aa1e4fb1c4a2a7"
+      "bytes": 10628,
+      "sha256": "c0ed342029c9b965ddd02aad2bf5ba8ba309b3a24420655912e470ccdb7aa162"
     },
     {
       "ext": "woff",
       "file": "unst.woff",
       "recommendedFile": "unst.woff",
-      "bytes": 12712,
-      "sha256": "b74ab1b5bcc2b765d41caac2d49afedb9e9d6f5fac38672d7e52c81282b98f93"
+      "bytes": 13392,
+      "sha256": "cd7be474a10faeec0184eebf1dcf016d028acd365b5cbd4dd46a52185a589f9a"
     },
     {
       "ext": "ttf",
       "file": "unst.ttf",
       "recommendedFile": "unst.ttf",
-      "bytes": 32308,
-      "sha256": "d61b1bd945d620495ef7779c7ca61e49a3d850b549deccb1982ef9d6e65e1604"
+      "bytes": 34388,
+      "sha256": "dc073323519c7076951efdfa6fda2d4090ce14924bb4a209d8ab2aa0daf7862a"
     }
   ],
   "unicodeRanges": [
@@ -75,6 +75,10 @@
       167
     ],
     [
+      198,
+      198
+    ],
+    [
       228,
       228
     ],
@@ -107,12 +111,40 @@
       307
     ],
     [
+      338,
+      339
+    ],
+    [
+      932,
+      932
+    ],
+    [
+      960,
+      960
+    ],
+    [
+      8229,
+      8230
+    ],
+    [
+      8252,
+      8252
+    ],
+    [
       8383,
       8383
     ],
     [
+      8756,
+      8759
+    ],
+    [
       9632,
       9632
+    ],
+    [
+      10013,
+      10013
     ],
     [
       42805,
@@ -120,8 +152,8 @@
     ]
   ],
   "counts": {
-    "codepointsTotal": 95,
-    "codepointsBMP": 95,
+    "codepointsTotal": 108,
+    "codepointsBMP": 108,
     "codepointsAstral": 0
   },
   "features": {
