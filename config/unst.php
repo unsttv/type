@@ -6,20 +6,21 @@ declare(strict_types=1);
 
 return [
     'Unst' => [
-        'glyphCount' => 150,
-        'singleGlyphCount' => 95,
-        'ligatureCount' => 55,
-        'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$+,-.:;=?@[]_{|}¦§÷₿■ äæëïöüıĳꜵ',
+        'glyphCount' => 166,
+        'singleGlyphCount' => 109,
+        'ligatureCount' => 57,
+        'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$&+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝ ÆäæëïöüıĳŒœΤπꜵ',
         'uppercase' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
         'digits' => '0123456789',
-        'punct' => '!#$+,-.:;=?@[]_{|}¦§÷₿■',
-        'other' => ' äæëïöüıĳꜵ',
+        'punct' => '!#$&+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝',
+        'other' => ' ÆäæëïöüıĳŒœΤπꜵ',
         'codepoints' => [
             32,
             33,
             35,
             36,
+            38,
             43,
             44,
             45,
@@ -99,6 +100,7 @@ return [
             125,
             166,
             167,
+            198,
             228,
             230,
             235,
@@ -108,8 +110,20 @@ return [
             252,
             305,
             307,
+            338,
+            339,
+            932,
+            960,
+            8229,
+            8230,
+            8252,
             8383,
+            8756,
+            8757,
+            8758,
+            8759,
             9632,
+            10013,
             42805,
         ],
         'unicodeRanges' => [
@@ -120,6 +134,10 @@ return [
             [
                 35,
                 36,
+            ],
+            [
+                38,
+                38,
             ],
             [
                 43,
@@ -154,6 +172,10 @@ return [
                 167,
             ],
             [
+                198,
+                198,
+            ],
+            [
                 228,
                 228,
             ],
@@ -186,12 +208,40 @@ return [
                 307,
             ],
             [
+                338,
+                339,
+            ],
+            [
+                932,
+                932,
+            ],
+            [
+                960,
+                960,
+            ],
+            [
+                8229,
+                8230,
+            ],
+            [
+                8252,
+                8252,
+            ],
+            [
                 8383,
                 8383,
             ],
             [
+                8756,
+                8759,
+            ],
+            [
                 9632,
                 9632,
+            ],
+            [
+                10013,
+                10013,
             ],
             [
                 42805,
@@ -203,6 +253,7 @@ return [
             '!' => 'character-u0021.svg',
             '#' => 'character-u0023.svg',
             '$' => 'character-u0024.svg',
+            '&' => 'character-u0026.svg',
             '+' => 'character-u002b.svg',
             ',' => 'character-u002c.svg',
             '-' => 'character-u002d.svg',
@@ -282,6 +333,7 @@ return [
             '}' => 'character-u007d.svg',
             '¦' => 'character-u00a6.svg',
             '§' => 'character-u00a7.svg',
+            'Æ' => 'character-u00c6.svg',
             'ä' => 'character-u00e4.svg',
             'æ' => 'character-u00e6.svg',
             'ë' => 'character-u00eb.svg',
@@ -291,8 +343,20 @@ return [
             'ü' => 'character-u00fc.svg',
             'ı' => 'character-u0131.svg',
             'ĳ' => 'character-u0133.svg',
+            'Œ' => 'character-u0152.svg',
+            'œ' => 'character-u0153.svg',
+            'Τ' => 'character-u03a4.svg',
+            'π' => 'character-u03c0.svg',
+            '‥' => 'character-u2025.svg',
+            '…' => 'character-u2026.svg',
+            '‼' => 'character-u203c.svg',
             '₿' => 'character-u20bf.svg',
+            '∴' => 'character-u2234.svg',
+            '∵' => 'character-u2235.svg',
+            '∶' => 'character-u2236.svg',
+            '∷' => 'character-u2237.svg',
             '■' => 'character-u25a0.svg',
+            '✝' => 'character-u271d.svg',
             'ꜵ' => 'character-ua735.svg',
         ],
         'charToUnicode' => [
@@ -300,6 +364,7 @@ return [
             '!' => 'U+0021',
             '#' => 'U+0023',
             '$' => 'U+0024',
+            '&' => 'U+0026',
             '+' => 'U+002B',
             ',' => 'U+002C',
             '-' => 'U+002D',
@@ -379,6 +444,7 @@ return [
             '}' => 'U+007D',
             '¦' => 'U+00A6',
             '§' => 'U+00A7',
+            'Æ' => 'U+00C6',
             'ä' => 'U+00E4',
             'æ' => 'U+00E6',
             'ë' => 'U+00EB',
@@ -388,11 +454,25 @@ return [
             'ü' => 'U+00FC',
             'ı' => 'U+0131',
             'ĳ' => 'U+0133',
+            'Œ' => 'U+0152',
+            'œ' => 'U+0153',
+            'Τ' => 'U+03A4',
+            'π' => 'U+03C0',
+            '‥' => 'U+2025',
+            '…' => 'U+2026',
+            '‼' => 'U+203C',
             '₿' => 'U+20BF',
+            '∴' => 'U+2234',
+            '∵' => 'U+2235',
+            '∶' => 'U+2236',
+            '∷' => 'U+2237',
             '■' => 'U+25A0',
+            '✝' => 'U+271D',
             'ꜵ' => 'U+A735',
         ],
         'ligatureKeys' => [
+            'Et',
+            'ca',
             'cb',
             'ch',
             'ck',
@@ -450,6 +530,38 @@ return [
             'fist',
         ],
         'ligatures' => [
+            'Et' => [
+                'sequence' => 'Et',
+                'chars' => [
+                    'E',
+                    't',
+                ],
+                'codepoints' => [
+                    69,
+                    116,
+                ],
+                'unicode' => [
+                    'U+0045',
+                    'U+0074',
+                ],
+                'filename' => 'ligature-u0045-u0074.svg',
+            ],
+            'ca' => [
+                'sequence' => 'ca',
+                'chars' => [
+                    'c',
+                    'a',
+                ],
+                'codepoints' => [
+                    99,
+                    97,
+                ],
+                'unicode' => [
+                    'U+0063',
+                    'U+0061',
+                ],
+                'filename' => 'ligature-u0063-u0061.svg',
+            ],
             'cb' => [
                 'sequence' => 'cb',
                 'chars' => [
@@ -1369,6 +1481,7 @@ return [
             '!' => 'character-u0021.svg',
             '#' => 'character-u0023.svg',
             '$' => 'character-u0024.svg',
+            '&' => 'character-u0026.svg',
             '+' => 'character-u002b.svg',
             ',' => 'character-u002c.svg',
             '-' => 'character-u002d.svg',
@@ -1448,6 +1561,7 @@ return [
             '}' => 'character-u007d.svg',
             '¦' => 'character-u00a6.svg',
             '§' => 'character-u00a7.svg',
+            'Æ' => 'character-u00c6.svg',
             'ä' => 'character-u00e4.svg',
             'æ' => 'character-u00e6.svg',
             'ë' => 'character-u00eb.svg',
@@ -1457,9 +1571,23 @@ return [
             'ü' => 'character-u00fc.svg',
             'ı' => 'character-u0131.svg',
             'ĳ' => 'character-u0133.svg',
+            'Œ' => 'character-u0152.svg',
+            'œ' => 'character-u0153.svg',
+            'Τ' => 'character-u03a4.svg',
+            'π' => 'character-u03c0.svg',
+            '‥' => 'character-u2025.svg',
+            '…' => 'character-u2026.svg',
+            '‼' => 'character-u203c.svg',
             '₿' => 'character-u20bf.svg',
+            '∴' => 'character-u2234.svg',
+            '∵' => 'character-u2235.svg',
+            '∶' => 'character-u2236.svg',
+            '∷' => 'character-u2237.svg',
             '■' => 'character-u25a0.svg',
+            '✝' => 'character-u271d.svg',
             'ꜵ' => 'character-ua735.svg',
+            'Et' => 'ligature-u0045-u0074.svg',
+            'ca' => 'ligature-u0063-u0061.svg',
             'cb' => 'ligature-u0063-u0062.svg',
             'ch' => 'ligature-u0063-u0068.svg',
             'ck' => 'ligature-u0063-u006b.svg',
@@ -1575,6 +1703,21 @@ return [
                 ],
                 'unicode' => [
                     'U+0024',
+                ],
+            ],
+            '&' => [
+                'key' => '&',
+                'filename' => 'character-u0026.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '&',
+                ],
+                'codepoints' => [
+                    38,
+                ],
+                'unicode' => [
+                    'U+0026',
                 ],
             ],
             '+' => [
@@ -2762,6 +2905,21 @@ return [
                     'U+00A7',
                 ],
             ],
+            'Æ' => [
+                'key' => 'Æ',
+                'filename' => 'character-u00c6.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    'Æ',
+                ],
+                'codepoints' => [
+                    198,
+                ],
+                'unicode' => [
+                    'U+00C6',
+                ],
+            ],
             'ä' => [
                 'key' => 'ä',
                 'filename' => 'character-u00e4.svg',
@@ -2897,6 +3055,111 @@ return [
                     'U+0133',
                 ],
             ],
+            'Œ' => [
+                'key' => 'Œ',
+                'filename' => 'character-u0152.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    'Œ',
+                ],
+                'codepoints' => [
+                    338,
+                ],
+                'unicode' => [
+                    'U+0152',
+                ],
+            ],
+            'œ' => [
+                'key' => 'œ',
+                'filename' => 'character-u0153.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    'œ',
+                ],
+                'codepoints' => [
+                    339,
+                ],
+                'unicode' => [
+                    'U+0153',
+                ],
+            ],
+            'Τ' => [
+                'key' => 'Τ',
+                'filename' => 'character-u03a4.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    'Τ',
+                ],
+                'codepoints' => [
+                    932,
+                ],
+                'unicode' => [
+                    'U+03A4',
+                ],
+            ],
+            'π' => [
+                'key' => 'π',
+                'filename' => 'character-u03c0.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    'π',
+                ],
+                'codepoints' => [
+                    960,
+                ],
+                'unicode' => [
+                    'U+03C0',
+                ],
+            ],
+            '‥' => [
+                'key' => '‥',
+                'filename' => 'character-u2025.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '‥',
+                ],
+                'codepoints' => [
+                    8229,
+                ],
+                'unicode' => [
+                    'U+2025',
+                ],
+            ],
+            '…' => [
+                'key' => '…',
+                'filename' => 'character-u2026.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '…',
+                ],
+                'codepoints' => [
+                    8230,
+                ],
+                'unicode' => [
+                    'U+2026',
+                ],
+            ],
+            '‼' => [
+                'key' => '‼',
+                'filename' => 'character-u203c.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '‼',
+                ],
+                'codepoints' => [
+                    8252,
+                ],
+                'unicode' => [
+                    'U+203C',
+                ],
+            ],
             '₿' => [
                 'key' => '₿',
                 'filename' => 'character-u20bf.svg',
@@ -2910,6 +3173,66 @@ return [
                 ],
                 'unicode' => [
                     'U+20BF',
+                ],
+            ],
+            '∴' => [
+                'key' => '∴',
+                'filename' => 'character-u2234.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '∴',
+                ],
+                'codepoints' => [
+                    8756,
+                ],
+                'unicode' => [
+                    'U+2234',
+                ],
+            ],
+            '∵' => [
+                'key' => '∵',
+                'filename' => 'character-u2235.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '∵',
+                ],
+                'codepoints' => [
+                    8757,
+                ],
+                'unicode' => [
+                    'U+2235',
+                ],
+            ],
+            '∶' => [
+                'key' => '∶',
+                'filename' => 'character-u2236.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '∶',
+                ],
+                'codepoints' => [
+                    8758,
+                ],
+                'unicode' => [
+                    'U+2236',
+                ],
+            ],
+            '∷' => [
+                'key' => '∷',
+                'filename' => 'character-u2237.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '∷',
+                ],
+                'codepoints' => [
+                    8759,
+                ],
+                'unicode' => [
+                    'U+2237',
                 ],
             ],
             '■' => [
@@ -2927,6 +3250,21 @@ return [
                     'U+25A0',
                 ],
             ],
+            '✝' => [
+                'key' => '✝',
+                'filename' => 'character-u271d.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '✝',
+                ],
+                'codepoints' => [
+                    10013,
+                ],
+                'unicode' => [
+                    'U+271D',
+                ],
+            ],
             'ꜵ' => [
                 'key' => 'ꜵ',
                 'filename' => 'character-ua735.svg',
@@ -2940,6 +3278,42 @@ return [
                 ],
                 'unicode' => [
                     'U+A735',
+                ],
+            ],
+            'Et' => [
+                'key' => 'Et',
+                'filename' => 'ligature-u0045-u0074.svg',
+                'isLigature' => true,
+                'length' => 2,
+                'chars' => [
+                    'E',
+                    't',
+                ],
+                'codepoints' => [
+                    69,
+                    116,
+                ],
+                'unicode' => [
+                    'U+0045',
+                    'U+0074',
+                ],
+            ],
+            'ca' => [
+                'key' => 'ca',
+                'filename' => 'ligature-u0063-u0061.svg',
+                'isLigature' => true,
+                'length' => 2,
+                'chars' => [
+                    'c',
+                    'a',
+                ],
+                'codepoints' => [
+                    99,
+                    97,
+                ],
+                'unicode' => [
+                    'U+0063',
+                    'U+0061',
                 ],
             ],
             'cb' => [

@@ -9,11 +9,30 @@ Generate an animated video from a variable font using text from:
 Outputs:
     dist/videos/{sanitized_text}-{timestamp}.{ext}
 
-Notes:
-- Runs locally, no Colab / notebook APIs.
-- Shapes normal Unicode text with HarfBuzz, so ligatures and kerning can work.
-- Supports multiple lines from the text file.
-- Keeps the original UNST animation path by default.
+Features:
+- Runs locally (no notebook / Colab required)
+- Shapes normal Unicode text with HarfBuzz
+- Supports multiple lines
+- Optional image fill for text and/or background
+- Image fill behaves like CSS:
+      background-size: cover;
+      background-position: center center;
+  with optional position overrides
+
+Examples:
+    python tools/generate-video.py --font dist/fonts/unst.ttf
+
+    python tools/generate-video.py \
+        --font dist/fonts/unst.ttf \
+        --text-image "https://example.com/texture.jpg" \
+        --bg-image "images/background.jpg"
+
+    python tools/generate-video.py \
+        --font dist/fonts/unst.ttf \
+        --text-image "images/portrait.jpg" \
+        --text-image-position "left center" \
+        --bg-image "images/bg.jpg" \
+        --bg-image-position "50% 20%"
 """
 
 from __future__ import annotations
@@ -27,14 +46,17 @@ import tempfile
 import unicodedata
 from collections import OrderedDict
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 import freetype
 import imageio.v2 as imageio
 import numpy as np
 import uharfbuzz as hb
-from PIL import Image
+from PIL import Image, ImageOps
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from tqdm import tqdm
@@ -139,7 +161,7 @@ def ft_bitmap_to_mask(bmp: freetype.Bitmap) -> Image.Image:
     return im
 
 
-def paste_mask_clipped(dst: Image.Image, mask: Image.Image, x: int, y: int, W: int, H: int) -> None:
+def paste_mask_clipped(dst: Image.Image, mask: Image.Image, x: int, y: int, W: int, H: int, fill: int = 255) -> None:
     bw, bh = mask.size
     x0, y0 = x, y
     x1, y1 = x + bw, y + bh
@@ -157,7 +179,7 @@ def paste_mask_clipped(dst: Image.Image, mask: Image.Image, x: int, y: int, W: i
     my1 = my0 + (iy1 - iy0)
 
     m = mask.crop((mx0, my0, mx1, my1))
-    dst.paste(0, (ix0, iy0, ix1, iy1), m)
+    dst.paste(fill, (ix0, iy0, ix1, iy1), m)
 
 
 def slugify_text(text: str, max_len: int = 80) -> str:
@@ -276,6 +298,163 @@ def build_axis_sequence(
 
 
 # ------------------------------------------------------------
+# Image source / cover-fill helpers
+# ------------------------------------------------------------
+
+def is_url(value: str) -> bool:
+    scheme = urlparse(value).scheme.lower()
+    return scheme in {"http", "https"}
+
+
+def load_image_source(source: str) -> Image.Image:
+    """
+    Load a raster image from a local path or URL.
+
+    Note:
+    - This uses Pillow, so supported formats depend on Pillow plugins.
+    - Typical PNG/JPEG/WebP/TIFF/BMP are fine.
+    """
+    if is_url(source):
+        req = Request(
+            source,
+            headers={
+                "User-Agent": "Mozilla/5.0 (compatible; generate-video.py)"
+            },
+        )
+        with urlopen(req, timeout=30) as resp:
+            data = resp.read()
+        im = Image.open(BytesIO(data))
+    else:
+        path = Path(source).expanduser()
+        if not path.is_absolute():
+            path = path.resolve()
+        if not path.exists():
+            raise FileNotFoundError(f"Image file not found: {path}")
+        im = Image.open(path)
+
+    im = ImageOps.exif_transpose(im)
+    return im.convert("RGB")
+
+
+def _parse_position_token(token: str, axis: str) -> float:
+    token = token.strip().lower()
+
+    if axis == "x":
+        kw = {"left": 0.0, "center": 0.5, "right": 1.0}
+    else:
+        kw = {"top": 0.0, "center": 0.5, "bottom": 1.0}
+
+    if token in kw:
+        return kw[token]
+
+    if token.endswith("%"):
+        try:
+            return max(0.0, min(1.0, float(token[:-1]) / 100.0))
+        except ValueError:
+            pass
+
+    try:
+        value = float(token)
+        if 0.0 <= value <= 1.0:
+            return value
+        if 0.0 <= value <= 100.0:
+            return value / 100.0
+    except ValueError:
+        pass
+
+    raise ValueError(f"Invalid {axis}-position token: {token!r}")
+
+
+def parse_position(value: str | None) -> Tuple[float, float]:
+    """
+    Parses a CSS-ish background-position style value.
+
+    Supported examples:
+      "center center"
+      "left top"
+      "right center"
+      "50% 20%"
+      "0.5 0.2"
+      "left"
+      "top"
+      "75%"
+
+    Default is center center.
+    """
+    if value is None:
+        return 0.5, 0.5
+
+    parts = [p for p in re.split(r"[\s,]+", value.strip()) if p]
+    if not parts:
+        return 0.5, 0.5
+
+    horizontal = {"left", "center", "right"}
+    vertical = {"top", "center", "bottom"}
+
+    if len(parts) == 1:
+        p = parts[0].lower()
+        if p in {"top", "bottom"}:
+            return 0.5, _parse_position_token(p, "y")
+        return _parse_position_token(p, "x"), 0.5
+
+    a = parts[0].lower()
+    b = parts[1].lower()
+
+    # Allow "top left" / "left top"
+    if a in vertical and b in horizontal:
+        return _parse_position_token(b, "x"), _parse_position_token(a, "y")
+    if a in horizontal and b in vertical:
+        return _parse_position_token(a, "x"), _parse_position_token(b, "y")
+
+    # Otherwise: first = x, second = y
+    return _parse_position_token(parts[0], "x"), _parse_position_token(parts[1], "y")
+
+
+def cover_resize_and_crop(
+    im: Image.Image,
+    out_w: int,
+    out_h: int,
+    pos_x: float = 0.5,
+    pos_y: float = 0.5,
+) -> Image.Image:
+    src_w, src_h = im.size
+    if src_w <= 0 or src_h <= 0:
+        raise ValueError("Source image has invalid size.")
+
+    scale = max(out_w / src_w, out_h / src_h)
+    new_w = max(1, int(round(src_w * scale)))
+    new_h = max(1, int(round(src_h * scale)))
+
+    resized = im.resize((new_w, new_h), Image.LANCZOS)
+
+    extra_x = max(0, new_w - out_w)
+    extra_y = max(0, new_h - out_h)
+
+    left = int(round(extra_x * max(0.0, min(1.0, pos_x))))
+    top = int(round(extra_y * max(0.0, min(1.0, pos_y))))
+
+    left = max(0, min(left, extra_x))
+    top = max(0, min(top, extra_y))
+
+    return resized.crop((left, top, left + out_w, top + out_h)).convert("RGB")
+
+
+def make_cover_layer(
+    source: str | None,
+    out_w: int,
+    out_h: int,
+    position: str | None,
+    fallback_rgb: Tuple[int, int, int],
+) -> Image.Image:
+    if not source:
+        return Image.new("RGB", (out_w, out_h), fallback_rgb)
+
+    pos_x, pos_y = parse_position(position)
+    im = load_image_source(source)
+    return cover_resize_and_crop(im, out_w, out_h, pos_x=pos_x, pos_y=pos_y)
+
+
+# ------------------------------------------------------------
 # Font instancing / shaping caches
 # ------------------------------------------------------------
 
@@ -373,7 +552,7 @@ def shape_line(text: str, hb_font: hb.Font, upm: int, font_px: int) -> List[Tupl
 
     for info, pos in zip(infos, positions):
         x = pen_x + (pos.x_offset * scale)
-        y = pen_y + (pos.y_offset * scale)  # positive is "up" in font space
+        y = pen_y + (pos.y_offset * scale)
         out.append((int(info.codepoint), float(x), float(y)))
 
         pen_x += pos.x_advance * scale
@@ -386,7 +565,7 @@ def shape_line(text: str, hb_font: hb.Font, upm: int, font_px: int) -> List[Tupl
 # Rendering
 # ------------------------------------------------------------
 
-def render_text_centered(
+def render_text_mask_centered(
     inst_path: Path,
     text: str,
     font_px: int,
@@ -394,6 +573,11 @@ def render_text_centered(
     H: int,
     line_height: float,
 ) -> Image.Image:
+    """
+    Returns an L-mode mask:
+      black   = outside text
+      white   = text ink
+    """
     lines = text.expandtabs(4).split("\n")
     if not lines:
         lines = [""]
@@ -403,8 +587,6 @@ def render_text_centered(
 
     hb_font, upm = hb_font_for_instance(inst_path)
 
-    # First: shape each line and compute each line's own ink bbox,
-    # so every line can be centered individually.
     per_line_runs = []
     line_advance = font_px * line_height
 
@@ -431,7 +613,7 @@ def render_text_centered(
                 x0 = left
                 y0 = top
                 x1 = left + bw
-                y1 = top + bh
+                y1 = y0 + bh
                 x_min = min(x_min, x0)
                 y_min = min(y_min, y0)
                 x_max = max(x_max, x1)
@@ -444,7 +626,6 @@ def render_text_centered(
 
         per_line_runs.append((run, line_center_shift_x))
 
-    # Second: compute global bbox after line centering and line stacking.
     g_x_min, g_y_min = float("inf"), float("inf")
     g_x_max, g_y_max = float("-inf"), float("-inf")
 
@@ -465,25 +646,35 @@ def render_text_centered(
             g_x_max = max(g_x_max, x1)
             g_y_max = max(g_y_max, y1)
 
-    img = Image.new("L", (W, H), 255)
+    img = Image.new("L", (W, H), 0)
 
-    # Empty / whitespace-only input: just return a blank frame.
     if not (g_x_max >= g_x_min and g_y_max >= g_y_min):
-        return img.convert("RGB")
+        return img
 
     shift_x = (W / 2.0) - ((g_x_min + g_x_max) / 2.0)
     shift_y = (H / 2.0) - ((g_y_min + g_y_max) / 2.0)
 
-    # Final paste.
     for line_idx, (run, line_shift_x) in enumerate(per_line_runs):
         baseline_y = line_idx * line_advance
         for mask, left, top in run:
             xi = int(round(left + line_shift_x + shift_x))
             yi = int(round(top + baseline_y + shift_y))
             if mask.size[0] > 0 and mask.size[1] > 0:
-                paste_mask_clipped(img, mask, xi, yi, W, H)
+                paste_mask_clipped(img, mask, xi, yi, W, H, fill=255)
 
-    return img.convert("RGB")
+    return img
+
+
+def composite_frame(
+    text_mask: Image.Image,
+    bg_layer: Image.Image,
+    text_layer: Image.Image,
+) -> Image.Image:
+    """
+    Uses text_mask to take pixels from text_layer where the text is,
+    otherwise from bg_layer.
+    """
+    return Image.composite(text_layer, bg_layer, text_mask).convert("RGB")
 
 
 # ------------------------------------------------------------
@@ -545,6 +736,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--round-to", type=float, default=DEFAULT_ROUND_TO, help=f"Axis rounding step for instance cache. Default: {DEFAULT_ROUND_TO}")
     p.add_argument("--cache-max", type=int, default=DEFAULT_CACHE_MAX, help=f"Max cached instances. Default: {DEFAULT_CACHE_MAX}")
 
+    p.add_argument("--text-image", type=str, default=None, help="URL or local file path for text fill image.")
+    p.add_argument("--bg-image", type=str, default=None, help="URL or local file path for background fill image.")
+    p.add_argument("--text-image-position", type=str, default="center center", help='CSS-ish position for text image cover crop. Default: "center center"')
+    p.add_argument("--bg-image-position", type=str, default="center center", help='CSS-ish position for background image cover crop. Default: "center center"')
+
     return p.parse_args()
 
 
@@ -603,17 +799,41 @@ def main() -> int:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     out_path = out_dir / f"{slug}-{timestamp}.{ext}"
 
-    print(f"Using font:      {font_path}")
-    print(f"Using text file: {text_path}")
-    print(f"Output:          {out_path}")
-    print(f"Canvas:          {args.width}x{args.height}")
-    print(f"FPS:             {args.fps}")
-    print(f"Font size:       {args.font_px}px")
-    print(f"Line height:     {args.line_height}")
-    print(f"wdth range:      {wdth_min:g} .. {wdth_max:g}")
-    print(f"hght range:      {hght_min:g} .. {hght_max:g}")
-    print(f"Frames:          {n_frames}")
-    print(f"Duration:        {duration_s:.2f}s")
+    # Prepare stable full-canvas layers once.
+    # This is the key to making the image NOT scale with the text.
+    try:
+        bg_layer = make_cover_layer(
+            source=args.bg_image,
+            out_w=args.width,
+            out_h=args.height,
+            position=args.bg_image_position,
+            fallback_rgb=(255, 255, 255),
+        )
+        text_layer = make_cover_layer(
+            source=args.text_image,
+            out_w=args.width,
+            out_h=args.height,
+            position=args.text_image_position,
+            fallback_rgb=(0, 0, 0),
+        )
+    except Exception as exc:
+        raise SystemExit(f"Failed to prepare image layer: {exc}") from exc
+
+    print(f"Using font:           {font_path}")
+    print(f"Using text file:      {text_path}")
+    print(f"Output:               {out_path}")
+    print(f"Canvas:               {args.width}x{args.height}")
+    print(f"FPS:                  {args.fps}")
+    print(f"Font size:            {args.font_px}px")
+    print(f"Line height:          {args.line_height}")
+    print(f"wdth range:           {wdth_min:g} .. {wdth_max:g}")
+    print(f"hght range:           {hght_min:g} .. {hght_max:g}")
+    print(f"Frames:               {n_frames}")
+    print(f"Duration:             {duration_s:.2f}s")
+    print(f"Text image:           {args.text_image or '(solid black)'}")
+    print(f"Text image position:  {args.text_image_position}")
+    print(f"BG image:             {args.bg_image or '(solid white)'}")
+    print(f"BG image position:    {args.bg_image_position}")
     print()
     print("Rendered text:")
     print("-" * 40)
@@ -636,7 +856,7 @@ def main() -> int:
                 cache_max=args.cache_max,
             )
 
-            frame = render_text_centered(
+            text_mask = render_text_mask_centered(
                 inst_path=inst_path,
                 text=text,
                 font_px=args.font_px,
@@ -644,6 +864,13 @@ def main() -> int:
                 H=args.height,
                 line_height=args.line_height,
             )
+
+            frame = composite_frame(
+                text_mask=text_mask,
+                bg_layer=bg_layer,
+                text_layer=text_layer,
+            )
+
             writer.append_data(np.array(frame))
     finally:
         writer.close()
