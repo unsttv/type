@@ -56,7 +56,7 @@ import freetype
 import imageio.v2 as imageio
 import numpy as np
 import uharfbuzz as hb
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageColor
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from tqdm import tqdm
@@ -121,6 +121,26 @@ atexit.register(_cleanup_instance_dir)
 # ------------------------------------------------------------
 # Helpers
 # ------------------------------------------------------------
+
+def parse_rgb_color(value: str) -> Tuple[int, int, int]:
+    """
+    Accepts common CSS/Pillow-style colors, for example:
+      black
+      white
+      #000
+      #000000
+      rgb(255,0,0)
+      red
+    """
+    try:
+        rgb = ImageColor.getrgb(value.strip())
+    except Exception as exc:
+        raise ValueError(f"Invalid color: {value!r}") from exc
+
+    if len(rgb) == 4:
+        rgb = rgb[:3]
+
+    return tuple(int(v) for v in rgb)
 
 def ease_in_out_sine(t: float) -> float:
     t = max(0.0, min(1.0, t))
@@ -444,10 +464,11 @@ def make_cover_layer(
     out_w: int,
     out_h: int,
     position: str | None,
-    fallback_rgb: Tuple[int, int, int],
+    fallback_color: str | Tuple[int, int, int],
 ) -> Image.Image:
     if not source:
-        return Image.new("RGB", (out_w, out_h), fallback_rgb)
+        rgb = parse_rgb_color(fallback_color) if isinstance(fallback_color, str) else fallback_color
+        return Image.new("RGB", (out_w, out_h), rgb)
 
     pos_x, pos_y = parse_position(position)
     im = load_image_source(source)
@@ -725,6 +746,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--font-px", type=int, default=DEFAULT_FONT_PX, help=f"Font size in pixels. Default: {DEFAULT_FONT_PX}")
     p.add_argument("--line-height", type=float, default=DEFAULT_LINE_HEIGHT, help=f"Line height multiplier. Default: {DEFAULT_LINE_HEIGHT}")
 
+    p.add_argument("--color", type=str, default="black", help='Solid text color fallback. Default: "black"')
+    p.add_argument("--bgcolor", type=str, default="white", help='Solid background color fallback. Default: "white"')
+
     p.add_argument("--hold", type=float, default=DEFAULT_HOLD_S, help=f"Hold duration per state, seconds. Default: {DEFAULT_HOLD_S}")
     p.add_argument("--move", type=float, default=DEFAULT_MOVE_S, help=f"Move duration between states, seconds. Default: {DEFAULT_MOVE_S}")
 
@@ -807,14 +831,14 @@ def main() -> int:
             out_w=args.width,
             out_h=args.height,
             position=args.bg_image_position,
-            fallback_rgb=(255, 255, 255),
+            fallback_color=args.bgcolor,
         )
         text_layer = make_cover_layer(
             source=args.text_image,
             out_w=args.width,
             out_h=args.height,
             position=args.text_image_position,
-            fallback_rgb=(0, 0, 0),
+            fallback_color=args.color,
         )
     except Exception as exc:
         raise SystemExit(f"Failed to prepare image layer: {exc}") from exc
@@ -830,10 +854,12 @@ def main() -> int:
     print(f"hght range:           {hght_min:g} .. {hght_max:g}")
     print(f"Frames:               {n_frames}")
     print(f"Duration:             {duration_s:.2f}s")
-    print(f"Text image:           {args.text_image or '(solid black)'}")
+    print(f"Text image:           {args.text_image or '(none)'}")
     print(f"Text image position:  {args.text_image_position}")
-    print(f"BG image:             {args.bg_image or '(solid white)'}")
+    print(f"Text color:           {args.color}")
+    print(f"BG image:             {args.bg_image or '(none)'}")
     print(f"BG image position:    {args.bg_image_position}")
+    print(f"BG color:             {args.bgcolor}")
     print()
     print("Rendered text:")
     print("-" * 40)
