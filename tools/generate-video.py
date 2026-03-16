@@ -553,9 +553,14 @@ def hb_font_for_instance(inst_path: Path) -> Tuple[hb.Font, int]:
     return font, upm
 
 
-def shape_line(text: str, hb_font: hb.Font, upm: int, font_px: int) -> List[Tuple[int, float, float]]:
+def shape_line(
+    text: str,
+    hb_font: hb.Font,
+    upm: int,
+    font_px: int,
+) -> Tuple[List[Tuple[int, float, float]], float]:
     if not text:
-        return []
+        return [], 0.0
 
     buf = hb.Buffer()
     buf.add_str(text)
@@ -579,7 +584,7 @@ def shape_line(text: str, hb_font: hb.Font, upm: int, font_px: int) -> List[Tupl
         pen_x += pos.x_advance * scale
         pen_y += pos.y_advance * scale
 
-    return out
+    return out, float(pen_x)
 
 
 # ------------------------------------------------------------
@@ -593,11 +598,19 @@ def render_text_mask_centered(
     W: int,
     H: int,
     line_height: float,
+    align: str = "center",
 ) -> Image.Image:
     """
     Returns an L-mode mask:
       black   = outside text
       white   = text ink
+
+    Alignment modes:
+      left   = lines share left edge based on shaped advance width
+      right  = lines share right edge based on shaped advance width
+      center = lines are visually centered per line using ink bbox
+      snap   = lines are centered using shaped advance width, which tends
+               to preserve grid/cell alignment better for structured fonts
     """
     lines = text.expandtabs(4).split("\n")
     if not lines:
@@ -608,11 +621,14 @@ def render_text_mask_centered(
 
     hb_font, upm = hb_font_for_instance(inst_path)
 
+    line_advance_y = font_px * line_height
     per_line_runs = []
-    line_advance = font_px * line_height
+    max_line_advance_x = 0.0
 
+    # First pass: shape lines and collect glyph masks / metrics
     for line in lines:
-        shaped = shape_line(line, hb_font, upm, font_px)
+        shaped, shaped_advance_x = shape_line(line, hb_font, upm, font_px)
+        max_line_advance_x = max(max_line_advance_x, shaped_advance_x)
 
         run = []
         x_min, y_min = float("inf"), float("inf")
@@ -640,19 +656,43 @@ def render_text_mask_centered(
                 x_max = max(x_max, x1)
                 y_max = max(y_max, y1)
 
-        if x_max >= x_min and y_max >= y_min:
-            line_center_shift_x = -((x_min + x_max) / 2.0)
-        else:
-            line_center_shift_x = 0.0
+        has_ink = x_max >= x_min and y_max >= y_min
+        ink_center_x = ((x_min + x_max) / 2.0) if has_ink else 0.0
 
-        per_line_runs.append((run, line_center_shift_x))
+        per_line_runs.append(
+            {
+                "run": run,
+                "advance_x": shaped_advance_x,
+                "has_ink": has_ink,
+                "ink_center_x": ink_center_x,
+            }
+        )
 
+    # Second pass: determine per-line horizontal shift according to alignment
+    for item in per_line_runs:
+        adv_x = item["advance_x"]
+
+        if align == "left":
+            line_shift_x = 0.0
+        elif align == "right":
+            line_shift_x = max_line_advance_x - adv_x
+        elif align == "snap":
+            line_shift_x = (max_line_advance_x - adv_x) / 2.0
+        else:  # center
+            # Visually center each line by its actual ink bbox
+            line_shift_x = -item["ink_center_x"] if item["has_ink"] else 0.0
+
+        item["line_shift_x"] = line_shift_x
+
+    # Third pass: compute global bbox after line alignment + line stacking
     g_x_min, g_y_min = float("inf"), float("inf")
     g_x_max, g_y_max = float("-inf"), float("-inf")
 
-    for line_idx, (run, line_shift_x) in enumerate(per_line_runs):
-        baseline_y = line_idx * line_advance
-        for mask, left, top in run:
+    for line_idx, item in enumerate(per_line_runs):
+        baseline_y = line_idx * line_advance_y
+        line_shift_x = item["line_shift_x"]
+
+        for mask, left, top in item["run"]:
             bw, bh = mask.size
             if bw <= 0 or bh <= 0:
                 continue
@@ -672,12 +712,15 @@ def render_text_mask_centered(
     if not (g_x_max >= g_x_min and g_y_max >= g_y_min):
         return img
 
+    # Keep the whole multiline block centered on the canvas
     shift_x = (W / 2.0) - ((g_x_min + g_x_max) / 2.0)
     shift_y = (H / 2.0) - ((g_y_min + g_y_max) / 2.0)
 
-    for line_idx, (run, line_shift_x) in enumerate(per_line_runs):
-        baseline_y = line_idx * line_advance
-        for mask, left, top in run:
+    for line_idx, item in enumerate(per_line_runs):
+        baseline_y = line_idx * line_advance_y
+        line_shift_x = item["line_shift_x"]
+
+        for mask, left, top in item["run"]:
             xi = int(round(left + line_shift_x + shift_x))
             yi = int(round(top + baseline_y + shift_y))
             if mask.size[0] > 0 and mask.size[1] > 0:
@@ -745,6 +788,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--fps", type=int, default=DEFAULT_FPS, help=f"Frames per second. Default: {DEFAULT_FPS}")
     p.add_argument("--font-px", type=int, default=DEFAULT_FONT_PX, help=f"Font size in pixels. Default: {DEFAULT_FONT_PX}")
     p.add_argument("--line-height", type=float, default=DEFAULT_LINE_HEIGHT, help=f"Line height multiplier. Default: {DEFAULT_LINE_HEIGHT}")
+
+    p.add_argument(
+        "--align",
+        type=str,
+        choices=["left", "center", "right", "snap"],
+        default="center",
+        help='Text alignment inside the multiline block. Default: "center"',
+    )
 
     p.add_argument("--color", type=str, default="black", help='Solid text color fallback. Default: "black"')
     p.add_argument("--bgcolor", type=str, default="white", help='Solid background color fallback. Default: "white"')
@@ -850,6 +901,7 @@ def main() -> int:
     print(f"FPS:                  {args.fps}")
     print(f"Font size:            {args.font_px}px")
     print(f"Line height:          {args.line_height}")
+    print(f"Alignment:            {args.align}")
     print(f"wdth range:           {wdth_min:g} .. {wdth_max:g}")
     print(f"hght range:           {hght_min:g} .. {hght_max:g}")
     print(f"Frames:               {n_frames}")
@@ -889,6 +941,7 @@ def main() -> int:
                 W=args.width,
                 H=args.height,
                 line_height=args.line_height,
+                align=args.align,
             )
 
             frame = composite_frame(
