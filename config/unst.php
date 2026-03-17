@@ -6,9 +6,9 @@ declare(strict_types=1);
 
 return [
     'Unst' => [
-        'glyphCount' => 169,
+        'glyphCount' => 170,
         'singleGlyphCount' => 112,
-        'ligatureCount' => 57,
+        'ligatureCount' => 58,
         'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝🏁 ÆäæëïöüıĳŒœΤπꜵ',
         'uppercase' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
@@ -529,6 +529,7 @@ return [
             'wa',
             'yp',
             'zs',
+            '🇳🇱',
             'esh',
             'esk',
             'est',
@@ -1323,6 +1324,22 @@ return [
                 ],
                 'filename' => 'ligature-u007a-u0073.svg',
             ],
+            '🇳🇱' => [
+                'sequence' => '🇳🇱',
+                'chars' => [
+                    '🇳',
+                    '🇱',
+                ],
+                'codepoints' => [
+                    127475,
+                    127473,
+                ],
+                'unicode' => [
+                    'U+1F1F3',
+                    'U+1F1F1',
+                ],
+                'filename' => 'ligature-u1f1f3-u1f1f1.svg',
+            ],
             'esh' => [
                 'sequence' => 'esh',
                 'chars' => [
@@ -1647,6 +1664,7 @@ return [
             'wa' => 'ligature-u0077-u0061.svg',
             'yp' => 'ligature-u0079-u0070.svg',
             'zs' => 'ligature-u007a-u0073.svg',
+            '🇳🇱' => 'ligature-u1f1f3-u1f1f1.svg',
             'esh' => 'ligature-u0065-u0073-u0068.svg',
             'esk' => 'ligature-u0065-u0073-u006b.svg',
             'est' => 'ligature-u0065-u0073-u0074.svg',
@@ -4217,6 +4235,24 @@ return [
                 'unicode' => [
                     'U+007A',
                     'U+0073',
+                ],
+            ],
+            '🇳🇱' => [
+                'key' => '🇳🇱',
+                'filename' => 'ligature-u1f1f3-u1f1f1.svg',
+                'isLigature' => true,
+                'length' => 2,
+                'chars' => [
+                    '🇳',
+                    '🇱',
+                ],
+                'codepoints' => [
+                    127475,
+                    127473,
+                ],
+                'unicode' => [
+                    'U+1F1F3',
+                    'U+1F1F1',
                 ],
             ],
             'esh' => [
