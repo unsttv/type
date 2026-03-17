@@ -23,8 +23,16 @@ Ligatures:
 - Filename defines the sequence:
     ligature-u0073-u0074.svg -> "st"
     ligature-u0066-u0069.svg -> "fi"
-- GSUB liga rules are auto-generated from discovered ligatures, but only emitted
-  when all component glyphs exist.
+- GSUB rules are auto-generated from discovered ligatures.
+  - Standard text ligatures go in liga
+  - Ligatures whose components are synthetic placeholders (e.g. emoji flags)
+    go in rlig so they are more likely to substitute consistently.
+
+Color support:
+- Explicit polygon fills in ligature SVGs are preserved as COLRv0/CPAL color layers.
+- Base glyphs are still built as monochrome outline fallbacks.
+- Variable geometry is preserved because the color layers are regular glyph outlines
+  that interpolate just like the monochrome base glyphs.
 
 Optional (recommended):
 - Shapely union of polygons before master generation to prevent tiny seams:
@@ -74,6 +82,7 @@ COMBINE_SHAPES = True
 
 EPS = 1e-9
 ROW_EPS = 1e-6  # tolerance for matching seam-fix rows
+RGBA = Tuple[int, int, int, int]
 
 # -----------------------------
 # Project paths
@@ -170,6 +179,12 @@ class Ring:
     is_hole: bool
 
 
+@dataclass(frozen=True)
+class ColorLayer:
+    fill_rgba: RGBA
+    rings: List[Ring]
+
+
 @dataclass
 class SvgGlyph:
     width_svg: float
@@ -177,6 +192,7 @@ class SvgGlyph:
     seam_x: Optional[float]
     seam_fix_rows: List[Tuple[float, float]]  # (x0, y_row)
     key: str  # debug / seam-logic key
+    color_layers: List[ColorLayer]
 
 
 @dataclass(frozen=True)
@@ -321,6 +337,7 @@ def load_single_glyphs_from_data(data_py_path: Path) -> List[SingleGlyph]:
             seam_x=None,
             seam_fix_rows=[],
             key=ch,
+            color_layers=[],
         )
 
         singles.append(
@@ -387,7 +404,6 @@ def ligature_key_to_glyph_name(key: str, cps: List[int]) -> str:
     """
     if SAFE_LIGA_NAME_RE.fullmatch(key):
         return key
-    # stable fallback
     return "liga_" + "_".join(f"u{cp:04X}" if cp <= 0xFFFF else f"u{cp:X}" for cp in cps)
 
 
@@ -529,6 +545,98 @@ def detect_seam_fix_rows(
     return dedup
 
 
+def _parse_rgb_part(part: str) -> int:
+    part = part.strip()
+    if part.endswith("%"):
+        return max(0, min(255, int(round(float(part[:-1]) * 255.0 / 100.0))))
+    return max(0, min(255, int(round(float(part)))))
+
+
+def _parse_alpha_part(part: str) -> int:
+    part = part.strip()
+    if part.endswith("%"):
+        return max(0, min(255, int(round(float(part[:-1]) * 255.0 / 100.0))))
+    value = float(part)
+    if value <= 1.0:
+        return max(0, min(255, int(round(value * 255.0))))
+    return max(0, min(255, int(round(value))))
+
+
+def parse_svg_fill(fill_value: Optional[str]) -> Optional[RGBA]:
+    if fill_value is None:
+        return None
+
+    s = fill_value.strip()
+    if not s:
+        return None
+
+    sl = s.lower()
+    if sl in {"none", "transparent", "currentcolor", "context-fill", "context-stroke", "inherit"}:
+        return None
+
+    if sl.startswith("#"):
+        hexpart = sl[1:]
+        if len(hexpart) == 3:
+            r = int(hexpart[0] * 2, 16)
+            g = int(hexpart[1] * 2, 16)
+            b = int(hexpart[2] * 2, 16)
+            return (r, g, b, 255)
+        if len(hexpart) == 4:
+            r = int(hexpart[0] * 2, 16)
+            g = int(hexpart[1] * 2, 16)
+            b = int(hexpart[2] * 2, 16)
+            a = int(hexpart[3] * 2, 16)
+            return (r, g, b, a)
+        if len(hexpart) == 6:
+            r = int(hexpart[0:2], 16)
+            g = int(hexpart[2:4], 16)
+            b = int(hexpart[4:6], 16)
+            return (r, g, b, 255)
+        if len(hexpart) == 8:
+            r = int(hexpart[0:2], 16)
+            g = int(hexpart[2:4], 16)
+            b = int(hexpart[4:6], 16)
+            a = int(hexpart[6:8], 16)
+            return (r, g, b, a)
+        raise ValueError(f"Unsupported hex fill: {fill_value!r}")
+
+    m = re.fullmatch(r"rgb\(([^)]+)\)", sl)
+    if m:
+        parts = [p.strip() for p in m.group(1).split(",")]
+        if len(parts) != 3:
+            raise ValueError(f"Unsupported rgb() fill: {fill_value!r}")
+        return (_parse_rgb_part(parts[0]), _parse_rgb_part(parts[1]), _parse_rgb_part(parts[2]), 255)
+
+    m = re.fullmatch(r"rgba\(([^)]+)\)", sl)
+    if m:
+        parts = [p.strip() for p in m.group(1).split(",")]
+        if len(parts) != 4:
+            raise ValueError(f"Unsupported rgba() fill: {fill_value!r}")
+        return (
+            _parse_rgb_part(parts[0]),
+            _parse_rgb_part(parts[1]),
+            _parse_rgb_part(parts[2]),
+            _parse_alpha_part(parts[3]),
+        )
+
+    named = {
+        "black": (0, 0, 0, 255),
+        "white": (255, 255, 255, 255),
+        "red": (255, 0, 0, 255),
+        "green": (0, 128, 0, 255),
+        "blue": (0, 0, 255, 255),
+        "yellow": (255, 255, 0, 255),
+        "cyan": (0, 255, 255, 255),
+        "magenta": (255, 0, 255, 255),
+        "gray": (128, 128, 128, 255),
+        "grey": (128, 128, 128, 255),
+    }
+    if sl in named:
+        return named[sl]
+
+    raise ValueError(f"Unsupported SVG fill value: {fill_value!r}")
+
+
 def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
     tree = ET.parse(svg_path)
     root = tree.getroot()
@@ -548,10 +656,24 @@ def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
     if not polys:
         raise ValueError(f"No <polygon> elements found in {svg_path}")
 
-    poly_list: List[Poly] = [parse_polygon_points(p.attrib["points"]) for p in polys]
+    poly_list: List[Poly] = []
+    color_groups: Dict[RGBA, List[Poly]] = {}
+
+    for p in polys:
+        poly = parse_polygon_points(p.attrib["points"])
+        poly_list.append(poly)
+
+        fill_rgba = parse_svg_fill(p.attrib.get("fill"))
+        if fill_rgba is not None:
+            color_groups.setdefault(fill_rgba, []).append(poly)
+
     seam_x = detect_seam_x(key, poly_list)
     seam_fix_rows = detect_seam_fix_rows(key, seam_x, poly_list)
     rings = rings_from_polys(poly_list)
+    color_layers = [
+        ColorLayer(fill_rgba=fill_rgba, rings=rings_from_polys(layer_polys))
+        for fill_rgba, layer_polys in color_groups.items()
+    ]
 
     return SvgGlyph(
         width_svg=width_svg,
@@ -559,6 +681,7 @@ def load_ligature_svg(svg_path: Path, key: str) -> SvgGlyph:
         seam_x=seam_x,
         seam_fix_rows=seam_fix_rows,
         key=key,
+        color_layers=color_layers,
     )
 
 
@@ -765,21 +888,49 @@ def make_notdef_glyph() -> object:
     return pen.glyph()
 
 
-def build_fea_liga(ligatures: List[LigatureDef], available_glyph_names: set[str]) -> str:
-    """
-    Auto-generate liga rules based on discovered ligatures.
+def make_empty_glyph() -> object:
+    return TTGlyphPen(None).glyph()
 
-    For each ligature key (e.g. "st"), emit:
-      sub s t by st;
 
-    Only if:
-      - all component glyph names exist
-      - the ligature glyph name exists
+def collect_missing_ligature_component_codepoints(
+    singles: List[SingleGlyph],
+    ligatures: List[LigatureDef],
+) -> List[int]:
+    existing = {g.codepoint for g in singles}
+    missing: List[int] = []
+    for lig in ligatures:
+        for cp in lig.codepoints:
+            if cp not in existing and cp not in missing:
+                missing.append(cp)
+    return missing
+
+
+def color_layer_glyph_name(base_glyph_name: str, layer_index: int) -> str:
+    return f"{base_glyph_name}_layer{layer_index:02d}"
+
+
+def rgba_to_cpal_tuple(rgba: RGBA) -> Tuple[float, float, float, float]:
+    r, g, b, a = rgba
+    return (r / 255.0, g / 255.0, b / 255.0, a / 255.0)
+
+
+def build_fea_features(
+    ligatures: List[LigatureDef],
+    available_glyph_names: set[str],
+    placeholder_component_names: set[str],
+) -> str:
     """
-    rules: List[str] = []
+    Auto-generate ligature substitution rules based on discovered ligatures.
+
+    - Standard typographic ligatures go in `liga`
+    - Sequences relying on synthetic placeholder component glyphs (such as emoji flags)
+      go in `rlig` so they are more likely to fire by default.
+    """
+    liga_rules: List[str] = []
+    rlig_rules: List[str] = []
 
     for lig in ligatures:
-        comps = [char_to_glyph_name(ch) for ch in lig.key]
+        comps = [char_to_glyph_name(chr(cp)) for cp in lig.codepoints]
         out = lig.glyph_name
 
         if out not in available_glyph_names:
@@ -787,12 +938,18 @@ def build_fea_liga(ligatures: List[LigatureDef], available_glyph_names: set[str]
         if any(cn not in available_glyph_names for cn in comps):
             continue
 
-        rules.append(f"  sub {' '.join(comps)} by {out};")
+        rule = f"  sub {' '.join(comps)} by {out};"
+        if any(cn in placeholder_component_names for cn in comps):
+            rlig_rules.append(rule)
+        else:
+            liga_rules.append(rule)
 
-    if not rules:
-        return ""
-
-    return "feature liga {\n" + "\n".join(rules) + "\n} liga;\n"
+    parts: List[str] = []
+    if rlig_rules:
+        parts.append("feature rlig {\n" + "\n".join(rlig_rules) + "\n} rlig;\n")
+    if liga_rules:
+        parts.append("feature liga {\n" + "\n".join(liga_rules) + "\n} liga;\n")
+    return "\n".join(parts)
 
 
 # -----------------------------
@@ -828,6 +985,7 @@ def build_master_ttf(
     out_path: Path,
     singles: List[SingleGlyph],
     ligatures: List[LigatureDef],
+    missing_ligature_components: List[int],
     wdth_value: float,
     hght_value: float,
 ) -> None:
@@ -837,17 +995,28 @@ def build_master_ttf(
 
     single_names = [g.glyph_name for g in singles]
     have_space = "space" in single_names
+    placeholder_components = [(cp, char_to_glyph_name(chr(cp))) for cp in missing_ligature_components]
+    placeholder_names = [gname for _cp, gname in placeholder_components]
     lig_names = [l.glyph_name for l in ligatures]
+    layer_names = [
+        color_layer_glyph_name(lig.glyph_name, idx)
+        for lig in ligatures
+        for idx, _layer in enumerate(lig.geom.color_layers)
+    ]
 
     glyph_order: List[str] = [".notdef"]
     if not have_space:
         glyph_order.append("space")  # fallback space
     glyph_order.extend(single_names)
+    glyph_order.extend(placeholder_names)
     glyph_order.extend(lig_names)
+    glyph_order.extend(layer_names)
 
     _assert_unique_glyph_order(glyph_order)
 
     cmap: Dict[int, str] = {g.codepoint: g.glyph_name for g in singles}
+    for cp, gname in placeholder_components:
+        cmap.setdefault(cp, gname)
 
     # Optional ĳ mapping if the ligature exists
     lig_ij = next((l for l in ligatures if l.key == "ij"), None)
@@ -866,9 +1035,14 @@ def build_master_ttf(
 
     space_adv_font = int(round((space_adv_svg * s) * SCALE))
     if not have_space:
-        glyf["space"] = TTGlyphPen(None).glyph()
+        glyf["space"] = make_empty_glyph()
         hmtx["space"] = (space_adv_font, 0)
     hmtx[".notdef"] = (space_adv_font, 0)
+
+    # Synthetic placeholder components (needed so multi-codepoint ligatures can GSUB)
+    for _cp, gname in placeholder_components:
+        glyf[gname] = make_empty_glyph()
+        hmtx[gname] = (0, 0)
 
     # Singles from data/glyphs.py
     for sg in singles:
@@ -896,6 +1070,10 @@ def build_master_ttf(
         )
         adv_font = int(round(adv_warped * SCALE))
         hmtx[sg.glyph_name] = (adv_font, 0)
+
+    color_layers_map: Dict[str, List[Tuple[str, int]]] = {}
+    palette_rgba_to_index: Dict[RGBA, int] = {}
+    palette: List[Tuple[float, float, float, float]] = []
 
     # Ligatures from SVG (discovered)
     for lig in ligatures:
@@ -927,6 +1105,34 @@ def build_master_ttf(
         adv_font = int(round(adv_warped * SCALE))
         hmtx[gname] = (adv_font, 0)
 
+        if sg.color_layers:
+            layer_defs: List[Tuple[str, int]] = []
+            for idx, layer in enumerate(sg.color_layers):
+                layer_name = color_layer_glyph_name(gname, idx)
+                warped_layer_rings = [
+                    transform_ring(
+                        r,
+                        s=s,
+                        t=t,
+                        seam_x=sg.seam_x,
+                        seam_fix_rows=sg.seam_fix_rows,
+                        key=sg.key,
+                    )
+                    for r in layer.rings
+                ]
+                glyf[layer_name] = build_tt_glyph_from_rings(warped_layer_rings, base_y_warped=base_y_warped)
+                hmtx[layer_name] = (adv_font, 0)
+
+                color_index = palette_rgba_to_index.get(layer.fill_rgba)
+                if color_index is None:
+                    color_index = len(palette)
+                    palette_rgba_to_index[layer.fill_rgba] = color_index
+                    palette.append(rgba_to_cpal_tuple(layer.fill_rgba))
+                layer_defs.append((layer_name, color_index))
+
+            if layer_defs:
+                color_layers_map[gname] = layer_defs
+
     ASCENT, DESCENT = compute_global_vertical_metrics()
 
     fb = FontBuilder(UPM, isTTF=True)
@@ -955,9 +1161,13 @@ def build_master_ttf(
     fb.setupMaxp()
     fb.setupHead()
 
-    fea = build_fea_liga(ligatures, set(glyph_order))
+    fea = build_fea_features(ligatures, set(glyph_order), set(placeholder_names))
     if fea.strip():
         addOpenTypeFeaturesFromString(fb.font, fea)
+
+    if color_layers_map:
+        fb.setupCPAL([palette])
+        fb.setupCOLR(color_layers_map, version=0)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fb.font.save(out_path)
@@ -990,9 +1200,16 @@ def build_variable_font() -> None:
     if ligatures:
         print(f"Discovered {len(ligatures)} ligatures in {src_dir}:")
         for l in ligatures:
-            print(f"  - {l.glyph_name}  <=  {l.svg_path.name}")
+            color_note = f" [{len(l.geom.color_layers)} color layer(s)]" if l.geom.color_layers else ""
+            print(f"  - {l.glyph_name}  <=  {l.svg_path.name}{color_note}")
     else:
         print(f"[info] No ligature SVGs found in {src_dir} (ligature-u*.svg). Continuing without ligatures.")
+
+    missing_ligature_components = collect_missing_ligature_component_codepoints(singles, ligatures)
+    if missing_ligature_components:
+        print("Added placeholder component glyphs for ligature shaping:")
+        for cp in missing_ligature_components:
+            print(f"  - U+{cp:04X} -> {char_to_glyph_name(chr(cp))}")
 
     wdths = [25.0, 100.0, 400.0]
     hghts = [25.0, 100.0, 400.0]
@@ -1018,6 +1235,7 @@ def build_variable_font() -> None:
                 out_path=p,
                 singles=singles,
                 ligatures=ligatures,
+                missing_ligature_components=missing_ligature_components,
                 wdth_value=w,
                 hght_value=h,
             )
