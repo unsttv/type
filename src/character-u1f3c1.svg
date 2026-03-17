@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30" shape-rendering="crispEdges" data-char="🏁" data-codepoint="U+1F3C1">
+  <g>
+    <polygon class="glyph glyph-u1f3c1" points="0,0 20,0 20,1 0,1"/>
+    <polygon class="glyph glyph-u1f3c1" points="0,1 4,1 4,4 0,4"/>
+    <polygon class="glyph glyph-u1f3c1" points="8,1 12,1 12,4 8,4"/>
+    <polygon class="glyph glyph-u1f3c1" points="16,1 20,1 20,4 16,4"/>
+    <polygon class="glyph glyph-u1f3c1" points="0,4 8,4 8,10 0,10"/>
+    <polygon class="glyph glyph-u1f3c1" points="12,4 16,4 16,10 12,10"/>
+    <polygon class="glyph glyph-u1f3c1" points="0,10 4,10 4,14 0,14"/>
+    <polygon class="glyph glyph-u1f3c1" points="8,10 12,10 12,14 8,14"/>
+    <polygon class="glyph glyph-u1f3c1" points="16,10 20,10 20,14 16,14"/>
+    <polygon class="glyph glyph-u1f3c1" points="0,14 20,14 20,15 0,15"/>
+    <polygon class="glyph glyph-u1f3c1" points="0,15 4,15 4,20 0,20"/>
+  </g>
+</svg>

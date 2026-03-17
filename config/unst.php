@@ -6,14 +6,14 @@ declare(strict_types=1);
 
 return [
     'Unst' => [
-        'glyphCount' => 168,
-        'singleGlyphCount' => 111,
+        'glyphCount' => 169,
+        'singleGlyphCount' => 112,
         'ligatureCount' => 57,
-        'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝ ÆäæëïöüıĳŒœΤπꜵ',
+        'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝🏁 ÆäæëïöüıĳŒœΤπꜵ',
         'uppercase' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
         'digits' => '0123456789',
-        'punct' => '!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝',
+        'punct' => '!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝🏁',
         'other' => ' ÆäæëïöüıĳŒœΤπꜵ',
         'codepoints' => [
             32,
@@ -127,6 +127,7 @@ return [
             9632,
             10013,
             42805,
+            127937,
         ],
         'unicodeRanges' => [
             [
@@ -245,6 +246,10 @@ return [
                 42805,
                 42805,
             ],
+            [
+                127937,
+                127937,
+            ],
         ],
         'charToFilename' => [
             ' ' => 'character-u0020.svg',
@@ -358,6 +363,7 @@ return [
             '■' => 'character-u25a0.svg',
             '✝' => 'character-u271d.svg',
             'ꜵ' => 'character-ua735.svg',
+            '🏁' => 'character-u1f3c1.svg',
         ],
         'charToUnicode' => [
             ' ' => 'U+0020',
@@ -471,6 +477,7 @@ return [
             '■' => 'U+25A0',
             '✝' => 'U+271D',
             'ꜵ' => 'U+A735',
+            '🏁' => 'U+1F3C1',
         ],
         'ligatureKeys' => [
             'Et',
@@ -1590,6 +1597,7 @@ return [
             '■' => 'character-u25a0.svg',
             '✝' => 'character-u271d.svg',
             'ꜵ' => 'character-ua735.svg',
+            '🏁' => 'character-u1f3c1.svg',
             'Et' => 'ligature-u0045-u0074.svg',
             'ca' => 'ligature-u0063-u0061.svg',
             'cb' => 'ligature-u0063-u0062.svg',
@@ -3312,6 +3320,21 @@ return [
                 ],
                 'unicode' => [
                     'U+A735',
+                ],
+            ],
+            '🏁' => [
+                'key' => '🏁',
+                'filename' => 'character-u1f3c1.svg',
+                'isLigature' => false,
+                'length' => 1,
+                'chars' => [
+                    '🏁',
+                ],
+                'codepoints' => [
+                    127937,
+                ],
+                'unicode' => [
+                    'U+1F3C1',
                 ],
             ],
             'Et' => [
