@@ -293,21 +293,64 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
 
+    .unst-grid-shell {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 8px 10px;
+      align-items: start;
+      width: max-content;
+    }
+
+    .axis-corner {
+      width: 42px;
+      min-height: 18px;
+    }
+
+    .axis {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .axis-x {
+      display: grid;
+      align-items: end;
+      justify-items: center;
+      min-height: 18px;
+    }
+
+    .axis-y {
+      display: grid;
+      justify-items: end;
+      align-items: center;
+      padding-right: 8px;
+      min-width: 42px;
+    }
+
+    .axis-tick {
+      display: grid;
+      place-items: center;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
     .grid {
       display: grid;
-      gap: 1px;
-      background: color-mix(in srgb, var(--muted) 48%, var(--border));
-      border: 1px solid color-mix(in srgb, var(--muted) 48%, var(--border));
+      gap: 0;
       width: max-content;
       user-select: none;
       box-shadow: 0 14px 28px -18px var(--shadow);
+      border: 1px solid #98a3b5;
+      background: transparent;
     }
 
     .cell {
-      width: var(--cell-size);
-      height: var(--cell-size);
+      min-width: 0;
+      min-height: 0;
       padding: 0;
-      border: 0;
+      border: 1px solid #98a3b5;
       border-radius: 0;
       box-shadow: none;
       appearance: none;
@@ -315,13 +358,14 @@
       background:
         repeating-conic-gradient(from 45deg, var(--checker-a) 0 25%, var(--checker-b) 0 50%) 50% / 12px 12px;
       cursor: pointer;
+      margin: 0;
     }
     .cell::after {
       content: "";
       position: absolute;
       inset: 0;
       outline: 1px solid transparent;
-      outline-offset: -1px;
+      outline-offset: -2px;
       pointer-events: none;
     }
     .cell.active-current::after {
@@ -585,27 +629,27 @@
             <div class="kv"><div class="k">Actual emoji</div><div id="emojiTextValue" class="v">—</div></div>
             <div class="kv"><div class="k">SVG filename</div><div id="glyphSlugValue" class="v">—</div></div>
             <div class="kv"><div class="k">Unicode sequence</div><div id="codepointsValue" class="v">—</div></div>
-            <div class="kv"><div class="k">Grid</div><div id="gridValue" class="v">24 × 16</div></div>
+            <div class="kv"><div class="k">Grid</div><div id="gridValue" class="v">5 units (20) × 30</div></div>
             <div class="kv"><div class="k">Layers</div><div id="layerCountValue" class="v">0</div></div>
           </div>
 
           <div class="stack">
             <div class="row three">
               <div>
-                <label class="label" for="gridWidth">Columns</label>
-                <input id="gridWidth" type="number" min="4" max="64" value="24" />
+                <label class="label" for="gridWidth">Width</label>
+                <select id="gridWidth"></select>
               </div>
               <div>
-                <label class="label" for="gridHeight">Rows</label>
-                <input id="gridHeight" type="number" min="4" max="64" value="16" />
+                <label class="label">Height</label>
+                <div class="button-like" style="cursor: default;">30 (fixed UNST height)</div>
               </div>
               <div>
-                <label class="label" for="cellSize">Cell size</label>
-                <input id="cellSize" type="number" min="12" max="48" value="28" />
+                <label class="label" for="cellSize">Unit size</label>
+                <input id="cellSize" type="number" min="8" max="32" value="14" />
               </div>
             </div>
             <div class="row two">
-              <button id="resizeGridBtn">Resize grid</button>
+              <div class="helper">Each editable column spans 4 UNST units; rows use the fixed UNST band layout.</div>
               <button id="clearCurrentLayerBtn">Clear current layer</button>
             </div>
           </div>
@@ -643,7 +687,12 @@
           </div>
 
           <div class="canvas-wrap">
-            <div id="grid" class="grid" aria-label="Emoji design grid"></div>
+            <div class="unst-grid-shell">
+              <div class="axis-corner"></div>
+              <div id="xAxis" class="axis axis-x" aria-hidden="true"></div>
+              <div id="yAxis" class="axis axis-y" aria-hidden="true"></div>
+              <div id="grid" class="grid" aria-label="Emoji design grid"></div>
+            </div>
           </div>
 
           <div class="statusbar">
@@ -679,15 +728,18 @@
     </main>
 
     <footer class="footer">
-      <div>Saved in <span class="codeish">localStorage</span> under <span class="codeish">unst-emoji-designer-v4</span>.</div>
+      <div>Saved in <span class="codeish">localStorage</span> under <span class="codeish">unst-emoji-designer-v5</span>.</div>
       <div>Export targets: layered SVG, PNG, JSON library, and manifest snippet.</div>
     </footer>
   </div>
 
   <script>
     (() => {
-      const STORAGE_KEY = 'unst-emoji-designer-v4';
-      const DEFAULT_CELL_SIZE = 28;
+      const STORAGE_KEY = 'unst-emoji-designer-v5';
+      const UNST_COL_UNITS = 4;
+      const UNST_ROW_BANDS = [[0,1],[1,4],[4,9],[9,10],[10,14],[14,15],[15,19],[19,20],[20,25],[25,29],[29,30]];
+      const UNST_TOTAL_HEIGHT = 30;
+      const DEFAULT_CELL_SIZE = 14;
       const QUICK_PALETTE = [
         '#ffffff', '#000000', '#ae1c28', '#21468b', '#ff4b55', '#f9f9f9', '#ffce00', '#d00c33',
         '#0055a4', '#008c45', '#bc002d', '#002868', '#bf0a30', '#ce1126', '#fcd116', '#002b7f',
@@ -705,9 +757,10 @@
         layerCountValue: document.getElementById('layerCountValue'),
         designCountPill: document.getElementById('designCountPill'),
         gridWidth: document.getElementById('gridWidth'),
-        gridHeight: document.getElementById('gridHeight'),
         cellSize: document.getElementById('cellSize'),
         quickPalette: document.getElementById('quickPalette'),
+        xAxis: document.getElementById('xAxis'),
+        yAxis: document.getElementById('yAxis'),
         grid: document.getElementById('grid'),
         layerList: document.getElementById('layerList'),
         designList: document.getElementById('designList'),
@@ -750,8 +803,8 @@
           name: 'Untitled flag',
           countryCode: '',
           sequence: '',
-          width: 24,
-          height: 16,
+          width: 5,
+          height: UNST_ROW_BANDS.length,
           layers: [layer]
         };
       }
@@ -841,6 +894,26 @@
           if (x < newW && y < newH) next.push(indexFor(x, y, newW));
         }
         layer.cells = next;
+      }
+
+      function bandForRow(y) {
+        return UNST_ROW_BANDS[y] || [0, 1];
+      }
+
+      function cellRectFor(design, x, y) {
+        const [y0, y1] = bandForRow(y);
+        return {
+          x: x * UNST_COL_UNITS,
+          y: y0,
+          width: UNST_COL_UNITS,
+          height: y1 - y0,
+          cx: x * UNST_COL_UNITS + UNST_COL_UNITS / 2,
+          cy: (y0 + y1) / 2
+        };
+      }
+
+      function designViewBoxWidth(design) {
+        return design.width * UNST_COL_UNITS;
       }
 
       function flattenColorAt(design, x, y) {
@@ -939,11 +1012,13 @@
       }
 
       function buildSvg(design, options = {}) {
-        const cell = options.cell || 1;
+        const scale = options.cell || 1;
         const includeBackground = options.includeBackground || false;
         const bg = options.background || 'transparent';
+        const vbWidth = designViewBoxWidth(design);
+        const vbHeight = UNST_TOTAL_HEIGHT;
         const parts = [];
-        parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${design.width * cell} ${design.height * cell}" width="${design.width * cell}" height="${design.height * cell}" shape-rendering="crispEdges">`);
+        parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vbWidth} ${vbHeight}" width="${vbWidth * scale}" height="${vbHeight * scale}" shape-rendering="crispEdges">`);
         if (includeBackground && bg !== 'transparent') {
           parts.push(`<rect width="100%" height="100%" fill="${escapeXml(bg)}"/>`);
         }
@@ -951,9 +1026,10 @@
           if (!layer.visible) continue;
           parts.push(`<g id="${escapeXml(layer.id)}" fill="${escapeXml(layer.color)}">`);
           for (const idx of layer.cells) {
-            const x = (idx % design.width) * cell;
-            const y = Math.floor(idx / design.width) * cell;
-            parts.push(`<rect x="${x}" y="${y}" width="${cell}" height="${cell}"/>`);
+            const x = idx % design.width;
+            const y = Math.floor(idx / design.width);
+            const rect = cellRectFor(design, x, y);
+            parts.push(`<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}"/>`);
           }
           parts.push(`</g>`);
         }
@@ -1065,10 +1141,9 @@
         els.emojiTextValue.textContent = sequenceStringToEmoji(design.sequence) || '—';
         els.glyphSlugValue.textContent = exportFilenameFromSequence(design.sequence);
         els.codepointsValue.textContent = codepointsToDisplay(design.sequence);
-        els.gridValue.textContent = `${design.width} × ${design.height}`;
+        els.gridValue.textContent = `${design.width} units (${designViewBoxWidth(design)}) × ${UNST_TOTAL_HEIGHT}`;
         els.layerCountValue.textContent = `${design.layers.length}`;
-        els.gridWidth.value = design.width;
-        els.gridHeight.value = design.height;
+        els.gridWidth.value = String(design.width);
         els.designCountPill.textContent = `${state.designs.length} design${state.designs.length === 1 ? '' : 's'}`;
         els.emojiPreview.textContent = sequenceStringToEmoji(design.sequence) || '🏳️';
       }
@@ -1231,7 +1306,7 @@
           controls.className = 'design-controls';
           const pill = document.createElement('span');
           pill.className = 'pill';
-          pill.textContent = `${design.width} × ${design.height}`;
+          pill.textContent = `${design.width}u (${design.width * UNST_COL_UNITS}) × ${UNST_TOTAL_HEIGHT}`;
           controls.append(pill);
           card.append(top, controls);
           els.designList.appendChild(card);
@@ -1258,8 +1333,32 @@
         const layer = getCurrentLayer();
         if (!design || !layer) return;
 
-        document.documentElement.style.setProperty('--cell-size', `${Number(els.cellSize.value || DEFAULT_CELL_SIZE)}px`);
-        els.grid.style.gridTemplateColumns = `repeat(${design.width}, var(--cell-size))`;
+        const unitSize = Number(els.cellSize.value || DEFAULT_CELL_SIZE);
+        document.documentElement.style.setProperty('--cell-size', `${unitSize}px`);
+        const colWidth = unitSize * UNST_COL_UNITS;
+        const rowHeights = UNST_ROW_BANDS.map(([a, b]) => (b - a) * unitSize);
+
+        els.xAxis.style.gridTemplateColumns = `repeat(${design.width}, ${colWidth}px)`;
+        els.xAxis.innerHTML = '';
+        for (let x = 0; x < design.width; x += 1) {
+          const tick = document.createElement('div');
+          tick.className = 'axis-tick';
+          tick.textContent = `${x * UNST_COL_UNITS}–${(x + 1) * UNST_COL_UNITS}`;
+          els.xAxis.appendChild(tick);
+        }
+
+        els.yAxis.style.gridTemplateRows = rowHeights.map(v => `${v}px`).join(' ');
+        els.yAxis.innerHTML = '';
+        for (let y = 0; y < UNST_ROW_BANDS.length; y += 1) {
+          const tick = document.createElement('div');
+          tick.className = 'axis-tick';
+          const [y0, y1] = UNST_ROW_BANDS[y];
+          tick.textContent = `${y0}–${y1}`;
+          els.yAxis.appendChild(tick);
+        }
+
+        els.grid.style.gridTemplateColumns = `repeat(${design.width}, ${colWidth}px)`;
+        els.grid.style.gridTemplateRows = rowHeights.map(v => `${v}px`).join(' ');
         els.grid.innerHTML = '';
 
         for (let y = 0; y < design.height; y += 1) {
@@ -1277,7 +1376,8 @@
             cell.dataset.y = String(y);
             cell.addEventListener('click', onCellClick);
             cell.addEventListener('pointermove', () => {
-              els.cursorText.textContent = `x: ${x} · y: ${y}`;
+              const [y0, y1] = UNST_ROW_BANDS[y];
+              els.cursorText.textContent = `x: ${x * UNST_COL_UNITS}–${(x + 1) * UNST_COL_UNITS} · y: ${y0}–${y1}`;
             });
             els.grid.appendChild(cell);
           }
@@ -1315,20 +1415,22 @@
         const w = design.width;
         const h = design.height;
 
-        function fillAll(layer) {
+        function fillByPredicate(layer, predicate) {
           layer.cells = [];
           for (let y = 0; y < h; y += 1) {
             for (let x = 0; x < w; x += 1) {
-              layer.cells.push(indexFor(x, y, w));
+              const rect = cellRectFor(design, x, y);
+              if (predicate(rect, x, y)) layer.cells.push(indexFor(x, y, w));
             }
           }
         }
 
-        function fillRows(layer, yStart, yEnd) {
-          layer.cells = [];
-          for (let y = yStart; y < yEnd; y += 1) {
-            for (let x = 0; x < w; x += 1) layer.cells.push(indexFor(x, y, w));
-          }
+        function fillAll(layer) {
+          fillByPredicate(layer, () => true);
+        }
+
+        function fillRowsByUnits(layer, yMin, yMax) {
+          fillByPredicate(layer, rect => rect.cy >= yMin && rect.cy < yMax);
         }
 
         function fillCols(layer, xStart, xEnd) {
@@ -1339,33 +1441,28 @@
         }
 
         function fillDisc(layer, cx, cy, r) {
-          layer.cells = [];
-          for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              const dx = x + 0.5 - cx;
-              const dy = y + 0.5 - cy;
-              if (dx * dx + dy * dy <= r * r) layer.cells.push(indexFor(x, y, w));
-            }
-          }
+          fillByPredicate(layer, rect => {
+            const dx = rect.cx - cx;
+            const dy = rect.cy - cy;
+            return dx * dx + dy * dy <= r * r;
+          });
         }
 
         function fillDiagonal(layer, upperLeftColor = true) {
-          layer.cells = [];
-          for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              const belongs = upperLeftColor ? (x / Math.max(1, w - 1) + y / Math.max(1, h - 1) <= 1) : (x / Math.max(1, w - 1) >= y / Math.max(1, h - 1));
-              if (belongs) layer.cells.push(indexFor(x, y, w));
-            }
-          }
+          fillByPredicate(layer, rect => {
+            const nx = rect.cx / Math.max(1, designViewBoxWidth(design));
+            const ny = rect.cy / Math.max(1, UNST_TOTAL_HEIGHT);
+            return upperLeftColor ? (nx + ny <= 1) : (nx >= ny);
+          });
         }
 
         if (kind === 'flag-horizontal-3') {
           const a = makeLayer('Top stripe', '#ae1c28');
           const b = makeLayer('Middle stripe', '#ffffff');
           const c = makeLayer('Bottom stripe', '#21468b');
-          fillRows(a, 0, Math.ceil(h / 3));
-          fillRows(b, Math.ceil(h / 3), Math.ceil((2 * h) / 3));
-          fillRows(c, Math.ceil((2 * h) / 3), h);
+          fillRowsByUnits(a, 0, UNST_TOTAL_HEIGHT / 3);
+          fillRowsByUnits(b, UNST_TOTAL_HEIGHT / 3, (2 * UNST_TOTAL_HEIGHT) / 3);
+          fillRowsByUnits(c, (2 * UNST_TOTAL_HEIGHT) / 3, UNST_TOTAL_HEIGHT + 0.001);
           design.layers = [a, b, c];
           state.currentLayerId = a.id;
           setStatus('Applied horizontal tricolor preset.');
@@ -1387,23 +1484,25 @@
           const blueCross = makeLayer('Blue cross', '#00205b');
           blueCross.cells = [];
 
-          const whiteVStart = Math.floor(w * 0.28);
-          const whiteVEnd = whiteVStart + Math.max(3, Math.round(w * 0.18));
-          const whiteHStart = Math.floor(h * 0.39);
-          const whiteHEnd = whiteHStart + Math.max(3, Math.round(h * 0.22));
+          const vbW = designViewBoxWidth(design);
+          const whiteVX = vbW * 0.34;
+          const whiteVW = Math.max(UNST_COL_UNITS, vbW * 0.18);
+          const whiteHY = UNST_TOTAL_HEIGHT * 0.43;
+          const whiteHH = Math.max(1, UNST_TOTAL_HEIGHT * 0.20);
 
-          const blueVStart = whiteVStart + 1;
-          const blueVEnd = whiteVEnd - 1;
-          const blueHStart = whiteHStart + 1;
-          const blueHEnd = whiteHEnd - 1;
+          const blueVX = whiteVX + Math.max(0.5, whiteVW * 0.2);
+          const blueVW = Math.max(UNST_COL_UNITS / 2, whiteVW * 0.6);
+          const blueHY = whiteHY + Math.max(0.5, whiteHH * 0.2);
+          const blueHH = Math.max(1, whiteHH * 0.6);
 
-          for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              const idx = indexFor(x, y, w);
-              if ((x >= whiteVStart && x < whiteVEnd) || (y >= whiteHStart && y < whiteHEnd)) whiteCross.cells.push(idx);
-              if ((x >= blueVStart && x < blueVEnd) || (y >= blueHStart && y < blueHEnd)) blueCross.cells.push(idx);
-            }
-          }
+          fillByPredicate(whiteCross, rect => (
+            (rect.cx >= whiteVX && rect.cx < whiteVX + whiteVW) ||
+            (rect.cy >= whiteHY && rect.cy < whiteHY + whiteHH)
+          ));
+          fillByPredicate(blueCross, rect => (
+            (rect.cx >= blueVX && rect.cx < blueVX + blueVW) ||
+            (rect.cy >= blueHY && rect.cy < blueHY + blueHH)
+          ));
           design.layers = [bg, whiteCross, blueCross];
           state.currentLayerId = bg.id;
           setStatus('Applied Nordic cross preset.');
@@ -1411,7 +1510,7 @@
           const bg = makeLayer('Field', '#ffffff');
           fillAll(bg);
           const disc = makeLayer('Disc', '#bc002d');
-          fillDisc(disc, w / 2, h / 2, Math.min(w, h) * 0.23);
+          fillDisc(disc, designViewBoxWidth(design) / 2, UNST_TOTAL_HEIGHT / 2, Math.min(designViewBoxWidth(design), UNST_TOTAL_HEIGHT) * 0.23);
           design.layers = [bg, disc];
           state.currentLayerId = disc.id;
           setStatus('Applied center disc preset.');
@@ -1491,12 +1590,12 @@
         if (!design) return;
         const oldW = design.width;
         const oldH = design.height;
-        const newW = Math.max(4, Math.min(64, Number(els.gridWidth.value || oldW)));
-        const newH = Math.max(4, Math.min(64, Number(els.gridHeight.value || oldH)));
+        const newW = Math.max(1, Math.min(32, Number(els.gridWidth.value || oldW)));
+        const newH = UNST_ROW_BANDS.length;
         design.width = newW;
         design.height = newH;
         for (const layer of design.layers) resizeLayerCells(layer, oldW, oldH, newW, newH);
-        setStatus(`Resized grid to ${newW} × ${newH}.`);
+        setStatus(`Resized grid to ${newW} units (${newW * UNST_COL_UNITS}).`);
         renderAll();
       }
 
@@ -1599,8 +1698,8 @@
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          canvas.width = design.width * 32;
-          canvas.height = design.height * 32;
+          canvas.width = designViewBoxWidth(design) * 32;
+          canvas.height = UNST_TOTAL_HEIGHT * 32;
           const ctx = canvas.getContext('2d');
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(img, 0, 0);
@@ -1656,8 +1755,8 @@
         state.designs = state.designs.map(design => ({
           ...design,
           id: design.id || uid('design'),
-          width: design.width || 24,
-          height: design.height || 16,
+          width: design.width || 5,
+          height: UNST_ROW_BANDS.length,
           layers: (design.layers || [makeLayer('Base', '#ffffff')]).map(layer => ({
             ...layer,
             id: layer.id || uid('layer'),
@@ -1687,7 +1786,9 @@
           applyPreset(preset);
         });
 
-        document.getElementById('resizeGridBtn').addEventListener('click', resizeCurrentGrid);
+        els.gridWidth.addEventListener('change', resizeCurrentGrid);
+        els.cellSize.addEventListener('input', () => renderGrid());
+        els.cellSize.addEventListener('change', () => renderGrid());
         document.getElementById('clearCurrentLayerBtn').addEventListener('click', clearCurrentLayer);
         document.getElementById('addLayerBtn').addEventListener('click', addLayer);
         document.getElementById('duplicateLayerBtn').addEventListener('click', duplicateLayer);
@@ -1722,6 +1823,12 @@
       function init() {
         load();
         ensureState();
+        for (let i = 1; i <= 16; i += 1) {
+          const opt = document.createElement('option');
+          opt.value = String(i);
+          opt.textContent = `${i} unit${i === 1 ? '' : 's'} (${i * UNST_COL_UNITS})`;
+          els.gridWidth.appendChild(opt);
+        }
         els.themeMode.value = state.themeMode;
         applyTheme();
         renderQuickPalette();
