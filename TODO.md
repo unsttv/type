@@ -2,7 +2,7 @@
 # TODO
 
 - [ ] Build tool that can generate SVG for characters with arbitrary width values for thing and heavy lines.
-- [ ] Fix variable thickness of s in new ligatures.
+- [ ] Add emoji designer.
 
 ## Done
 
@@ -12,3 +12,4 @@
 - [x] Add yp ligature.
 - [x] Attempt to add capital letters?
 - [x] Improve capital letter glyphs.
+- [x] Fix variable thickness of s in new ligatures.
