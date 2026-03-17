@@ -293,19 +293,65 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
     }
 
+    .grid-shell {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 10px;
+      align-items: start;
+      width: max-content;
+    }
+
+    .corner-spacer {
+      width: 42px;
+      min-height: 1px;
+    }
+
+    .axis-x,
+    .axis-y {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .axis-x {
+      display: grid;
+      gap: 1px;
+      justify-items: center;
+      align-items: end;
+      padding-bottom: 4px;
+    }
+
+    .axis-y {
+      display: grid;
+      gap: 1px;
+      justify-items: end;
+      align-items: center;
+      padding-right: 4px;
+      width: 42px;
+    }
+
+    .axis-label {
+      display: grid;
+      place-items: center;
+      white-space: nowrap;
+    }
+
     .grid {
       display: grid;
       gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
+      background: #9ba4b2;
+      border: 1px solid #9ba4b2;
       width: max-content;
       user-select: none;
       box-shadow: 0 14px 28px -18px var(--shadow);
     }
 
     .cell {
-      width: var(--cell-size);
-      height: var(--cell-size);
+      min-width: 0;
+      min-height: 0;
       padding: 0;
       border: 0;
       position: relative;
@@ -591,29 +637,29 @@
 
           <div class="kvs">
             <div class="kv"><div class="k">Actual emoji</div><div id="emojiTextValue" class="v">—</div></div>
-            <div class="kv"><div class="k">Glyph slug</div><div id="glyphSlugValue" class="v">—</div></div>
+            <div class="kv"><div class="k">SVG filename</div><div id="glyphSlugValue" class="v">—</div></div>
             <div class="kv"><div class="k">Codepoints</div><div id="codepointsValue" class="v">—</div></div>
-            <div class="kv"><div class="k">Grid</div><div id="gridValue" class="v">24 × 16</div></div>
+            <div class="kv"><div class="k">Grid</div><div id="gridValue" class="v">5 units (20) · viewBox 0 0 20 30</div></div>
             <div class="kv"><div class="k">Layers</div><div id="layerCountValue" class="v">0</div></div>
           </div>
 
           <div class="stack">
             <div class="row three">
               <div>
-                <label class="label" for="gridWidth">Columns</label>
-                <input id="gridWidth" type="number" min="4" max="64" value="24" />
+                <label class="label" for="gridWidth">Width</label>
+                <select id="gridWidth"></select>
               </div>
               <div>
-                <label class="label" for="gridHeight">Rows</label>
-                <input id="gridHeight" type="number" min="4" max="64" value="16" />
+                <label class="label" for="cellSize">Zoom</label>
+                <input id="cellSize" type="number" min="8" max="32" value="14" />
               </div>
               <div>
-                <label class="label" for="cellSize">Cell size</label>
-                <input id="cellSize" type="number" min="12" max="48" value="28" />
+                <label class="label" for="viewBoxValue">ViewBox</label>
+                <div id="viewBoxValue" class="button-like" style="cursor:default;">0 0 20 30</div>
               </div>
             </div>
             <div class="row two">
-              <button id="resizeGridBtn">Resize grid</button>
+              <button id="resizeGridBtn">Apply width</button>
               <button id="clearCurrentLayerBtn">Clear current layer</button>
             </div>
           </div>
@@ -624,7 +670,7 @@
           </div>
 
           <div class="helper">
-            Assumptions built into this first version: color emoji are edited as layered cell art, exported as layered SVG, and described using explicit Unicode sequences so you can later wire them into GSUB / color-font generation however you prefer.
+            This version now uses the same UNST-style export space as the glyph designer: variable width in 4-unit columns, a fixed 30-unit height split into UNST row bands, and ligature-style sequence naming on SVG export.
           </div>
         </div>
       </section>
@@ -668,7 +714,12 @@
           </div>
 
           <div class="canvas-wrap">
-            <div id="grid" class="grid" aria-label="Emoji design grid"></div>
+            <div class="grid-shell">
+              <div class="corner-spacer" aria-hidden="true"></div>
+              <div id="xLabels" class="axis-x" aria-hidden="true"></div>
+              <div id="yLabels" class="axis-y" aria-hidden="true"></div>
+              <div id="grid" class="grid" aria-label="Emoji design grid"></div>
+            </div>
           </div>
 
           <div class="statusbar">
@@ -704,15 +755,21 @@
     </main>
 
     <footer class="footer">
-      <div>Saved in <span class="codeish">localStorage</span> under <span class="codeish">unst-emoji-designer-v1</span>.</div>
-      <div>Export targets: layered SVG, PNG, JSON library, and manifest snippet.</div>
+      <div>Saved in <span class="codeish">localStorage</span> under <span class="codeish">unst-emoji-designer-v3</span>.</div>
+      <div>Export targets: UNST-compatible layered SVG, PNG, JSON library, and manifest snippet.</div>
     </footer>
   </div>
 
   <script>
     (() => {
-      const STORAGE_KEY = 'unst-emoji-designer-v1';
+      const STORAGE_KEY = 'unst-emoji-designer-v3';
       const DEFAULT_CELL_SIZE = 28;
+      const UNST_COL_UNIT = 4;
+      const UNST_VIEWBOX_HEIGHT = 30;
+      const UNST_ROW_BREAKS = [0, 1, 4, 9, 10, 14, 15, 19, 20, 25, 29, 30];
+      const UNST_ROW_SEGMENTS = UNST_ROW_BREAKS.slice(0, -1).map((start, i) => ({ start, end: UNST_ROW_BREAKS[i + 1], size: UNST_ROW_BREAKS[i + 1] - start }));
+      const UNST_DEFAULT_WIDTH = 5;
+      const UNST_DEFAULT_HEIGHT = UNST_ROW_SEGMENTS.length;
       const QUICK_PALETTE = [
         '#ffffff', '#000000', '#ae1c28', '#21468b', '#ff4b55', '#f9f9f9', '#ffce00', '#d00c33',
         '#0055a4', '#008c45', '#bc002d', '#002868', '#bf0a30', '#ce1126', '#fcd116', '#002b7f',
@@ -732,7 +789,9 @@
         layerCountValue: document.getElementById('layerCountValue'),
         designCountPill: document.getElementById('designCountPill'),
         gridWidth: document.getElementById('gridWidth'),
-        gridHeight: document.getElementById('gridHeight'),
+        viewBoxValue: document.getElementById('viewBoxValue'),
+        xLabels: document.getElementById('xLabels'),
+        yLabels: document.getElementById('yLabels'),
         cellSize: document.getElementById('cellSize'),
         quickPalette: document.getElementById('quickPalette'),
         grid: document.getElementById('grid'),
@@ -783,8 +842,8 @@
           countryCode: '',
           sequence: '',
           notes: '',
-          width: 24,
-          height: 16,
+          width: UNST_DEFAULT_WIDTH,
+          height: UNST_DEFAULT_HEIGHT,
           layers: [layer]
         };
       }
@@ -920,6 +979,16 @@
         return `emoji-${cps.map(cp => cp.toString(16).toLowerCase()).join('_')}`;
       }
 
+      function formatUnstCodepoint(cp) {
+        return `u${cp.toString(16).toLowerCase().padStart(4, '0')}`;
+      }
+
+      function exportFilenameFromSequence(sequence) {
+        const cps = parseSequence(sequence);
+        if (!cps.length) return 'ligature-empty.svg';
+        return `ligature-${cps.map(formatUnstCodepoint).join('-')}.svg`;
+      }
+
       function countryCodeToSequence(countryCode) {
         const cc = (countryCode || '').trim().toUpperCase();
         if (!/^[A-Z]{2}$/.test(cc)) return '';
@@ -964,22 +1033,77 @@
         sortCells(layer);
       }
 
+      function cellRectFor(design, x, y) {
+        return {
+          x: x * UNST_COL_UNIT,
+          y: UNST_ROW_BREAKS[y],
+          width: UNST_COL_UNIT,
+          height: UNST_ROW_BREAKS[y + 1] - UNST_ROW_BREAKS[y]
+        };
+      }
+
+      function layerRects(layer, design) {
+        const rows = UNST_ROW_SEGMENTS.length;
+        const cols = design.width;
+        const active = Array.from({ length: rows }, () => Array(cols).fill(false));
+        for (const idx of layer.cells) {
+          const x = idx % cols;
+          const y = Math.floor(idx / cols);
+          if (y >= 0 && y < rows && x >= 0 && x < cols) active[y][x] = true;
+        }
+        const seen = Array.from({ length: rows }, () => Array(cols).fill(false));
+        const rects = [];
+
+        for (let y = 0; y < rows; y += 1) {
+          for (let x = 0; x < cols; x += 1) {
+            if (!active[y][x] || seen[y][x]) continue;
+
+            let maxX = x;
+            while (maxX + 1 < cols && active[y][maxX + 1] && !seen[y][maxX + 1]) maxX += 1;
+
+            let maxY = y;
+            outer: while (maxY + 1 < rows) {
+              for (let xx = x; xx <= maxX; xx += 1) {
+                if (!active[maxY + 1][xx] || seen[maxY + 1][xx]) break outer;
+              }
+              maxY += 1;
+            }
+
+            for (let yy = y; yy <= maxY; yy += 1) {
+              for (let xx = x; xx <= maxX; xx += 1) {
+                seen[yy][xx] = true;
+              }
+            }
+
+            rects.push({
+              x: x * UNST_COL_UNIT,
+              y: UNST_ROW_BREAKS[y],
+              width: (maxX - x + 1) * UNST_COL_UNIT,
+              height: UNST_ROW_BREAKS[maxY + 1] - UNST_ROW_BREAKS[y]
+            });
+          }
+        }
+
+        return rects;
+      }
+
       function buildSvg(design, options = {}) {
-        const cell = options.cell || 1;
+        const scale = options.scale || 1;
         const includeBackground = options.includeBackground || false;
         const bg = options.background || 'transparent';
+        const viewW = design.width * UNST_COL_UNIT;
+        const viewH = UNST_VIEWBOX_HEIGHT;
         const parts = [];
-        parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${design.width * cell} ${design.height * cell}" width="${design.width * cell}" height="${design.height * cell}" shape-rendering="crispEdges">`);
+        parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewW} ${viewH}" width="${viewW * scale}" height="${viewH * scale}" shape-rendering="crispEdges">`);
         if (includeBackground && bg !== 'transparent') {
           parts.push(`<rect width="100%" height="100%" fill="${escapeXml(bg)}"/>`);
         }
         for (const layer of design.layers) {
           if (!layer.visible) continue;
+          const rects = layerRects(layer, design);
           parts.push(`<g id="${escapeXml(layer.id)}" fill="${escapeXml(layer.color)}">`);
-          for (const idx of layer.cells) {
-            const x = (idx % design.width) * cell;
-            const y = Math.floor(idx / design.width) * cell;
-            parts.push(`<rect x="${x}" y="${y}" width="${cell}" height="${cell}"/>`);
+          for (const rect of rects) {
+            parts.push(`<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}"/>`);
           }
           parts.push(`</g>`);
         }
@@ -995,6 +1119,7 @@
           sequence: design.sequence,
           sequenceCodepoints: cps,
           glyphSlug: slugFromSequence(design.sequence),
+          exportFilename: exportFilenameFromSequence(design.sequence),
           width: design.width,
           height: design.height,
           layers: design.layers.map(layer => ({
@@ -1091,12 +1216,12 @@
         els.sequenceInput.value = design.sequence;
         els.notesInput.value = design.notes || '';
         els.emojiTextValue.textContent = sequenceStringToEmoji(design.sequence) || '—';
-        els.glyphSlugValue.textContent = slugFromSequence(design.sequence);
+        els.glyphSlugValue.textContent = exportFilenameFromSequence(design.sequence);
         els.codepointsValue.textContent = codepointsToDisplay(design.sequence);
-        els.gridValue.textContent = `${design.width} × ${design.height}`;
+        els.gridValue.textContent = `${design.width} units (${design.width * UNST_COL_UNIT}) · viewBox 0 0 ${design.width * UNST_COL_UNIT} ${UNST_VIEWBOX_HEIGHT}`;
         els.layerCountValue.textContent = `${design.layers.length}`;
-        els.gridWidth.value = design.width;
-        els.gridHeight.value = design.height;
+        els.gridWidth.value = String(design.width);
+        els.viewBoxValue.textContent = `0 0 ${design.width * UNST_COL_UNIT} ${UNST_VIEWBOX_HEIGHT}`;
         els.designCountPill.textContent = `${state.designs.length} design${state.designs.length === 1 ? '' : 's'}`;
         els.emojiPreview.textContent = sequenceStringToEmoji(design.sequence) || '🏳️';
       }
@@ -1259,7 +1384,7 @@
           controls.className = 'design-controls';
           const pill = document.createElement('span');
           pill.className = 'pill';
-          pill.textContent = `${design.width} × ${design.height}`;
+          pill.textContent = `${design.width}u · ${design.width * UNST_COL_UNIT}×${UNST_VIEWBOX_HEIGHT}`;
           controls.append(pill);
           card.append(top, controls);
           els.designList.appendChild(card);
@@ -1277,7 +1402,7 @@
       function renderPreview() {
         const design = getCurrentDesign();
         if (!design) return;
-        const svg = buildSvg(design);
+        const svg = buildSvg(design, { scale: 10 });
         els.svgPreview.innerHTML = svg;
       }
 
@@ -1286,10 +1411,32 @@
         const layer = getCurrentLayer();
         if (!design || !layer) return;
 
-        document.documentElement.style.setProperty('--cell-size', `${Number(els.cellSize.value || DEFAULT_CELL_SIZE)}px`);
+        const unitSize = Math.max(8, Math.min(32, Number(els.cellSize.value || DEFAULT_CELL_SIZE)));
+        document.documentElement.style.setProperty('--cell-size', `${unitSize}px`);
+        const colSize = `${unitSize * UNST_COL_UNIT}px`;
+        const rowSizes = UNST_ROW_SEGMENTS.map(seg => `${seg.size * unitSize}px`).join(' ');
         els.grid.classList.toggle('no-grid', !state.showGrid);
-        els.grid.style.gridTemplateColumns = `repeat(${design.width}, var(--cell-size))`;
+        els.grid.style.gridTemplateColumns = `repeat(${design.width}, ${colSize})`;
+        els.grid.style.gridTemplateRows = rowSizes;
+        els.xLabels.style.gridTemplateColumns = `repeat(${design.width}, ${colSize})`;
+        els.yLabels.style.gridTemplateRows = rowSizes;
         els.grid.innerHTML = '';
+        els.xLabels.innerHTML = '';
+        els.yLabels.innerHTML = '';
+
+        for (let x = 0; x < design.width; x += 1) {
+          const label = document.createElement('div');
+          label.className = 'axis-label';
+          label.textContent = `${x * UNST_COL_UNIT}–${(x + 1) * UNST_COL_UNIT}`;
+          els.xLabels.appendChild(label);
+        }
+        for (let y = 0; y < UNST_ROW_SEGMENTS.length; y += 1) {
+          const seg = UNST_ROW_SEGMENTS[y];
+          const label = document.createElement('div');
+          label.className = 'axis-label';
+          label.textContent = `${seg.start}–${seg.end}`;
+          els.yLabels.appendChild(label);
+        }
 
         const previewRect = state.rectPreview;
         const previewIndices = new Set();
@@ -1299,13 +1446,11 @@
           const minY = Math.min(previewRect.y0, previewRect.y1);
           const maxY = Math.max(previewRect.y0, previewRect.y1);
           for (let y = minY; y <= maxY; y += 1) {
-            for (let x = minX; x <= maxX; x += 1) {
-              previewIndices.add(indexFor(x, y, design.width));
-            }
+            for (let x = minX; x <= maxX; x += 1) previewIndices.add(indexFor(x, y, design.width));
           }
         }
 
-        for (let y = 0; y < design.height; y += 1) {
+        for (let y = 0; y < UNST_ROW_SEGMENTS.length; y += 1) {
           for (let x = 0; x < design.width; x += 1) {
             const idx = indexFor(x, y, design.width);
             const cell = document.createElement('button');
@@ -1320,7 +1465,8 @@
             cell.addEventListener('pointerdown', onCellPointerDown);
             cell.addEventListener('pointerenter', onCellPointerEnter);
             cell.addEventListener('pointermove', () => {
-              els.cursorText.textContent = `x: ${x} · y: ${y}`;
+              const seg = UNST_ROW_SEGMENTS[y];
+              els.cursorText.textContent = `x: ${x * UNST_COL_UNIT}–${(x + 1) * UNST_COL_UNIT} · y: ${seg.start}–${seg.end}`;
             });
             els.grid.appendChild(cell);
           }
@@ -1367,7 +1513,8 @@
         const cell = event.currentTarget;
         const x = Number(cell.dataset.x);
         const y = Number(cell.dataset.y);
-        els.cursorText.textContent = `x: ${x} · y: ${y}`;
+        const seg = UNST_ROW_SEGMENTS[y];
+        els.cursorText.textContent = `x: ${x * UNST_COL_UNIT}–${(x + 1) * UNST_COL_UNIT} · y: ${seg.start}–${seg.end}`;
 
         if (!state.drag) return;
         if (state.tool === 'paint') {
@@ -1447,48 +1594,26 @@
         const design = getCurrentDesign();
         if (!design) return;
         const w = design.width;
-        const h = design.height;
+        const h = UNST_ROW_SEGMENTS.length;
+        const viewW = w * UNST_COL_UNIT;
 
         function fillAll(layer) {
           layer.cells = [];
           for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              layer.cells.push(indexFor(x, y, w));
-            }
-          }
-        }
-
-        function fillRows(layer, yStart, yEnd) {
-          layer.cells = [];
-          for (let y = yStart; y < yEnd; y += 1) {
             for (let x = 0; x < w; x += 1) layer.cells.push(indexFor(x, y, w));
           }
         }
 
-        function fillCols(layer, xStart, xEnd) {
-          layer.cells = [];
-          for (let y = 0; y < h; y += 1) {
-            for (let x = xStart; x < xEnd; x += 1) layer.cells.push(indexFor(x, y, w));
-          }
-        }
-
-        function fillDisc(layer, cx, cy, r) {
+        function fillByPredicate(layer, predicate) {
           layer.cells = [];
           for (let y = 0; y < h; y += 1) {
             for (let x = 0; x < w; x += 1) {
-              const dx = x + 0.5 - cx;
-              const dy = y + 0.5 - cy;
-              if (dx * dx + dy * dy <= r * r) layer.cells.push(indexFor(x, y, w));
-            }
-          }
-        }
-
-        function fillDiagonal(layer, upperLeftColor = true) {
-          layer.cells = [];
-          for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              const belongs = upperLeftColor ? (x / Math.max(1, w - 1) + y / Math.max(1, h - 1) <= 1) : (x / Math.max(1, w - 1) >= y / Math.max(1, h - 1));
-              if (belongs) layer.cells.push(indexFor(x, y, w));
+              const rect = cellRectFor(design, x, y);
+              const cx = rect.x + rect.width / 2;
+              const cy = rect.y + rect.height / 2;
+              if (predicate({ x, y, rect, cx, cy, viewW, viewH: UNST_VIEWBOX_HEIGHT })) {
+                layer.cells.push(indexFor(x, y, w));
+              }
             }
           }
         }
@@ -1497,9 +1622,9 @@
           const a = makeLayer('Top stripe', '#ae1c28');
           const b = makeLayer('Middle stripe', '#ffffff');
           const c = makeLayer('Bottom stripe', '#21468b');
-          fillRows(a, 0, Math.ceil(h / 3));
-          fillRows(b, Math.ceil(h / 3), Math.ceil((2 * h) / 3));
-          fillRows(c, Math.ceil((2 * h) / 3), h);
+          fillByPredicate(a, ({ cy }) => cy < 10);
+          fillByPredicate(b, ({ cy }) => cy >= 10 && cy < 20);
+          fillByPredicate(c, ({ cy }) => cy >= 20);
           design.layers = [a, b, c];
           state.currentLayerId = a.id;
           setStatus('Applied horizontal tricolor preset.');
@@ -1507,9 +1632,9 @@
           const a = makeLayer('Left stripe', '#0055a4');
           const b = makeLayer('Middle stripe', '#ffffff');
           const c = makeLayer('Right stripe', '#ef4135');
-          fillCols(a, 0, Math.ceil(w / 3));
-          fillCols(b, Math.ceil(w / 3), Math.ceil((2 * w) / 3));
-          fillCols(c, Math.ceil((2 * w) / 3), w);
+          fillByPredicate(a, ({ cx, viewW }) => cx < viewW / 3);
+          fillByPredicate(b, ({ cx, viewW }) => cx >= viewW / 3 && cx < (2 * viewW) / 3);
+          fillByPredicate(c, ({ cx, viewW }) => cx >= (2 * viewW) / 3);
           design.layers = [a, b, c];
           state.currentLayerId = a.id;
           setStatus('Applied vertical tricolor preset.');
@@ -1517,27 +1642,20 @@
           const bg = makeLayer('Field', '#ba0c2f');
           fillAll(bg);
           const whiteCross = makeLayer('White cross', '#ffffff');
-          whiteCross.cells = [];
           const blueCross = makeLayer('Blue cross', '#00205b');
-          blueCross.cells = [];
 
-          const whiteVStart = Math.floor(w * 0.28);
-          const whiteVEnd = whiteVStart + Math.max(3, Math.round(w * 0.18));
-          const whiteHStart = Math.floor(h * 0.39);
-          const whiteHEnd = whiteHStart + Math.max(3, Math.round(h * 0.22));
+          const whiteVStart = viewW * 0.26;
+          const whiteVEnd = whiteVStart + Math.max(4, viewW * 0.18);
+          const whiteHStart = 11;
+          const whiteHEnd = 19;
 
           const blueVStart = whiteVStart + 1;
           const blueVEnd = whiteVEnd - 1;
-          const blueHStart = whiteHStart + 1;
-          const blueHEnd = whiteHEnd - 1;
+          const blueHStart = 13;
+          const blueHEnd = 17;
 
-          for (let y = 0; y < h; y += 1) {
-            for (let x = 0; x < w; x += 1) {
-              const idx = indexFor(x, y, w);
-              if ((x >= whiteVStart && x < whiteVEnd) || (y >= whiteHStart && y < whiteHEnd)) whiteCross.cells.push(idx);
-              if ((x >= blueVStart && x < blueVEnd) || (y >= blueHStart && y < blueHEnd)) blueCross.cells.push(idx);
-            }
-          }
+          fillByPredicate(whiteCross, ({ cx, cy }) => (cx >= whiteVStart && cx < whiteVEnd) || (cy >= whiteHStart && cy < whiteHEnd));
+          fillByPredicate(blueCross, ({ cx, cy }) => (cx >= blueVStart && cx < blueVEnd) || (cy >= blueHStart && cy < blueHEnd));
           design.layers = [bg, whiteCross, blueCross];
           state.currentLayerId = bg.id;
           setStatus('Applied Nordic cross preset.');
@@ -1545,14 +1663,14 @@
           const bg = makeLayer('Field', '#ffffff');
           fillAll(bg);
           const disc = makeLayer('Disc', '#bc002d');
-          fillDisc(disc, w / 2, h / 2, Math.min(w, h) * 0.23);
+          fillByPredicate(disc, ({ cx, cy, viewW, viewH }) => { const dx = cx - viewW / 2; const dy = cy - viewH / 2; const r = Math.min(viewW, viewH) * 0.23; return dx * dx + dy * dy <= r * r; });
           design.layers = [bg, disc];
           state.currentLayerId = disc.id;
           setStatus('Applied center disc preset.');
         } else if (kind === 'flag-diagonal-bicolor') {
           const a = makeLayer('Upper triangle', '#ffffff');
           const b = makeLayer('Lower triangle', '#d7141a');
-          fillDiagonal(a, true);
+          fillByPredicate(a, ({ cx, cy, viewW, viewH }) => (cx / Math.max(1, viewW) + cy / Math.max(1, viewH)) <= 1);
           fillAll(b);
           design.layers = [b, a];
           state.currentLayerId = a.id;
@@ -1625,12 +1743,11 @@
         if (!design) return;
         const oldW = design.width;
         const oldH = design.height;
-        const newW = Math.max(4, Math.min(64, Number(els.gridWidth.value || oldW)));
-        const newH = Math.max(4, Math.min(64, Number(els.gridHeight.value || oldH)));
+        const newW = Math.max(1, Math.min(16, Number(els.gridWidth.value || oldW)));
         design.width = newW;
-        design.height = newH;
-        for (const layer of design.layers) resizeLayerCells(layer, oldW, oldH, newW, newH);
-        setStatus(`Resized grid to ${newW} × ${newH}.`);
+        design.height = UNST_ROW_SEGMENTS.length;
+        for (const layer of design.layers) resizeLayerCells(layer, oldW, oldH, newW, UNST_ROW_SEGMENTS.length);
+        setStatus(`Set width to ${newW} units (${newW * UNST_COL_UNIT}).`);
         renderAll();
       }
 
@@ -1721,23 +1838,23 @@
       function exportCurrentSvg() {
         const design = getCurrentDesign();
         if (!design) return;
-        triggerDownload(`${slugFromSequence(design.sequence)}.svg`, buildSvg(design), 'image/svg+xml');
+        triggerDownload(exportFilenameFromSequence(design.sequence), buildSvg(design), 'image/svg+xml');
       }
 
       async function exportCurrentPng() {
         const design = getCurrentDesign();
         if (!design) return;
-        const svg = buildSvg(design, { cell: 32 });
+        const svg = buildSvg(design, { scale: 12 });
         const blob = new Blob([svg], { type: 'image/svg+xml' });
         const url = URL.createObjectURL(blob);
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          canvas.width = design.width * 32;
-          canvas.height = design.height * 32;
+          canvas.width = design.width * UNST_COL_UNIT * 24;
+          canvas.height = UNST_VIEWBOX_HEIGHT * 24;
           const ctx = canvas.getContext('2d');
           ctx.imageSmoothingEnabled = false;
-          ctx.drawImage(img, 0, 0);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           canvas.toBlob(pngBlob => {
             if (pngBlob) triggerDownload(`${slugFromSequence(design.sequence)}.png`, pngBlob, 'image/png');
             URL.revokeObjectURL(url);
@@ -1790,8 +1907,8 @@
         state.designs = state.designs.map(design => ({
           ...design,
           id: design.id || uid('design'),
-          width: design.width || 24,
-          height: design.height || 16,
+          width: Math.max(1, Math.min(16, Number(design.width) || UNST_DEFAULT_WIDTH)),
+          height: UNST_ROW_SEGMENTS.length,
           layers: (design.layers || [makeLayer('Base', '#ffffff')]).map(layer => ({
             ...layer,
             id: layer.id || uid('layer'),
@@ -1882,11 +1999,22 @@
         });
       }
 
+      function populateWidthOptions() {
+        els.gridWidth.innerHTML = '';
+        for (let i = 1; i <= 16; i += 1) {
+          const option = document.createElement('option');
+          option.value = String(i);
+          option.textContent = `${i} unit${i === 1 ? '' : 's'} (${i * UNST_COL_UNIT})`;
+          els.gridWidth.appendChild(option);
+        }
+      }
+
       function init() {
         load();
         ensureState();
         els.themeMode.value = state.themeMode;
         applyTheme();
+        populateWidthOptions();
         renderQuickPalette();
         bindEvents();
         renderAll();
