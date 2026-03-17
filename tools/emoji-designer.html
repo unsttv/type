@@ -1,0 +1,1899 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UNST Emoji Designer</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel-2: #11141a;
+      --panel-3: #0b0e13;
+      --fg: #edf1f8;
+      --muted: #99a3b4;
+      --border: rgba(255,255,255,.12);
+      --accent: #6ea8ff;
+      --accent-2: #8df0c8;
+      --danger: #ff7a7a;
+      --shadow: rgba(0,0,0,.35);
+      --checker-a: rgba(255,255,255,.04);
+      --checker-b: rgba(255,255,255,.08);
+      --cell-size: 28px;
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    :root.light {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-2: #f2f4f8;
+      --panel-3: #eef1f6;
+      --fg: #10131a;
+      --muted: #4f5b70;
+      --border: rgba(16,19,26,.12);
+      --accent: #2f6bff;
+      --accent-2: #127d5b;
+      --danger: #c83737;
+      --shadow: rgba(0,0,0,.08);
+      --checker-a: rgba(0,0,0,.04);
+      --checker-b: rgba(0,0,0,.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button, .button-like {
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white 8%), var(--panel));
+      color: var(--fg);
+      border-radius: 11px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: transform .06s ease, border-color .15s ease, background .15s ease;
+      box-shadow: 0 1px 0 rgba(255,255,255,.04) inset;
+    }
+    button:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+    button:active { transform: translateY(1px); }
+    button.primary {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 85%, white 15%), color-mix(in srgb, var(--accent) 88%, black 12%));
+      border-color: color-mix(in srgb, var(--accent) 70%, white 30%);
+      color: white;
+    }
+    button.ghost { background: transparent; }
+    button.danger { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); color: var(--danger); }
+    button.is-active {
+      border-color: color-mix(in srgb, var(--accent) 75%, var(--border));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    button.compact { padding: 6px 9px; border-radius: 9px; }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel-3);
+      color: var(--fg);
+      padding: 9px 11px;
+      outline: none;
+    }
+    input[type="color"] {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel-3);
+      padding: 2px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 88px;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100%;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 92%, black 8%);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      letter-spacing: .12em;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 70%, white 30%), color-mix(in srgb, var(--accent-2) 75%, black 25%));
+      color: white;
+      box-shadow: 0 12px 28px -16px var(--shadow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+    .brand .sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .top-actions, .cluster, .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(520px, 1fr) 360px;
+      gap: 16px;
+      padding: 16px;
+      min-height: 0;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel) 95%, white 5%), var(--panel));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 40px -32px var(--shadow);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--panel-2) 85%, transparent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-head h2, .panel-head h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .panel-body {
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 16px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .stack { display: grid; gap: 12px; }
+    .row { display: grid; gap: 10px; }
+    .row.two { grid-template-columns: 1fr 1fr; }
+    .row.three { grid-template-columns: repeat(3, 1fr); }
+    .label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .helper {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    code, .codeish {
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .kvs {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      background: var(--panel-3);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .kv {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      align-items: baseline;
+    }
+    .kv .k {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .kv .v {
+      font-family: var(--mono);
+      font-size: 12px;
+      word-break: break-word;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+      padding: 16px;
+      min-height: 0;
+    }
+
+    .toolbar {
+      padding: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      justify-content: space-between;
+    }
+
+    .canvas-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(45deg, var(--checker-a) 25%, transparent 25%) 0 0 / 20px 20px,
+        linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%) 0 10px / 20px 20px,
+        linear-gradient(45deg, transparent 75%, var(--checker-a) 75%) 10px -10px / 20px 20px,
+        linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%) -10px 0 / 20px 20px,
+        var(--panel-3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      overflow: auto;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .grid {
+      display: grid;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      width: max-content;
+      user-select: none;
+      box-shadow: 0 14px 28px -18px var(--shadow);
+    }
+
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      padding: 0;
+      border: 0;
+      position: relative;
+      background: transparent;
+      cursor: crosshair;
+    }
+    .cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      outline: 1px solid transparent;
+      outline-offset: -1px;
+      pointer-events: none;
+    }
+    .cell.active-current::after {
+      outline-color: color-mix(in srgb, white 88%, var(--accent) 12%);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.14);
+    }
+    .cell.preview::after {
+      outline-color: color-mix(in srgb, var(--accent) 70%, white 30%);
+      background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 8px 4px 0;
+    }
+
+    .preview-boxes {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+    .preview-box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel-3);
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      min-height: 0;
+    }
+    .preview-box h3 {
+      margin: 0;
+      font-size: 13px;
+    }
+    .emoji-preview {
+      min-height: 88px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      font-size: 60px;
+      background: color-mix(in srgb, var(--panel) 60%, transparent);
+    }
+    .svg-preview {
+      min-height: 88px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--panel) 60%, transparent);
+      padding: 8px;
+    }
+    .svg-preview svg {
+      max-width: 100%;
+      max-height: 104px;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px -16px var(--shadow);
+      image-rendering: pixelated;
+    }
+
+    .layer-list, .design-list {
+      display: grid;
+      gap: 10px;
+    }
+    .layer-card, .design-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel-3);
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+    .layer-card.is-selected,
+    .design-card.is-selected {
+      border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .layer-top, .design-top {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      min-width: 0;
+    }
+    .layer-title, .design-title {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+      flex: 1;
+    }
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.22);
+      flex: 0 0 auto;
+    }
+    .mini-preview {
+      width: 44px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background:
+        linear-gradient(45deg, var(--checker-a) 25%, transparent 25%) 0 0 / 10px 10px,
+        linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%) 0 5px / 10px 10px,
+        linear-gradient(45deg, transparent 75%, var(--checker-a) 75%) 5px -5px / 10px 10px,
+        linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%) -5px 0 / 10px 10px,
+        var(--panel-2);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+    .mini-preview svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+    }
+    .layer-controls,
+    .design-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--muted);
+      background: color-mix(in srgb, var(--panel-2) 65%, transparent);
+    }
+    .palette {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .palette button {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 999px;
+      border-width: 2px;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1380px) {
+      .layout { grid-template-columns: 320px minmax(460px, 1fr) 320px; }
+    }
+
+    @media (max-width: 1180px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .workspace { min-height: 720px; }
+      .preview-boxes { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">UE</div>
+        <div>
+          <h1>UNST Emoji Designer</h1>
+          <div class="sub">Sequence-aware color emoji editor for flags and other layered symbols.</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="cluster">
+          <button id="newDesignBtn">New design</button>
+          <button id="duplicateDesignBtn">Duplicate</button>
+          <button id="deleteDesignBtn" class="danger">Delete</button>
+        </div>
+        <div class="cluster">
+          <button id="exportDesignJsonBtn">Export design JSON</button>
+          <button id="exportLibraryJsonBtn">Export library JSON</button>
+          <button id="exportSvgBtn" class="primary">Export SVG</button>
+          <button id="exportPngBtn">Export PNG</button>
+          <button id="importBtn">Import JSON</button>
+          <input id="importInput" type="file" accept="application/json,.json" class="hidden" />
+        </div>
+        <div class="cluster">
+          <label class="helper" for="themeMode">Theme</label>
+          <select id="themeMode" style="width: 112px;">
+            <option value="device">Device</option>
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Metadata & presets</h2>
+          <span class="pill">stand-alone</span>
+        </div>
+        <div class="panel-body">
+          <div class="stack">
+            <div>
+              <label class="label" for="designName">Design name</label>
+              <input id="designName" type="text" placeholder="Netherlands" />
+            </div>
+
+            <div class="row two">
+              <div>
+                <label class="label" for="countryCode">Country code</label>
+                <input id="countryCode" type="text" maxlength="2" placeholder="NL" />
+              </div>
+              <div>
+                <label class="label" for="gridPreset">Quick preset</label>
+                <select id="gridPreset">
+                  <option value="">Choose preset…</option>
+                  <option value="flag-horizontal-3">Horizontal tricolor</option>
+                  <option value="flag-vertical-3">Vertical tricolor</option>
+                  <option value="flag-nordic-cross">Nordic cross</option>
+                  <option value="flag-center-disc">Center disc</option>
+                  <option value="flag-diagonal-bicolor">Diagonal bicolor</option>
+                  <option value="example-nl">Example: Netherlands</option>
+                  <option value="example-de">Example: Germany</option>
+                  <option value="example-fr">Example: France</option>
+                  <option value="example-it">Example: Italy</option>
+                  <option value="example-jp">Example: Japan</option>
+                  <option value="example-no">Example: Norway</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="label" for="sequenceInput">Unicode sequence</label>
+              <input id="sequenceInput" type="text" placeholder="U+1F1F3 U+1F1F1" />
+              <div class="helper" style="margin-top: 6px;">Country flags are usually two Regional Indicator code points. This tool keeps the sequence explicit so it fits your ligature-based UNST workflow.</div>
+            </div>
+
+            <div class="row two">
+              <button id="buildFromCountryBtn">Build sequence from country code</button>
+              <button id="applyPresetBtn">Apply preset</button>
+            </div>
+
+            <div>
+              <label class="label" for="notesInput">Notes</label>
+              <textarea id="notesInput" placeholder="Construction notes, intended export route, palette slots, etc."></textarea>
+            </div>
+          </div>
+
+          <div class="kvs">
+            <div class="kv"><div class="k">Actual emoji</div><div id="emojiTextValue" class="v">—</div></div>
+            <div class="kv"><div class="k">Glyph slug</div><div id="glyphSlugValue" class="v">—</div></div>
+            <div class="kv"><div class="k">Codepoints</div><div id="codepointsValue" class="v">—</div></div>
+            <div class="kv"><div class="k">Grid</div><div id="gridValue" class="v">24 × 16</div></div>
+            <div class="kv"><div class="k">Layers</div><div id="layerCountValue" class="v">0</div></div>
+          </div>
+
+          <div class="stack">
+            <div class="row three">
+              <div>
+                <label class="label" for="gridWidth">Columns</label>
+                <input id="gridWidth" type="number" min="4" max="64" value="24" />
+              </div>
+              <div>
+                <label class="label" for="gridHeight">Rows</label>
+                <input id="gridHeight" type="number" min="4" max="64" value="16" />
+              </div>
+              <div>
+                <label class="label" for="cellSize">Cell size</label>
+                <input id="cellSize" type="number" min="12" max="48" value="28" />
+              </div>
+            </div>
+            <div class="row two">
+              <button id="resizeGridBtn">Resize grid</button>
+              <button id="clearCurrentLayerBtn">Clear current layer</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="label">Quick palette</div>
+            <div id="quickPalette" class="palette"></div>
+          </div>
+
+          <div class="helper">
+            Assumptions built into this first version: color emoji are edited as layered cell art, exported as layered SVG, and described using explicit Unicode sequences so you can later wire them into GSUB / color-font generation however you prefer.
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Editor</h2>
+          <div class="toolbar" style="padding:0; background:transparent; border:0;">
+            <span class="pill" id="currentToolPill">Tool: Paint</span>
+            <span class="pill" id="autosavePill">Autosaved locally</span>
+          </div>
+        </div>
+
+        <div class="workspace">
+          <div class="toolbar">
+            <div class="cluster">
+              <button data-tool="paint" class="tool-btn is-active">Paint</button>
+              <button data-tool="erase" class="tool-btn">Erase</button>
+              <button data-tool="fill" class="tool-btn">Fill</button>
+              <button data-tool="rect" class="tool-btn">Rect</button>
+              <button id="eyedropLayerBtn" class="tool-btn">Pick layer</button>
+            </div>
+            <div class="cluster">
+              <button id="toggleGridBtn" class="compact is-active">Grid</button>
+              <button id="flattenPreviewBtn" class="compact">Copy flattened SVG</button>
+              <button id="copyManifestBtn" class="compact">Copy manifest snippet</button>
+            </div>
+          </div>
+
+          <div class="preview-boxes">
+            <div class="preview-box">
+              <h3>System emoji preview</h3>
+              <div id="emojiPreview" class="emoji-preview">🏳️</div>
+              <div class="helper">Useful for checking whether your typed sequence is valid as Unicode, independent from your custom font.</div>
+            </div>
+            <div class="preview-box">
+              <h3>Flattened UNST preview</h3>
+              <div id="svgPreview" class="svg-preview"></div>
+              <div class="helper">Rendered from the visible layers in this editor, using pixel-aligned SVG rectangles.</div>
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <div id="grid" class="grid" aria-label="Emoji design grid"></div>
+          </div>
+
+          <div class="statusbar">
+            <div id="statusText">Ready.</div>
+            <div id="cursorText">x: — · y: —</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Layers & library</h2>
+          <span class="pill" id="designCountPill">0 designs</span>
+        </div>
+        <div class="panel-body">
+          <div class="stack">
+            <div class="row two">
+              <button id="addLayerBtn">Add layer</button>
+              <button id="duplicateLayerBtn">Duplicate layer</button>
+            </div>
+            <div class="layer-list" id="layerList"></div>
+          </div>
+
+          <div class="stack">
+            <div class="row two">
+              <button id="addDesignBtn">Add blank design</button>
+              <button id="duplicateDesignBtn2">Duplicate design</button>
+            </div>
+            <div class="design-list" id="designList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>Saved in <span class="codeish">localStorage</span> under <span class="codeish">unst-emoji-designer-v1</span>.</div>
+      <div>Export targets: layered SVG, PNG, JSON library, and manifest snippet.</div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'unst-emoji-designer-v1';
+      const DEFAULT_CELL_SIZE = 28;
+      const QUICK_PALETTE = [
+        '#ffffff', '#000000', '#ae1c28', '#21468b', '#ff4b55', '#f9f9f9', '#ffce00', '#d00c33',
+        '#0055a4', '#008c45', '#bc002d', '#002868', '#bf0a30', '#ce1126', '#fcd116', '#002b7f',
+        '#009b3a', '#cf142b', '#012169', '#ef3340', '#6da544', '#ffda44', '#1b1b1b'
+      ];
+
+      const els = {
+        themeMode: document.getElementById('themeMode'),
+        designName: document.getElementById('designName'),
+        countryCode: document.getElementById('countryCode'),
+        sequenceInput: document.getElementById('sequenceInput'),
+        notesInput: document.getElementById('notesInput'),
+        emojiTextValue: document.getElementById('emojiTextValue'),
+        glyphSlugValue: document.getElementById('glyphSlugValue'),
+        codepointsValue: document.getElementById('codepointsValue'),
+        gridValue: document.getElementById('gridValue'),
+        layerCountValue: document.getElementById('layerCountValue'),
+        designCountPill: document.getElementById('designCountPill'),
+        gridWidth: document.getElementById('gridWidth'),
+        gridHeight: document.getElementById('gridHeight'),
+        cellSize: document.getElementById('cellSize'),
+        quickPalette: document.getElementById('quickPalette'),
+        grid: document.getElementById('grid'),
+        layerList: document.getElementById('layerList'),
+        designList: document.getElementById('designList'),
+        emojiPreview: document.getElementById('emojiPreview'),
+        svgPreview: document.getElementById('svgPreview'),
+        statusText: document.getElementById('statusText'),
+        cursorText: document.getElementById('cursorText'),
+        currentToolPill: document.getElementById('currentToolPill'),
+        autosavePill: document.getElementById('autosavePill'),
+        gridPreset: document.getElementById('gridPreset'),
+        importInput: document.getElementById('importInput')
+      };
+
+      const state = {
+        themeMode: 'device',
+        showGrid: true,
+        tool: 'paint',
+        pickLayerMode: false,
+        drag: null,
+        rectPreview: null,
+        currentDesignId: null,
+        currentLayerId: null,
+        designs: []
+      };
+
+      function uid(prefix = 'id') {
+        return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      function makeLayer(name = 'Layer', color = '#ffffff') {
+        return {
+          id: uid('layer'),
+          name,
+          color,
+          visible: true,
+          cells: []
+        };
+      }
+
+      function makeBlankDesign() {
+        const id = uid('design');
+        const layer = makeLayer('Base', '#ffffff');
+        return {
+          id,
+          name: 'Untitled flag',
+          countryCode: '',
+          sequence: '',
+          notes: '',
+          width: 24,
+          height: 16,
+          layers: [layer]
+        };
+      }
+
+      function clone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+
+      function save() {
+        const payload = {
+          themeMode: state.themeMode,
+          showGrid: state.showGrid,
+          currentDesignId: state.currentDesignId,
+          currentLayerId: state.currentLayerId,
+          designs: state.designs
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        els.autosavePill.textContent = 'Autosaved locally';
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.designs)) return false;
+          state.themeMode = parsed.themeMode || 'device';
+          state.showGrid = parsed.showGrid !== false;
+          state.designs = parsed.designs;
+          state.currentDesignId = parsed.currentDesignId || (state.designs[0] && state.designs[0].id) || null;
+          const design = getCurrentDesign();
+          state.currentLayerId = parsed.currentLayerId || (design && design.layers[0] && design.layers[0].id) || null;
+          return true;
+        } catch (err) {
+          console.warn(err);
+          return false;
+        }
+      }
+
+      function ensureState() {
+        if (!state.designs.length) {
+          const design = makeBlankDesign();
+          state.designs = [design];
+          state.currentDesignId = design.id;
+          state.currentLayerId = design.layers[0].id;
+        }
+      }
+
+      function getCurrentDesign() {
+        return state.designs.find(d => d.id === state.currentDesignId) || null;
+      }
+
+      function getCurrentLayer() {
+        const design = getCurrentDesign();
+        if (!design) return null;
+        return design.layers.find(l => l.id === state.currentLayerId) || design.layers[0] || null;
+      }
+
+      function normalizeHex(hex) {
+        if (!hex) return '#ffffff';
+        return hex.startsWith('#') ? hex : `#${hex}`;
+      }
+
+      function indexFor(x, y, width) {
+        return y * width + x;
+      }
+
+      function hasCell(layer, idx) {
+        return layer.cells.includes(idx);
+      }
+
+      function setCell(layer, idx, on) {
+        const exists = layer.cells.includes(idx);
+        if (on && !exists) layer.cells.push(idx);
+        if (!on && exists) layer.cells = layer.cells.filter(v => v !== idx);
+      }
+
+      function sortCells(layer) {
+        layer.cells.sort((a, b) => a - b);
+      }
+
+      function resizeLayerCells(layer, oldW, oldH, newW, newH) {
+        const next = [];
+        for (const idx of layer.cells) {
+          const x = idx % oldW;
+          const y = Math.floor(idx / oldW);
+          if (x < newW && y < newH) next.push(indexFor(x, y, newW));
+        }
+        layer.cells = next;
+      }
+
+      function flattenColorAt(design, x, y) {
+        const idx = indexFor(x, y, design.width);
+        let color = null;
+        for (const layer of design.layers) {
+          if (!layer.visible) continue;
+          if (layer.cells.includes(idx)) color = layer.color;
+        }
+        return color;
+      }
+
+      function sequenceStringToEmoji(sequence) {
+        const cps = parseSequence(sequence);
+        if (!cps.length) return '';
+        try {
+          return String.fromCodePoint(...cps);
+        } catch {
+          return '';
+        }
+      }
+
+      function parseSequence(sequence) {
+        if (!sequence) return [];
+        const cleaned = sequence.trim();
+        if (!cleaned) return [];
+
+        const unicodeish = cleaned.match(/U\+[0-9A-Fa-f]{2,6}|0x[0-9A-Fa-f]{2,6}|[0-9A-Fa-f]{4,6}/g);
+        if (unicodeish && unicodeish.length) {
+          return unicodeish.map(part => Number.parseInt(part.replace(/^U\+/i, '').replace(/^0x/i, ''), 16)).filter(Number.isFinite);
+        }
+
+        return Array.from(cleaned).map(ch => ch.codePointAt(0));
+      }
+
+      function codepointsToDisplay(sequence) {
+        const cps = parseSequence(sequence);
+        return cps.length ? cps.map(cp => `U+${cp.toString(16).toUpperCase().padStart(4, '0')}`).join(' ') : '—';
+      }
+
+      function slugFromSequence(sequence) {
+        const cps = parseSequence(sequence);
+        if (!cps.length) return 'emoji-empty';
+        return `emoji-${cps.map(cp => cp.toString(16).toLowerCase()).join('_')}`;
+      }
+
+      function countryCodeToSequence(countryCode) {
+        const cc = (countryCode || '').trim().toUpperCase();
+        if (!/^[A-Z]{2}$/.test(cc)) return '';
+        const cps = [...cc].map(ch => 0x1F1E6 + (ch.charCodeAt(0) - 65));
+        return cps.map(cp => `U+${cp.toString(16).toUpperCase()}`).join(' ');
+      }
+
+      function paintRectOnLayer(layer, design, x0, y0, x1, y1, on) {
+        const minX = Math.max(0, Math.min(x0, x1));
+        const maxX = Math.min(design.width - 1, Math.max(x0, x1));
+        const minY = Math.max(0, Math.min(y0, y1));
+        const maxY = Math.min(design.height - 1, Math.max(y0, y1));
+        for (let y = minY; y <= maxY; y += 1) {
+          for (let x = minX; x <= maxX; x += 1) {
+            setCell(layer, indexFor(x, y, design.width), on);
+          }
+        }
+        sortCells(layer);
+      }
+
+      function floodFill(layer, design, startX, startY) {
+        const target = hasCell(layer, indexFor(startX, startY, design.width));
+        const replacement = !target;
+        if (target === replacement) return;
+
+        const seen = new Set();
+        const stack = [[startX, startY]];
+        while (stack.length) {
+          const [x, y] = stack.pop();
+          if (x < 0 || y < 0 || x >= design.width || y >= design.height) continue;
+          const idx = indexFor(x, y, design.width);
+          if (seen.has(idx)) continue;
+          seen.add(idx);
+          const here = hasCell(layer, idx);
+          if (here !== target) continue;
+          setCell(layer, idx, replacement);
+          stack.push([x + 1, y]);
+          stack.push([x - 1, y]);
+          stack.push([x, y + 1]);
+          stack.push([x, y - 1]);
+        }
+        sortCells(layer);
+      }
+
+      function buildSvg(design, options = {}) {
+        const cell = options.cell || 1;
+        const includeBackground = options.includeBackground || false;
+        const bg = options.background || 'transparent';
+        const parts = [];
+        parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${design.width * cell} ${design.height * cell}" width="${design.width * cell}" height="${design.height * cell}" shape-rendering="crispEdges">`);
+        if (includeBackground && bg !== 'transparent') {
+          parts.push(`<rect width="100%" height="100%" fill="${escapeXml(bg)}"/>`);
+        }
+        for (const layer of design.layers) {
+          if (!layer.visible) continue;
+          parts.push(`<g id="${escapeXml(layer.id)}" fill="${escapeXml(layer.color)}">`);
+          for (const idx of layer.cells) {
+            const x = (idx % design.width) * cell;
+            const y = Math.floor(idx / design.width) * cell;
+            parts.push(`<rect x="${x}" y="${y}" width="${cell}" height="${cell}"/>`);
+          }
+          parts.push(`</g>`);
+        }
+        parts.push(`</svg>`);
+        return parts.join('');
+      }
+
+      function buildManifestSnippet(design) {
+        const cps = parseSequence(design.sequence).map(cp => `0x${cp.toString(16).toUpperCase()}`);
+        return JSON.stringify({
+          name: design.name,
+          countryCode: design.countryCode,
+          sequence: design.sequence,
+          sequenceCodepoints: cps,
+          glyphSlug: slugFromSequence(design.sequence),
+          width: design.width,
+          height: design.height,
+          layers: design.layers.map(layer => ({
+            id: layer.id,
+            name: layer.name,
+            color: layer.color,
+            visible: layer.visible,
+            cells: layer.cells
+          }))
+        }, null, 2);
+      }
+
+      function escapeXml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      function triggerDownload(filename, blob, mime) {
+        const url = URL.createObjectURL(blob instanceof Blob ? blob : new Blob([blob], { type: mime }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 500);
+      }
+
+      function applyTheme() {
+        const root = document.documentElement;
+        const mode = state.themeMode;
+        let effective = mode;
+        if (mode === 'device') {
+          effective = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        root.classList.toggle('light', effective === 'light');
+      }
+
+      function setStatus(text) {
+        els.statusText.textContent = text;
+      }
+
+      function setCurrentDesign(id) {
+        state.currentDesignId = id;
+        const design = getCurrentDesign();
+        if (design) {
+          state.currentLayerId = (design.layers.find(l => l.id === state.currentLayerId) || design.layers[0] || {}).id || null;
+        }
+        renderAll();
+      }
+
+      function setCurrentLayer(id) {
+        state.currentLayerId = id;
+        renderAll();
+      }
+
+      function updateMetadataFromForm() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        design.name = els.designName.value || 'Untitled flag';
+        design.countryCode = (els.countryCode.value || '').trim().toUpperCase();
+        design.sequence = els.sequenceInput.value.trim();
+        design.notes = els.notesInput.value;
+        save();
+        renderAll();
+      }
+
+      function renderQuickPalette() {
+        els.quickPalette.innerHTML = '';
+        QUICK_PALETTE.forEach(color => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.title = color;
+          btn.style.background = color;
+          btn.addEventListener('click', () => {
+            const layer = getCurrentLayer();
+            if (!layer) return;
+            layer.color = color;
+            save();
+            renderAll();
+          });
+          els.quickPalette.appendChild(btn);
+        });
+      }
+
+      function renderMetadata() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        els.designName.value = design.name;
+        els.countryCode.value = design.countryCode;
+        els.sequenceInput.value = design.sequence;
+        els.notesInput.value = design.notes || '';
+        els.emojiTextValue.textContent = sequenceStringToEmoji(design.sequence) || '—';
+        els.glyphSlugValue.textContent = slugFromSequence(design.sequence);
+        els.codepointsValue.textContent = codepointsToDisplay(design.sequence);
+        els.gridValue.textContent = `${design.width} × ${design.height}`;
+        els.layerCountValue.textContent = `${design.layers.length}`;
+        els.gridWidth.value = design.width;
+        els.gridHeight.value = design.height;
+        els.designCountPill.textContent = `${state.designs.length} design${state.designs.length === 1 ? '' : 's'}`;
+        els.emojiPreview.textContent = sequenceStringToEmoji(design.sequence) || '🏳️';
+      }
+
+      function renderLayerList() {
+        const design = getCurrentDesign();
+        const current = getCurrentLayer();
+        els.layerList.innerHTML = '';
+        if (!design) return;
+
+        design.layers.forEach((layer, index) => {
+          const card = document.createElement('div');
+          card.className = `layer-card${current && current.id === layer.id ? ' is-selected' : ''}`;
+
+          const top = document.createElement('div');
+          top.className = 'layer-top';
+
+          const title = document.createElement('div');
+          title.className = 'layer-title';
+
+          const swatch = document.createElement('div');
+          swatch.className = 'swatch';
+          swatch.style.background = layer.color;
+
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.value = layer.name;
+          nameInput.addEventListener('input', () => {
+            layer.name = nameInput.value || `Layer ${index + 1}`;
+            save();
+            renderAll();
+          });
+          nameInput.addEventListener('focus', () => setCurrentLayer(layer.id));
+
+          title.appendChild(swatch);
+          title.appendChild(nameInput);
+
+          const selectBtn = document.createElement('button');
+          selectBtn.className = 'compact';
+          selectBtn.textContent = current && current.id === layer.id ? 'Selected' : 'Select';
+          selectBtn.addEventListener('click', () => setCurrentLayer(layer.id));
+
+          top.appendChild(title);
+          top.appendChild(selectBtn);
+
+          const controls = document.createElement('div');
+          controls.className = 'layer-controls';
+
+          const visBtn = document.createElement('button');
+          visBtn.className = `compact${layer.visible ? ' is-active' : ''}`;
+          visBtn.textContent = layer.visible ? 'Visible' : 'Hidden';
+          visBtn.addEventListener('click', () => {
+            layer.visible = !layer.visible;
+            save();
+            renderAll();
+          });
+
+          const upBtn = document.createElement('button');
+          upBtn.className = 'compact';
+          upBtn.textContent = '↑';
+          upBtn.title = 'Move up';
+          upBtn.disabled = index === design.layers.length - 1;
+          upBtn.addEventListener('click', () => {
+            if (index >= design.layers.length - 1) return;
+            const tmp = design.layers[index + 1];
+            design.layers[index + 1] = design.layers[index];
+            design.layers[index] = tmp;
+            save();
+            renderAll();
+          });
+
+          const downBtn = document.createElement('button');
+          downBtn.className = 'compact';
+          downBtn.textContent = '↓';
+          downBtn.title = 'Move down';
+          downBtn.disabled = index === 0;
+          downBtn.addEventListener('click', () => {
+            if (index <= 0) return;
+            const tmp = design.layers[index - 1];
+            design.layers[index - 1] = design.layers[index];
+            design.layers[index] = tmp;
+            save();
+            renderAll();
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'compact danger';
+          delBtn.textContent = 'Delete';
+          delBtn.disabled = design.layers.length <= 1;
+          delBtn.addEventListener('click', () => {
+            if (design.layers.length <= 1) return;
+            design.layers = design.layers.filter(l => l.id !== layer.id);
+            state.currentLayerId = design.layers[Math.max(0, index - 1)].id;
+            save();
+            renderAll();
+          });
+
+          controls.append(visBtn, upBtn, downBtn, delBtn);
+
+          const colorRow = document.createElement('div');
+          colorRow.className = 'row two';
+          const colorWrap = document.createElement('div');
+          const colorLabel = document.createElement('div');
+          colorLabel.className = 'label';
+          colorLabel.textContent = 'Color';
+          const colorInput = document.createElement('input');
+          colorInput.type = 'color';
+          colorInput.value = normalizeHex(layer.color);
+          colorInput.addEventListener('input', () => {
+            layer.color = colorInput.value;
+            save();
+            renderAll();
+          });
+          colorWrap.append(colorLabel, colorInput);
+
+          const statsWrap = document.createElement('div');
+          const statsLabel = document.createElement('div');
+          statsLabel.className = 'label';
+          statsLabel.textContent = 'Cells';
+          const stats = document.createElement('div');
+          stats.className = 'button-like';
+          stats.style.cursor = 'default';
+          stats.textContent = `${layer.cells.length}`;
+          statsWrap.append(statsLabel, stats);
+
+          colorRow.append(colorWrap, statsWrap);
+
+          card.append(top, controls, colorRow);
+          els.layerList.appendChild(card);
+        });
+      }
+
+      function renderDesignList() {
+        const currentDesign = getCurrentDesign();
+        els.designList.innerHTML = '';
+        state.designs.forEach(design => {
+          const card = document.createElement('div');
+          card.className = `design-card${currentDesign && currentDesign.id === design.id ? ' is-selected' : ''}`;
+
+          const top = document.createElement('div');
+          top.className = 'design-top';
+
+          const title = document.createElement('div');
+          title.className = 'design-title';
+          const preview = document.createElement('div');
+          preview.className = 'mini-preview';
+          preview.innerHTML = buildSvg(design);
+          const labelWrap = document.createElement('div');
+          labelWrap.style.minWidth = '0';
+          labelWrap.innerHTML = `<div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(design.name)}</div><div class="helper" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(design.sequence || 'No sequence')}</div>`;
+          title.append(preview, labelWrap);
+
+          const selectBtn = document.createElement('button');
+          selectBtn.className = 'compact';
+          selectBtn.textContent = currentDesign && currentDesign.id === design.id ? 'Open' : 'Select';
+          selectBtn.addEventListener('click', () => setCurrentDesign(design.id));
+
+          top.append(title, selectBtn);
+          const controls = document.createElement('div');
+          controls.className = 'design-controls';
+          const pill = document.createElement('span');
+          pill.className = 'pill';
+          pill.textContent = `${design.width} × ${design.height}`;
+          controls.append(pill);
+          card.append(top, controls);
+          els.designList.appendChild(card);
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function renderPreview() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const svg = buildSvg(design);
+        els.svgPreview.innerHTML = svg;
+      }
+
+      function renderGrid() {
+        const design = getCurrentDesign();
+        const layer = getCurrentLayer();
+        if (!design || !layer) return;
+
+        document.documentElement.style.setProperty('--cell-size', `${Number(els.cellSize.value || DEFAULT_CELL_SIZE)}px`);
+        els.grid.classList.toggle('no-grid', !state.showGrid);
+        els.grid.style.gridTemplateColumns = `repeat(${design.width}, var(--cell-size))`;
+        els.grid.innerHTML = '';
+
+        const previewRect = state.rectPreview;
+        const previewIndices = new Set();
+        if (previewRect) {
+          const minX = Math.min(previewRect.x0, previewRect.x1);
+          const maxX = Math.max(previewRect.x0, previewRect.x1);
+          const minY = Math.min(previewRect.y0, previewRect.y1);
+          const maxY = Math.max(previewRect.y0, previewRect.y1);
+          for (let y = minY; y <= maxY; y += 1) {
+            for (let x = minX; x <= maxX; x += 1) {
+              previewIndices.add(indexFor(x, y, design.width));
+            }
+          }
+        }
+
+        for (let y = 0; y < design.height; y += 1) {
+          for (let x = 0; x < design.width; x += 1) {
+            const idx = indexFor(x, y, design.width);
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'cell';
+            if (hasCell(layer, idx)) cell.classList.add('active-current');
+            if (previewIndices.has(idx)) cell.classList.add('preview');
+            const flattened = flattenColorAt(design, x, y);
+            cell.style.background = flattened || 'transparent';
+            cell.dataset.x = String(x);
+            cell.dataset.y = String(y);
+            cell.addEventListener('pointerdown', onCellPointerDown);
+            cell.addEventListener('pointerenter', onCellPointerEnter);
+            cell.addEventListener('pointermove', () => {
+              els.cursorText.textContent = `x: ${x} · y: ${y}`;
+            });
+            els.grid.appendChild(cell);
+          }
+        }
+      }
+
+      function onCellPointerDown(event) {
+        const design = getCurrentDesign();
+        const layer = getCurrentLayer();
+        if (!design || !layer) return;
+        const cell = event.currentTarget;
+        const x = Number(cell.dataset.x);
+        const y = Number(cell.dataset.y);
+
+        if (state.pickLayerMode) {
+          pickTopLayerAt(x, y);
+          return;
+        }
+
+        cell.setPointerCapture(event.pointerId);
+        state.drag = { pointerId: event.pointerId, x0: x, y0: y };
+        if (state.tool === 'paint') {
+          setCell(layer, indexFor(x, y, design.width), true);
+          save();
+          renderAll(false);
+        } else if (state.tool === 'erase') {
+          setCell(layer, indexFor(x, y, design.width), false);
+          save();
+          renderAll(false);
+        } else if (state.tool === 'fill') {
+          floodFill(layer, design, x, y);
+          save();
+          renderAll();
+        } else if (state.tool === 'rect') {
+          state.rectPreview = { x0: x, y0: y, x1: x, y1: y };
+          renderGrid();
+        }
+      }
+
+      function onCellPointerEnter(event) {
+        const design = getCurrentDesign();
+        const layer = getCurrentLayer();
+        if (!design || !layer) return;
+        const cell = event.currentTarget;
+        const x = Number(cell.dataset.x);
+        const y = Number(cell.dataset.y);
+        els.cursorText.textContent = `x: ${x} · y: ${y}`;
+
+        if (!state.drag) return;
+        if (state.tool === 'paint') {
+          setCell(layer, indexFor(x, y, design.width), true);
+          save();
+          renderAll(false);
+        } else if (state.tool === 'erase') {
+          setCell(layer, indexFor(x, y, design.width), false);
+          save();
+          renderAll(false);
+        } else if (state.tool === 'rect') {
+          state.rectPreview = { x0: state.drag.x0, y0: state.drag.y0, x1: x, y1: y };
+          renderGrid();
+        }
+      }
+
+      window.addEventListener('pointerup', event => {
+        const design = getCurrentDesign();
+        const layer = getCurrentLayer();
+        if (!state.drag || !design || !layer) return;
+        if (state.tool === 'rect' && state.rectPreview) {
+          paintRectOnLayer(layer, design, state.rectPreview.x0, state.rectPreview.y0, state.rectPreview.x1, state.rectPreview.y1, true);
+          state.rectPreview = null;
+          save();
+          renderAll();
+        } else {
+          state.drag = null;
+        }
+        state.drag = null;
+      });
+
+      function pickTopLayerAt(x, y) {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const idx = indexFor(x, y, design.width);
+        for (let i = design.layers.length - 1; i >= 0; i -= 1) {
+          const layer = design.layers[i];
+          if (layer.visible && layer.cells.includes(idx)) {
+            state.currentLayerId = layer.id;
+            state.pickLayerMode = false;
+            setStatus(`Picked layer “${layer.name}”.`);
+            renderAll();
+            return;
+          }
+        }
+        state.pickLayerMode = false;
+        setStatus('No visible layer at that cell.');
+        renderAll();
+      }
+
+      function renderToolbar() {
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+          btn.classList.toggle('is-active', btn.dataset.tool === state.tool);
+        });
+        els.currentToolPill.textContent = `Tool: ${state.pickLayerMode ? 'Pick layer' : capitalize(state.tool)}`;
+        document.getElementById('toggleGridBtn').classList.toggle('is-active', state.showGrid);
+        document.getElementById('eyedropLayerBtn').classList.toggle('is-active', state.pickLayerMode);
+      }
+
+      function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      }
+
+      function renderAll(full = true) {
+        const design = getCurrentDesign();
+        if (!design) return;
+        renderMetadata();
+        renderToolbar();
+        renderLayerList();
+        renderDesignList();
+        renderPreview();
+        renderGrid();
+        if (full) save();
+      }
+
+      function applyPreset(kind) {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const w = design.width;
+        const h = design.height;
+
+        function fillAll(layer) {
+          layer.cells = [];
+          for (let y = 0; y < h; y += 1) {
+            for (let x = 0; x < w; x += 1) {
+              layer.cells.push(indexFor(x, y, w));
+            }
+          }
+        }
+
+        function fillRows(layer, yStart, yEnd) {
+          layer.cells = [];
+          for (let y = yStart; y < yEnd; y += 1) {
+            for (let x = 0; x < w; x += 1) layer.cells.push(indexFor(x, y, w));
+          }
+        }
+
+        function fillCols(layer, xStart, xEnd) {
+          layer.cells = [];
+          for (let y = 0; y < h; y += 1) {
+            for (let x = xStart; x < xEnd; x += 1) layer.cells.push(indexFor(x, y, w));
+          }
+        }
+
+        function fillDisc(layer, cx, cy, r) {
+          layer.cells = [];
+          for (let y = 0; y < h; y += 1) {
+            for (let x = 0; x < w; x += 1) {
+              const dx = x + 0.5 - cx;
+              const dy = y + 0.5 - cy;
+              if (dx * dx + dy * dy <= r * r) layer.cells.push(indexFor(x, y, w));
+            }
+          }
+        }
+
+        function fillDiagonal(layer, upperLeftColor = true) {
+          layer.cells = [];
+          for (let y = 0; y < h; y += 1) {
+            for (let x = 0; x < w; x += 1) {
+              const belongs = upperLeftColor ? (x / Math.max(1, w - 1) + y / Math.max(1, h - 1) <= 1) : (x / Math.max(1, w - 1) >= y / Math.max(1, h - 1));
+              if (belongs) layer.cells.push(indexFor(x, y, w));
+            }
+          }
+        }
+
+        if (kind === 'flag-horizontal-3') {
+          const a = makeLayer('Top stripe', '#ae1c28');
+          const b = makeLayer('Middle stripe', '#ffffff');
+          const c = makeLayer('Bottom stripe', '#21468b');
+          fillRows(a, 0, Math.ceil(h / 3));
+          fillRows(b, Math.ceil(h / 3), Math.ceil((2 * h) / 3));
+          fillRows(c, Math.ceil((2 * h) / 3), h);
+          design.layers = [a, b, c];
+          state.currentLayerId = a.id;
+          setStatus('Applied horizontal tricolor preset.');
+        } else if (kind === 'flag-vertical-3') {
+          const a = makeLayer('Left stripe', '#0055a4');
+          const b = makeLayer('Middle stripe', '#ffffff');
+          const c = makeLayer('Right stripe', '#ef4135');
+          fillCols(a, 0, Math.ceil(w / 3));
+          fillCols(b, Math.ceil(w / 3), Math.ceil((2 * w) / 3));
+          fillCols(c, Math.ceil((2 * w) / 3), w);
+          design.layers = [a, b, c];
+          state.currentLayerId = a.id;
+          setStatus('Applied vertical tricolor preset.');
+        } else if (kind === 'flag-nordic-cross') {
+          const bg = makeLayer('Field', '#ba0c2f');
+          fillAll(bg);
+          const whiteCross = makeLayer('White cross', '#ffffff');
+          whiteCross.cells = [];
+          const blueCross = makeLayer('Blue cross', '#00205b');
+          blueCross.cells = [];
+
+          const whiteVStart = Math.floor(w * 0.28);
+          const whiteVEnd = whiteVStart + Math.max(3, Math.round(w * 0.18));
+          const whiteHStart = Math.floor(h * 0.39);
+          const whiteHEnd = whiteHStart + Math.max(3, Math.round(h * 0.22));
+
+          const blueVStart = whiteVStart + 1;
+          const blueVEnd = whiteVEnd - 1;
+          const blueHStart = whiteHStart + 1;
+          const blueHEnd = whiteHEnd - 1;
+
+          for (let y = 0; y < h; y += 1) {
+            for (let x = 0; x < w; x += 1) {
+              const idx = indexFor(x, y, w);
+              if ((x >= whiteVStart && x < whiteVEnd) || (y >= whiteHStart && y < whiteHEnd)) whiteCross.cells.push(idx);
+              if ((x >= blueVStart && x < blueVEnd) || (y >= blueHStart && y < blueHEnd)) blueCross.cells.push(idx);
+            }
+          }
+          design.layers = [bg, whiteCross, blueCross];
+          state.currentLayerId = bg.id;
+          setStatus('Applied Nordic cross preset.');
+        } else if (kind === 'flag-center-disc') {
+          const bg = makeLayer('Field', '#ffffff');
+          fillAll(bg);
+          const disc = makeLayer('Disc', '#bc002d');
+          fillDisc(disc, w / 2, h / 2, Math.min(w, h) * 0.23);
+          design.layers = [bg, disc];
+          state.currentLayerId = disc.id;
+          setStatus('Applied center disc preset.');
+        } else if (kind === 'flag-diagonal-bicolor') {
+          const a = makeLayer('Upper triangle', '#ffffff');
+          const b = makeLayer('Lower triangle', '#d7141a');
+          fillDiagonal(a, true);
+          fillAll(b);
+          design.layers = [b, a];
+          state.currentLayerId = a.id;
+          setStatus('Applied diagonal bicolor preset.');
+        } else if (kind === 'example-nl') {
+          design.name = 'Netherlands';
+          design.countryCode = 'NL';
+          design.sequence = countryCodeToSequence('NL');
+          applyPreset('flag-horizontal-3');
+          design.layers[0].color = '#ae1c28';
+          design.layers[1].color = '#ffffff';
+          design.layers[2].color = '#21468b';
+          state.currentLayerId = design.layers[0].id;
+          return renderAll();
+        } else if (kind === 'example-de') {
+          design.name = 'Germany';
+          design.countryCode = 'DE';
+          design.sequence = countryCodeToSequence('DE');
+          applyPreset('flag-horizontal-3');
+          design.layers[0].color = '#000000';
+          design.layers[1].color = '#dd0000';
+          design.layers[2].color = '#ffce00';
+          state.currentLayerId = design.layers[0].id;
+          return renderAll();
+        } else if (kind === 'example-fr') {
+          design.name = 'France';
+          design.countryCode = 'FR';
+          design.sequence = countryCodeToSequence('FR');
+          applyPreset('flag-vertical-3');
+          design.layers[0].color = '#0055a4';
+          design.layers[1].color = '#ffffff';
+          design.layers[2].color = '#ef4135';
+          state.currentLayerId = design.layers[0].id;
+          return renderAll();
+        } else if (kind === 'example-it') {
+          design.name = 'Italy';
+          design.countryCode = 'IT';
+          design.sequence = countryCodeToSequence('IT');
+          applyPreset('flag-vertical-3');
+          design.layers[0].color = '#009246';
+          design.layers[1].color = '#ffffff';
+          design.layers[2].color = '#ce2b37';
+          state.currentLayerId = design.layers[0].id;
+          return renderAll();
+        } else if (kind === 'example-jp') {
+          design.name = 'Japan';
+          design.countryCode = 'JP';
+          design.sequence = countryCodeToSequence('JP');
+          applyPreset('flag-center-disc');
+          design.layers[0].color = '#ffffff';
+          design.layers[1].color = '#bc002d';
+          state.currentLayerId = design.layers[1].id;
+          return renderAll();
+        } else if (kind === 'example-no') {
+          design.name = 'Norway';
+          design.countryCode = 'NO';
+          design.sequence = countryCodeToSequence('NO');
+          applyPreset('flag-nordic-cross');
+          design.layers[0].color = '#ba0c2f';
+          design.layers[1].color = '#ffffff';
+          design.layers[2].color = '#00205b';
+          state.currentLayerId = design.layers[2].id;
+          return renderAll();
+        }
+        renderAll();
+      }
+
+      function resizeCurrentGrid() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const oldW = design.width;
+        const oldH = design.height;
+        const newW = Math.max(4, Math.min(64, Number(els.gridWidth.value || oldW)));
+        const newH = Math.max(4, Math.min(64, Number(els.gridHeight.value || oldH)));
+        design.width = newW;
+        design.height = newH;
+        for (const layer of design.layers) resizeLayerCells(layer, oldW, oldH, newW, newH);
+        setStatus(`Resized grid to ${newW} × ${newH}.`);
+        renderAll();
+      }
+
+      function addLayer() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const layer = makeLayer(`Layer ${design.layers.length + 1}`, QUICK_PALETTE[design.layers.length % QUICK_PALETTE.length]);
+        design.layers.push(layer);
+        state.currentLayerId = layer.id;
+        setStatus(`Added ${layer.name}.`);
+        renderAll();
+      }
+
+      function duplicateLayer() {
+        const design = getCurrentDesign();
+        const layer = getCurrentLayer();
+        if (!design || !layer) return;
+        const next = clone(layer);
+        next.id = uid('layer');
+        next.name = `${layer.name} copy`;
+        design.layers.push(next);
+        state.currentLayerId = next.id;
+        setStatus(`Duplicated ${layer.name}.`);
+        renderAll();
+      }
+
+      function clearCurrentLayer() {
+        const layer = getCurrentLayer();
+        if (!layer) return;
+        layer.cells = [];
+        setStatus(`Cleared ${layer.name}.`);
+        renderAll();
+      }
+
+      function addBlankDesign() {
+        const design = makeBlankDesign();
+        state.designs.push(design);
+        state.currentDesignId = design.id;
+        state.currentLayerId = design.layers[0].id;
+        setStatus('Added blank design.');
+        renderAll();
+      }
+
+      function duplicateCurrentDesign() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const next = clone(design);
+        next.id = uid('design');
+        next.name = `${design.name} copy`;
+        next.layers = next.layers.map(layer => ({ ...layer, id: uid('layer') }));
+        state.designs.push(next);
+        state.currentDesignId = next.id;
+        state.currentLayerId = next.layers[0].id;
+        setStatus(`Duplicated “${design.name}”.`);
+        renderAll();
+      }
+
+      function deleteCurrentDesign() {
+        if (state.designs.length <= 1) {
+          setStatus('At least one design must remain.');
+          return;
+        }
+        const design = getCurrentDesign();
+        if (!design) return;
+        const idx = state.designs.findIndex(d => d.id === design.id);
+        state.designs = state.designs.filter(d => d.id !== design.id);
+        const next = state.designs[Math.max(0, idx - 1)] || state.designs[0];
+        state.currentDesignId = next.id;
+        state.currentLayerId = next.layers[0].id;
+        setStatus(`Deleted “${design.name}”.`);
+        renderAll();
+      }
+
+      function exportCurrentDesignJson() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        triggerDownload(`${slugFromSequence(design.sequence)}.json`, JSON.stringify(design, null, 2), 'application/json');
+      }
+
+      function exportLibraryJson() {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          designs: state.designs
+        };
+        triggerDownload('unst-emoji-library.json', JSON.stringify(payload, null, 2), 'application/json');
+      }
+
+      function exportCurrentSvg() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        triggerDownload(`${slugFromSequence(design.sequence)}.svg`, buildSvg(design), 'image/svg+xml');
+      }
+
+      async function exportCurrentPng() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        const svg = buildSvg(design, { cell: 32 });
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = design.width * 32;
+          canvas.height = design.height * 32;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(pngBlob => {
+            if (pngBlob) triggerDownload(`${slugFromSequence(design.sequence)}.png`, pngBlob, 'image/png');
+            URL.revokeObjectURL(url);
+          }, 'image/png');
+        };
+        img.src = url;
+      }
+
+      async function copyFlattenedSvg() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        try {
+          await navigator.clipboard.writeText(buildSvg(design));
+          setStatus('Copied flattened SVG to clipboard.');
+        } catch {
+          setStatus('Clipboard write failed.');
+        }
+      }
+
+      async function copyManifestSnippet() {
+        const design = getCurrentDesign();
+        if (!design) return;
+        try {
+          await navigator.clipboard.writeText(buildManifestSnippet(design));
+          setStatus('Copied manifest snippet to clipboard.');
+        } catch {
+          setStatus('Clipboard write failed.');
+        }
+      }
+
+      function importJsonText(text) {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          state.designs = parsed;
+        } else if (parsed && Array.isArray(parsed.designs)) {
+          state.designs = parsed.designs;
+        } else if (parsed && parsed.id && parsed.layers) {
+          state.designs.push(parsed);
+        } else {
+          throw new Error('Unsupported JSON structure.');
+        }
+        ensureImportedIds();
+        state.currentDesignId = state.designs[0].id;
+        state.currentLayerId = state.designs[0].layers[0].id;
+        setStatus('Imported JSON successfully.');
+        renderAll();
+      }
+
+      function ensureImportedIds() {
+        state.designs = state.designs.map(design => ({
+          ...design,
+          id: design.id || uid('design'),
+          width: design.width || 24,
+          height: design.height || 16,
+          layers: (design.layers || [makeLayer('Base', '#ffffff')]).map(layer => ({
+            ...layer,
+            id: layer.id || uid('layer'),
+            name: layer.name || 'Layer',
+            color: normalizeHex(layer.color || '#ffffff'),
+            visible: layer.visible !== false,
+            cells: Array.isArray(layer.cells) ? layer.cells.map(Number).filter(Number.isFinite) : []
+          }))
+        }));
+      }
+
+      function bindEvents() {
+        els.themeMode.addEventListener('change', () => {
+          state.themeMode = els.themeMode.value;
+          applyTheme();
+          save();
+        });
+
+        ['designName', 'countryCode', 'sequenceInput', 'notesInput'].forEach(key => {
+          els[key].addEventListener('input', updateMetadataFromForm);
+        });
+
+        document.getElementById('buildFromCountryBtn').addEventListener('click', () => {
+          const cc = (els.countryCode.value || '').trim().toUpperCase();
+          const sequence = countryCodeToSequence(cc);
+          if (!sequence) return setStatus('Enter a two-letter country code first.');
+          els.sequenceInput.value = sequence;
+          updateMetadataFromForm();
+          setStatus(`Built Regional Indicator sequence for ${cc}.`);
+        });
+
+        document.getElementById('applyPresetBtn').addEventListener('click', () => {
+          const preset = els.gridPreset.value;
+          if (!preset) return setStatus('Choose a preset first.');
+          applyPreset(preset);
+        });
+
+        document.getElementById('resizeGridBtn').addEventListener('click', resizeCurrentGrid);
+        document.getElementById('clearCurrentLayerBtn').addEventListener('click', clearCurrentLayer);
+        document.getElementById('addLayerBtn').addEventListener('click', addLayer);
+        document.getElementById('duplicateLayerBtn').addEventListener('click', duplicateLayer);
+        document.getElementById('addDesignBtn').addEventListener('click', addBlankDesign);
+        document.getElementById('newDesignBtn').addEventListener('click', addBlankDesign);
+        document.getElementById('duplicateDesignBtn').addEventListener('click', duplicateCurrentDesign);
+        document.getElementById('duplicateDesignBtn2').addEventListener('click', duplicateCurrentDesign);
+        document.getElementById('deleteDesignBtn').addEventListener('click', deleteCurrentDesign);
+        document.getElementById('exportDesignJsonBtn').addEventListener('click', exportCurrentDesignJson);
+        document.getElementById('exportLibraryJsonBtn').addEventListener('click', exportLibraryJson);
+        document.getElementById('exportSvgBtn').addEventListener('click', exportCurrentSvg);
+        document.getElementById('exportPngBtn').addEventListener('click', exportCurrentPng);
+        document.getElementById('flattenPreviewBtn').addEventListener('click', copyFlattenedSvg);
+        document.getElementById('copyManifestBtn').addEventListener('click', copyManifestSnippet);
+        document.getElementById('importBtn').addEventListener('click', () => els.importInput.click());
+        els.importInput.addEventListener('change', async () => {
+          const file = els.importInput.files && els.importInput.files[0];
+          if (!file) return;
+          const text = await file.text();
+          try {
+            importJsonText(text);
+          } catch (err) {
+            setStatus(err.message || 'Import failed.');
+          } finally {
+            els.importInput.value = '';
+          }
+        });
+
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            state.tool = btn.dataset.tool;
+            state.pickLayerMode = false;
+            renderToolbar();
+          });
+        });
+
+        document.getElementById('eyedropLayerBtn').addEventListener('click', () => {
+          state.pickLayerMode = !state.pickLayerMode;
+          renderToolbar();
+          setStatus(state.pickLayerMode ? 'Pick-layer mode enabled. Click a visible cell.' : 'Pick-layer mode disabled.');
+        });
+
+        document.getElementById('toggleGridBtn').addEventListener('click', () => {
+          state.showGrid = !state.showGrid;
+          renderAll();
+        });
+
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+          if (state.themeMode === 'device') applyTheme();
+        });
+      }
+
+      function init() {
+        load();
+        ensureState();
+        els.themeMode.value = state.themeMode;
+        applyTheme();
+        renderQuickPalette();
+        bindEvents();
+        renderAll();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
