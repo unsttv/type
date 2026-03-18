@@ -200,3 +200,4 @@ Both ``wdth`` and `hght` can take on a value between 25 and 400, 100 being the d
 3. Run `py tools\generate-data.py`.
 4. Run `py tools\generate-fonts.py`.
 5. Run `py tools\generate-manifest.py`.
+6. Run `py tools\generate-templates.py`.

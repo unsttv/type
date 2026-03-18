@@ -1,6 +1,6 @@
 {
   "manifestVersion": 1,
-  "generatedAt": "2026-03-17T16:12:45.465796+00:00",
+  "generatedAt": "2026-03-18T08:43:54.224473+00:00",
   "name": "unst",
   "metadata": {
     "family": "unst",
@@ -8,29 +8,29 @@
     "fullName": "unst Regular",
     "postScriptName": "unst-Regular",
     "unitsPerEm": 1000,
-    "glyphCount": 176
+    "glyphCount": 178
   },
   "files": [
     {
       "ext": "woff2",
       "file": "unst.woff2",
       "recommendedFile": "unst.woff2",
-      "bytes": 11480,
-      "sha256": "e9ebc0d266d9fa80f5188e943a91bee9a7e020a7ec9766c94fc8acb3c1eae85a"
+      "bytes": 11624,
+      "sha256": "57ef697cf8f4351842fabea28f89dc0642e79efa764758d90fb43eda41905572"
     },
     {
       "ext": "woff",
       "file": "unst.woff",
       "recommendedFile": "unst.woff",
-      "bytes": 14376,
-      "sha256": "6a3d198b5b14913de55857b619f40d06c940ecf9907b6a90f9dfb0672df07519"
+      "bytes": 14612,
+      "sha256": "3de959b6cd86841447c64f33a0a9336c23f6df64e88420f6b930a6f4f9627021"
     },
     {
       "ext": "ttf",
       "file": "unst.ttf",
       "recommendedFile": "unst.ttf",
-      "bytes": 36656,
-      "sha256": "4d1f8b42fc23a4086d11f260050bd1308ec0a36eb71b08c919191784c2404b35"
+      "bytes": 37288,
+      "sha256": "c3b439f2a6b3b39c5d5e87be118643a97b95f8c98f5f672d04b329ab9d1fd0fe"
     }
   ],
   "unicodeRanges": [

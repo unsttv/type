@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 30" width="28" height="30" shape-rendering="crispEdges" data-ligature-text="ga">
+  <title>Ligature g a</title>
+  <desc>Source text: ga</desc>
+  <metadata>{&quot;text&quot;:&quot;ga&quot;,&quot;labels&quot;:[&quot;g&quot;,&quot;a&quot;],&quot;codepoints&quot;:[103,97],&quot;filename&quot;:&quot;ligature-u0067-u0061.svg&quot;,&quot;defaultGap&quot;:4,&quot;gapSettings&quot;:[{&quot;index&quot;:0,&quot;pair&quot;:&quot;ga&quot;,&quot;gap&quot;:4,&quot;mode&quot;:&quot;none&quot;,&quot;touch&quot;:1}]}</metadata>
+  <g>
+    <polygon class="base" points="0,9 12,9 12,10 0,10"/>
+    <polygon class="base" points="0,10 4,10 4,14 0,14"/>
+    <polygon class="base" points="8,10 12,10 12,14 8,14"/>
+    <polygon class="base" points="0,14 12,14 12,15 0,15"/>
+    <polygon class="base" points="8,15 12,15 12,20 8,20"/>
+    <polygon class="base" points="0,19 12,19 12,20 0,20"/>
+    <polygon class="base" points="0,20 4,20 4,25 0,25"/>
+    <polygon class="base" points="8,20 12,20 12,25 8,25"/>
+    <polygon class="base" points="0,25 4,25 4,29 0,29"/>
+    <polygon class="base" points="8,25 12,25 12,29 8,29"/>
+    <polygon class="base" points="0,29 12,29 12,30 0,30"/>
+    <polygon class="base" points="28,20 16,20 16,19 28,19"/>
+    <polygon class="base" points="28,19 24,19 24,10 28,10"/>
+    <polygon class="base" points="20,19 16,19 16,15 20,15"/>
+    <polygon class="base" points="28,15 16,15 16,14 28,14"/>
+    <polygon class="base" points="28,10 16,10 16,9 28,9"/>
+    <polygon class="conn" points="12,9 16,9 16,10 12,10"/>
+  </g>
+</svg>

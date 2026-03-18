@@ -6,9 +6,9 @@ declare(strict_types=1);
 
 return [
     'Unst' => [
-        'glyphCount' => 170,
+        'glyphCount' => 172,
         'singleGlyphCount' => 112,
-        'ligatureCount' => 58,
+        'ligatureCount' => 60,
         'chars' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!"#$&\'+,-.:;=?@[]_{|}¦§÷‥…‼₿∴∵∶∷■✝🏁 ÆäæëïöüıĳŒœΤπꜵ',
         'uppercase' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'lowercase' => 'abcdefghijklmnopqrstuvwxyz',
@@ -498,6 +498,7 @@ return [
             'ek',
             'em',
             'en',
+            'er',
             'es',
             'et',
             'fa',
@@ -509,6 +510,7 @@ return [
             'fz',
             'fä',
             'fü',
+            'ga',
             'ib',
             'ih',
             'ij',
@@ -828,6 +830,22 @@ return [
                 ],
                 'filename' => 'ligature-u0065-u006e.svg',
             ],
+            'er' => [
+                'sequence' => 'er',
+                'chars' => [
+                    'e',
+                    'r',
+                ],
+                'codepoints' => [
+                    101,
+                    114,
+                ],
+                'unicode' => [
+                    'U+0065',
+                    'U+0072',
+                ],
+                'filename' => 'ligature-u0065-u0072.svg',
+            ],
             'es' => [
                 'sequence' => 'es',
                 'chars' => [
@@ -1003,6 +1021,22 @@ return [
                     'U+00FC',
                 ],
                 'filename' => 'ligature-u0066-u00fc.svg',
+            ],
+            'ga' => [
+                'sequence' => 'ga',
+                'chars' => [
+                    'g',
+                    'a',
+                ],
+                'codepoints' => [
+                    103,
+                    97,
+                ],
+                'unicode' => [
+                    'U+0067',
+                    'U+0061',
+                ],
+                'filename' => 'ligature-u0067-u0061.svg',
             ],
             'ib' => [
                 'sequence' => 'ib',
@@ -1633,6 +1667,7 @@ return [
             'ek' => 'ligature-u0065-u006b.svg',
             'em' => 'ligature-u0065-u006d.svg',
             'en' => 'ligature-u0065-u006e.svg',
+            'er' => 'ligature-u0065-u0072.svg',
             'es' => 'ligature-u0065-u0073.svg',
             'et' => 'ligature-u0065-u0074.svg',
             'fa' => 'ligature-u0066-u0061.svg',
@@ -1644,6 +1679,7 @@ return [
             'fz' => 'ligature-u0066-u007a.svg',
             'fä' => 'ligature-u0066-u00e4.svg',
             'fü' => 'ligature-u0066-u00fc.svg',
+            'ga' => 'ligature-u0067-u0061.svg',
             'ib' => 'ligature-u0069-u0062.svg',
             'ih' => 'ligature-u0069-u0068.svg',
             'ij' => 'ligature-u0069-u006a.svg',
@@ -3679,6 +3715,24 @@ return [
                     'U+006E',
                 ],
             ],
+            'er' => [
+                'key' => 'er',
+                'filename' => 'ligature-u0065-u0072.svg',
+                'isLigature' => true,
+                'length' => 2,
+                'chars' => [
+                    'e',
+                    'r',
+                ],
+                'codepoints' => [
+                    101,
+                    114,
+                ],
+                'unicode' => [
+                    'U+0065',
+                    'U+0072',
+                ],
+            ],
             'es' => [
                 'key' => 'es',
                 'filename' => 'ligature-u0065-u0073.svg',
@@ -3875,6 +3929,24 @@ return [
                 'unicode' => [
                     'U+0066',
                     'U+00FC',
+                ],
+            ],
+            'ga' => [
+                'key' => 'ga',
+                'filename' => 'ligature-u0067-u0061.svg',
+                'isLigature' => true,
+                'length' => 2,
+                'chars' => [
+                    'g',
+                    'a',
+                ],
+                'codepoints' => [
+                    103,
+                    97,
+                ],
+                'unicode' => [
+                    'U+0067',
+                    'U+0061',
                 ],
             ],
             'ib' => [
