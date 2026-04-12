@@ -207,3 +207,5 @@ Both ``wdth`` and `hght` can take on a value between 25 and 400, 100 being the d
 ```shell
 py .\tools\generate-video.py
 ```
+
+(See `parse_args` for all the arguments the script takes.)
